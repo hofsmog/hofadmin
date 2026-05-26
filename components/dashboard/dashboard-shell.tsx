@@ -91,8 +91,8 @@ function Sidebar({
     <div className="flex h-full flex-col">
       <div className="border-b p-5">
         <div>
-          <BrandLockup onClick={onNavigate} />
-          <p className="mt-2 pl-[3.25rem] text-xs text-muted-foreground">Core workspace</p>
+          <BrandLockup size="sm" onClick={onNavigate} />
+          <p className="mt-2 text-xs text-muted-foreground">Core workspace</p>
         </div>
 
         <button className="mt-5 flex w-full items-center justify-between rounded-xl border bg-zinc-50 px-3 py-2.5 text-left shadow-sm transition hover:bg-white dark:bg-zinc-900 dark:hover:bg-zinc-900/70">
