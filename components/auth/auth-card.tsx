@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { BrandLockup } from "@/components/ui/brand";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,12 +17,7 @@ export function AuthCard({
   return (
     <Card className="w-full max-w-md p-6 shadow-xl shadow-zinc-950/[0.06]">
       <div className="mb-6">
-        <Link href="/" className="mb-6 flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-zinc-950 text-sm font-bold text-white dark:bg-zinc-100 dark:text-zinc-950">
-            H
-          </span>
-          <span className="text-sm font-semibold">HofAdmin</span>
-        </Link>
+        <BrandLockup className="mb-6" />
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
       </div>

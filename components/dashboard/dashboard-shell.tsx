@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, ChevronDown, Menu, Search, X } from "lucide-react";
 import { useState } from "react";
+import { BrandLockup } from "@/components/ui/brand";
 import { organizations } from "@/lib/organizations";
 import { dashboardNavItems } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
@@ -89,15 +90,10 @@ function Sidebar({
   return (
     <div className="flex h-full flex-col">
       <div className="border-b p-5">
-        <Link href="/" className="flex items-center gap-3" onClick={onNavigate}>
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-zinc-950 text-sm font-bold text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-950">
-            H
-          </span>
-          <div>
-            <p className="text-sm font-semibold leading-5">HofAdmin</p>
-            <p className="text-xs text-muted-foreground">Core workspace</p>
-          </div>
-        </Link>
+        <div>
+          <BrandLockup onClick={onNavigate} />
+          <p className="mt-2 pl-[3.25rem] text-xs text-muted-foreground">Core workspace</p>
+        </div>
 
         <button className="mt-5 flex w-full items-center justify-between rounded-xl border bg-zinc-50 px-3 py-2.5 text-left shadow-sm transition hover:bg-white dark:bg-zinc-900 dark:hover:bg-zinc-900/70">
           <div>
