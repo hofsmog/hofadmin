@@ -44,6 +44,7 @@ export default async function SettingsPage() {
             logoUrl={logoUrl}
             avatarUrl={activeOrganization.avatarUrl}
             accentColor={accentColor}
+            organizationType={activeOrganization.organizationType}
             disabled={!canEdit}
             activeRole={activeMembership.role}
           />
@@ -81,7 +82,7 @@ export default async function SettingsPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
-                Branding changes emit activity events.
+                Type: {activeOrganization.organizationType ?? "Not set"}.
               </div>
             </div>
           </CardContent>

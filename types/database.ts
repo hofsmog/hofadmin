@@ -1,9 +1,13 @@
 export type OrganizationRole = "owner" | "admin" | "member";
 export type QrItemType = "general" | "event" | "member" | "asset" | "location";
+export type OrganizationType = "school" | "club" | "business" | "restaurant" | "cafe" | "event" | "other";
+export type MemberStatus = "active" | "inactive";
+export type MemberType = "student" | "staff" | "player" | "volunteer" | "employee" | "customer" | "guest" | "other";
 export type ActivityEventType =
   | "qr_created"
   | "checkin_created"
   | "member_invited"
+  | "member_created"
   | "organization_updated"
   | "module_opened"
   | "module_enabled";
@@ -22,6 +26,10 @@ export type Database = {
           avatar_url: string | null;
           logo_url: string | null;
           accent_color: string | null;
+          organization_type: OrganizationType | null;
+          starter_modules: string[];
+          onboarding_checklist: Json;
+          onboarding_completed_at: string | null;
           created_by: string;
           created_at: string;
           updated_at: string;
@@ -34,6 +42,10 @@ export type Database = {
           avatar_url?: string | null;
           logo_url?: string | null;
           accent_color?: string | null;
+          organization_type?: OrganizationType | null;
+          starter_modules?: string[];
+          onboarding_checklist?: Json;
+          onboarding_completed_at?: string | null;
           created_by: string;
           created_at?: string;
           updated_at?: string;
@@ -46,6 +58,10 @@ export type Database = {
           avatar_url?: string | null;
           logo_url?: string | null;
           accent_color?: string | null;
+          organization_type?: OrganizationType | null;
+          starter_modules?: string[];
+          onboarding_checklist?: Json;
+          onboarding_completed_at?: string | null;
           created_by?: string;
           created_at?: string;
           updated_at?: string;
@@ -261,6 +277,105 @@ export type Database = {
           },
         ];
       };
+      members: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          status: MemberStatus;
+          type: MemberType;
+          email: string | null;
+          phone: string | null;
+          notes: string | null;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          status?: MemberStatus;
+          type?: MemberType;
+          email?: string | null;
+          phone?: string | null;
+          notes?: string | null;
+          created_by: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          name?: string;
+          status?: MemberStatus;
+          type?: MemberType;
+          email?: string | null;
+          phone?: string | null;
+          notes?: string | null;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "members_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      member_qr_links: {
+        Row: {
+          id: string;
+          organization_id: string;
+          member_id: string;
+          qr_item_id: string | null;
+          linked_by: string | null;
+          linked_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          member_id: string;
+          qr_item_id?: string | null;
+          linked_by?: string | null;
+          linked_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          member_id?: string;
+          qr_item_id?: string | null;
+          linked_by?: string | null;
+          linked_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "member_qr_links_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "member_qr_links_member_id_fkey";
+            columns: ["member_id"];
+            isOneToOne: false;
+            referencedRelation: "members";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "member_qr_links_qr_item_id_fkey";
+            columns: ["qr_item_id"];
+            isOneToOne: false;
+            referencedRelation: "qr_items";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -278,6 +393,9 @@ export type Database = {
       invitation_status: "pending" | "accepted" | "revoked";
       qr_item_type: QrItemType;
       activity_event_type: ActivityEventType;
+      organization_type: OrganizationType;
+      member_status: MemberStatus;
+      member_type: MemberType;
     };
     CompositeTypes: Record<string, never>;
   };

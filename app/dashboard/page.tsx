@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Building2, CheckCircle2, Layers3, MailPlus, Plus, QrCode, ScanLine, UsersRound } from "lucide-react";
+import { Building2, CheckCircle2, Layers3, MailPlus, Plus, QrCode, ScanLine, UserRoundCheck, UsersRound } from "lucide-react";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -25,7 +25,10 @@ export default async function DashboardPage() {
   const [
     { count: totalQrItems },
     { count: todayCheckins },
+    { count: teamMembers },
+    { count: totalMembers },
     { count: activeMembers },
+    { data: recentMembers },
     { data: activityEvents },
   ] = await Promise.all([
     supabase
@@ -41,6 +44,21 @@ export default async function DashboardPage() {
       .from("organization_members")
       .select("*", { count: "exact", head: true })
       .eq("organization_id", organizationContext.activeOrganization.id),
+    supabase
+      .from("members")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", organizationContext.activeOrganization.id),
+    supabase
+      .from("members")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", organizationContext.activeOrganization.id)
+      .eq("status", "active"),
+    supabase
+      .from("members")
+      .select("id, name, type, status, created_at")
+      .eq("organization_id", organizationContext.activeOrganization.id)
+      .order("created_at", { ascending: false })
+      .limit(4),
     supabase
       .from("activity_events")
       .select("id, type, title, description, created_at")
@@ -78,8 +96,8 @@ export default async function DashboardPage() {
               <span className="max-w-36 truncate text-sm font-medium">{organizationContext.activeOrganization.slug}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Active modules</span>
-              <span className="text-sm font-medium">{enabledModules}</span>
+              <span className="text-sm text-muted-foreground">Team users</span>
+              <span className="text-sm font-medium">{teamMembers ?? 0}</span>
             </div>
             <ButtonLink href="/dashboard/settings" variant="secondary" className="h-10 w-full">
               <Building2 className="h-4 w-4" />
@@ -92,7 +110,7 @@ export default async function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="QR items" value={`${totalQrItems ?? 0}`} detail="Active QR inventory" icon={QrCode} />
         <StatCard label="Check-ins today" value={`${todayCheckins ?? 0}`} detail="Since local midnight" icon={CheckCircle2} />
-        <StatCard label="Active members" value={`${activeMembers ?? 0}`} detail={`Your role is ${organizationContext.activeMembership.role}`} icon={UsersRound} />
+        <StatCard label="Total members" value={`${totalMembers ?? 0}`} detail={`${activeMembers ?? 0} active records`} icon={UsersRound} />
         <StatCard label="Active modules" value={`${enabledModules}`} detail="Operational modules available" icon={Layers3} />
       </div>
 
@@ -100,6 +118,19 @@ export default async function DashboardPage() {
         <ActivityFeed events={activityEvents ?? []} />
 
         <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Setup checklist</CardTitle>
+              <CardDescription>Keep moving toward a useful first workspace.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <ChecklistItem done={(totalQrItems ?? 0) > 0} label="Create first QR item" href="/dashboard/modules/qr-checkins#create-qr" />
+              <ChecklistItem done={(totalMembers ?? 0) > 0} label="Add first member" href="/dashboard/modules/members#add-member" />
+              <ChecklistItem done={(teamMembers ?? 0) > 1} label="Invite team member" href="/dashboard/team" />
+              <ChecklistItem done={Boolean(organizationContext.activeOrganization.logoUrl || organizationContext.activeOrganization.accentColor)} label="Customize branding" href="/dashboard/settings" />
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Active modules</CardTitle>
@@ -121,6 +152,33 @@ export default async function DashboardPage() {
                   )}
                 </div>
               ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent members</CardTitle>
+              <CardDescription>Newest member records in this organization.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(recentMembers ?? []).length ? (
+                recentMembers?.map((member) => (
+                  <div key={member.id} className="flex items-center justify-between gap-3 rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900/60">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{member.name}</p>
+                      <p className="text-xs capitalize text-muted-foreground">{member.type} • {member.status}</p>
+                    </div>
+                    <UserRoundCheck className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-xl border border-dashed p-5 text-center">
+                  <p className="text-sm font-medium">No members yet</p>
+                  <ButtonLink href="/dashboard/modules/members#add-member" variant="ghost" className="mt-2 h-8">
+                    Add first member
+                  </ButtonLink>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -156,6 +214,17 @@ export default async function DashboardPage() {
         </div>
       </div>
     </>
+  );
+}
+
+function ChecklistItem({ done, label, href }: { done: boolean; label: string; href: string }) {
+  return (
+    <ButtonLink href={href} variant="ghost" className="h-11 w-full justify-start px-2">
+      <span className={done ? "grid h-7 w-7 place-items-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" : "grid h-7 w-7 place-items-center rounded-lg bg-zinc-100 text-zinc-500 dark:bg-zinc-900"}>
+        <CheckCircle2 className="h-4 w-4" />
+      </span>
+      <span className={done ? "text-muted-foreground line-through" : ""}>{label}</span>
+    </ButtonLink>
   );
 }
 

@@ -17,7 +17,7 @@ export const modules: ModuleDefinition[] = [
     category: "Engagement",
     status: "enabled",
     icon: "members",
-    href: "/dashboard/team",
+    href: "/dashboard/modules/members",
   },
   {
     id: "inventory",

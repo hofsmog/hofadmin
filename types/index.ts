@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import type { OrganizationRole } from "@/types/database";
+import type { OrganizationRole, OrganizationType } from "@/types/database";
 
 export type Role = OrganizationRole;
 
@@ -19,6 +19,10 @@ export type Organization = {
   avatarUrl: string | null;
   logoUrl: string | null;
   accentColor: string | null;
+  organizationType: OrganizationType | null;
+  starterModules: string[];
+  onboardingChecklist: unknown;
+  onboardingCompletedAt: string | null;
   createdAt?: string;
   updatedAt?: string;
 };

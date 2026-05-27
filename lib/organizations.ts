@@ -19,6 +19,10 @@ export function mapOrganization(row: OrganizationRow): Organization {
     avatarUrl: row.avatar_url,
     logoUrl: row.logo_url,
     accentColor: row.accent_color,
+    organizationType: row.organization_type,
+    starterModules: row.starter_modules,
+    onboardingChecklist: row.onboarding_checklist,
+    onboardingCompletedAt: row.onboarding_completed_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

@@ -15,6 +15,7 @@ const eventConfig = {
   qr_created: { icon: QrCode, label: "QR" },
   checkin_created: { icon: CheckCircle2, label: "Check-in" },
   member_invited: { icon: MailPlus, label: "Invite" },
+  member_created: { icon: MailPlus, label: "Member" },
   organization_updated: { icon: Building2, label: "Org" },
   module_opened: { icon: LayoutGrid, label: "Module" },
   module_enabled: { icon: PlugZap, label: "Module" },

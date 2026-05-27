@@ -17,6 +17,7 @@ export function OrganizationBrandingForm({
   logoUrl,
   avatarUrl,
   accentColor,
+  organizationType,
   disabled,
   activeRole,
 }: {
@@ -25,6 +26,7 @@ export function OrganizationBrandingForm({
   logoUrl: string | null;
   avatarUrl: string | null;
   accentColor: string;
+  organizationType: string | null;
   disabled: boolean;
   activeRole: string;
 }) {
@@ -46,6 +48,18 @@ export function OrganizationBrandingForm({
       <label className="block space-y-2">
         <span className="text-sm font-medium">Display name</span>
         <Input name="displayName" defaultValue={displayName ?? ""} disabled={disabled} placeholder={name} />
+      </label>
+      <label className="block space-y-2">
+        <span className="text-sm font-medium">Organization type</span>
+        <select name="organizationType" defaultValue={organizationType ?? "business"} disabled={disabled} className="h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 disabled:opacity-60 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800">
+          <option value="school">School</option>
+          <option value="club">Club</option>
+          <option value="business">Business</option>
+          <option value="restaurant">Restaurant</option>
+          <option value="cafe">Cafe</option>
+          <option value="event">Event</option>
+          <option value="other">Other</option>
+        </select>
       </label>
       <label className="block space-y-2">
         <span className="text-sm font-medium">Accent color</span>

@@ -12,9 +12,10 @@ import {
   sanitizeOrganizationName,
   setActiveOrganizationCookie,
 } from "@/lib/organizations";
-import type { OrganizationRole } from "@/types/database";
+import type { OrganizationRole, OrganizationType } from "@/types/database";
 
 const validRoles = new Set<OrganizationRole>(["owner", "admin", "member"]);
+const validOrganizationTypes = new Set<OrganizationType>(["school", "club", "business", "restaurant", "cafe", "event", "other"]);
 
 export type OrganizationBrandingState = {
   status: "idle" | "success" | "error";
@@ -94,6 +95,7 @@ async function updateOrganization(formData: FormData) {
 
   const name = sanitizeOrganizationName(String(formData.get("name") || ""));
   const displayName = sanitizeOptionalDisplayName(String(formData.get("displayName") || ""));
+  const organizationType = sanitizeOrganizationType(String(formData.get("organizationType") || ""));
   const logoUrl = String(formData.get("logoUrl") || "").trim() || null;
   const fallbackAvatarUrl = String(formData.get("avatarUrl") || "").trim() || null;
   const avatarUrl = logoUrl ?? fallbackAvatarUrl;
@@ -104,6 +106,7 @@ async function updateOrganization(formData: FormData) {
     .update({
       name,
       display_name: displayName,
+      organization_type: organizationType,
       avatar_url: avatarUrl,
       logo_url: logoUrl,
       accent_color: accentColor,
@@ -125,6 +128,7 @@ async function updateOrganization(formData: FormData) {
     metadata: {
       logoChanged: logoUrl !== context.activeOrganization.logoUrl,
       accentColor,
+      organizationType,
     },
   });
 
@@ -155,6 +159,20 @@ function sanitizeAccentColor(value: string) {
 
   if (!/^#[0-9A-Fa-f]{6}$/.test(trimmed)) {
     throw new Error("Accent color must be a valid hex color like #2563eb.");
+  }
+
+  return trimmed;
+}
+
+function sanitizeOrganizationType(value: string) {
+  const trimmed = value.trim() as OrganizationType;
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (!validOrganizationTypes.has(trimmed)) {
+    throw new Error("Choose a valid organization type.");
   }
 
   return trimmed;
