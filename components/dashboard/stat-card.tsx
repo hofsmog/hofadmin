@@ -13,7 +13,7 @@ export function StatCard({
   icon: ComponentType<{ className?: string }>;
 }) {
   return (
-    <Card className="p-5">
+    <Card className="p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-zinc-950/[0.05] dark:hover:shadow-black/30">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm text-muted-foreground">{label}</p>
