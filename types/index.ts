@@ -14,8 +14,11 @@ export type Permission =
 export type Organization = {
   id: string;
   name: string;
+  displayName: string | null;
   slug: string;
   avatarUrl: string | null;
+  logoUrl: string | null;
+  accentColor: string | null;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -40,13 +43,17 @@ export type ModuleIconKey =
   | "bookings"
   | "inventory"
   | "members"
-  | "checkIns";
+  | "checkIns"
+  | "tasks"
+  | "lunch"
+  | "visitors"
+  | "equipment";
 
 export type ModuleDefinition = {
   id: string;
   name: string;
   description: string;
-  category: "Operations" | "Engagement" | "Commerce" | "Workspace";
+  category: "Operations" | "Engagement" | "Commerce" | "Workspace" | "Facilities";
   status: ModuleStatus;
   icon: ModuleIconKey;
   href?: string;

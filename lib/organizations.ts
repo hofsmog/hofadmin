@@ -14,8 +14,11 @@ export function mapOrganization(row: OrganizationRow): Organization {
   return {
     id: row.id,
     name: row.name,
+    displayName: row.display_name,
     slug: row.slug,
     avatarUrl: row.avatar_url,
+    logoUrl: row.logo_url,
+    accentColor: row.accent_color,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

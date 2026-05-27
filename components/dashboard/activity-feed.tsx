@@ -1,4 +1,4 @@
-import { Building2, CheckCircle2, MailPlus, QrCode } from "lucide-react";
+import { Building2, CheckCircle2, LayoutGrid, MailPlus, PlugZap, QrCode } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ActivityEventType } from "@/types/database";
@@ -16,6 +16,8 @@ const eventConfig = {
   checkin_created: { icon: CheckCircle2, label: "Check-in" },
   member_invited: { icon: MailPlus, label: "Invite" },
   organization_updated: { icon: Building2, label: "Org" },
+  module_opened: { icon: LayoutGrid, label: "Module" },
+  module_enabled: { icon: PlugZap, label: "Module" },
 } satisfies Record<ActivityEventType, { icon: typeof QrCode; label: string }>;
 
 export function ActivityFeed({
@@ -28,7 +30,7 @@ export function ActivityFeed({
   description?: string;
 }) {
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -42,7 +44,7 @@ export function ActivityFeed({
             return (
               <div
                 key={event.id}
-                className="flex gap-3 rounded-xl border bg-zinc-50 p-3 transition hover:bg-white dark:bg-zinc-900/70 dark:hover:bg-zinc-900"
+                className="flex gap-3 rounded-xl border bg-zinc-50 p-3 transition duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-sm dark:bg-zinc-900/70 dark:hover:bg-zinc-900"
               >
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-zinc-700 shadow-sm dark:bg-zinc-950 dark:text-zinc-200">
                   <Icon className="h-4 w-4" />

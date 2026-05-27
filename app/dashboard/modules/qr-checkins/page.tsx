@@ -52,7 +52,7 @@ export default async function QrCheckinsPage() {
 
       <div className="grid gap-4 xl:grid-cols-[1fr_24rem]">
         <div className="space-y-4">
-          <Card>
+          <Card id="create-qr">
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
                 <div>

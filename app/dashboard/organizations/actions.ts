@@ -16,6 +16,11 @@ import type { OrganizationRole } from "@/types/database";
 
 const validRoles = new Set<OrganizationRole>(["owner", "admin", "member"]);
 
+export type OrganizationBrandingState = {
+  status: "idle" | "success" | "error";
+  message: string;
+};
+
 export async function switchOrganizationAction(formData: FormData) {
   const organizationId = String(formData.get("organizationId") || "");
   const user = await getCurrentUser();
@@ -55,6 +60,25 @@ export async function createOrganizationAction(formData: FormData) {
 }
 
 export async function updateOrganizationAction(formData: FormData) {
+  await updateOrganization(formData);
+}
+
+export async function updateOrganizationBrandingAction(
+  _state: OrganizationBrandingState,
+  formData: FormData,
+): Promise<OrganizationBrandingState> {
+  try {
+    await updateOrganization(formData);
+    return { status: "success", message: "Organization branding saved." };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Branding could not be saved.",
+    };
+  }
+}
+
+async function updateOrganization(formData: FormData) {
   const user = await getCurrentUser();
   const supabase = await createClient();
 
@@ -69,13 +93,20 @@ export async function updateOrganizationAction(formData: FormData) {
   }
 
   const name = sanitizeOrganizationName(String(formData.get("name") || ""));
-  const avatarUrl = String(formData.get("avatarUrl") || "").trim() || null;
+  const displayName = sanitizeOptionalDisplayName(String(formData.get("displayName") || ""));
+  const logoUrl = String(formData.get("logoUrl") || "").trim() || null;
+  const fallbackAvatarUrl = String(formData.get("avatarUrl") || "").trim() || null;
+  const avatarUrl = logoUrl ?? fallbackAvatarUrl;
+  const accentColor = sanitizeAccentColor(String(formData.get("accentColor") || ""));
 
   const { error } = await supabase
     .from("organizations")
     .update({
       name,
+      display_name: displayName,
       avatar_url: avatarUrl,
+      logo_url: logoUrl,
+      accent_color: accentColor,
       updated_at: new Date().toISOString(),
     })
     .eq("id", context.activeOrganization.id);
@@ -89,13 +120,44 @@ export async function updateOrganizationAction(formData: FormData) {
     organizationId: context.activeOrganization.id,
     type: "organization_updated",
     title: "Organization updated",
-    description: `${name} profile settings were updated.`,
+    description: `${displayName ?? name} branding settings were updated.`,
     actorId: user.id,
-    metadata: { avatarUrlChanged: avatarUrl !== context.activeOrganization.avatarUrl },
+    metadata: {
+      logoChanged: logoUrl !== context.activeOrganization.logoUrl,
+      accentColor,
+    },
   });
 
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard");
+}
+
+function sanitizeOptionalDisplayName(value: string) {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (trimmed.length < 2 || trimmed.length > 80) {
+    throw new Error("Display name must be between 2 and 80 characters.");
+  }
+
+  return trimmed;
+}
+
+function sanitizeAccentColor(value: string) {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (!/^#[0-9A-Fa-f]{6}$/.test(trimmed)) {
+    throw new Error("Accent color must be a valid hex color like #2563eb.");
+  }
+
+  return trimmed;
 }
 
 export async function inviteMemberAction(formData: FormData) {

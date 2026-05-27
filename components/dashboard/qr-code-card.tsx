@@ -5,6 +5,7 @@ import { Check, Copy, Download, Printer, QrCode } from "lucide-react";
 import QRCode from "qrcode";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import type { QrItemType } from "@/types/database";
 
@@ -144,6 +145,11 @@ export function QrCodeCard({ item, organizationName }: { item: QrCardItem; organ
 
   return (
     <article className="group overflow-hidden rounded-xl border bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-zinc-950">
+      <Toast
+        show={status !== "idle"}
+        title={status === "copied" ? "Copied to clipboard" : "QR download ready"}
+        message={status === "copied" ? item.name : "Your QR asset download has started."}
+      />
       <div className="grid gap-4 p-4 sm:grid-cols-[11rem_1fr]">
         <div className="relative aspect-square rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900">
           {pngUrl ? (

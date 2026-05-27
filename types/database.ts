@@ -1,6 +1,12 @@
 export type OrganizationRole = "owner" | "admin" | "member";
 export type QrItemType = "general" | "event" | "member" | "asset" | "location";
-export type ActivityEventType = "qr_created" | "checkin_created" | "member_invited" | "organization_updated";
+export type ActivityEventType =
+  | "qr_created"
+  | "checkin_created"
+  | "member_invited"
+  | "organization_updated"
+  | "module_opened"
+  | "module_enabled";
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -11,8 +17,11 @@ export type Database = {
         Row: {
           id: string;
           name: string;
+          display_name: string | null;
           slug: string;
           avatar_url: string | null;
+          logo_url: string | null;
+          accent_color: string | null;
           created_by: string;
           created_at: string;
           updated_at: string;
@@ -20,8 +29,11 @@ export type Database = {
         Insert: {
           id?: string;
           name: string;
+          display_name?: string | null;
           slug: string;
           avatar_url?: string | null;
+          logo_url?: string | null;
+          accent_color?: string | null;
           created_by: string;
           created_at?: string;
           updated_at?: string;
@@ -29,8 +41,11 @@ export type Database = {
         Update: {
           id?: string;
           name?: string;
+          display_name?: string | null;
           slug?: string;
           avatar_url?: string | null;
+          logo_url?: string | null;
+          accent_color?: string | null;
           created_by?: string;
           created_at?: string;
           updated_at?: string;

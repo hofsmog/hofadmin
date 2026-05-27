@@ -5,6 +5,7 @@ import { AlertCircle, Camera, CheckCircle2, Loader2, ScanLine } from "lucide-rea
 import { scanCheckinAction, type ScannerActionState } from "@/app/dashboard/modules/qr-checkins/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 const initialState: ScannerActionState = {
@@ -21,6 +22,7 @@ export function QrScanner({ organizationName }: { organizationName: string }) {
   const [state, formAction, isPending] = useActionState(scanCheckinAction, initialState);
   const [cameraState, setCameraState] = useState<"loading" | "ready" | "error">("loading");
   const [cameraMessage, setCameraMessage] = useState("Requesting camera access...");
+  const [manualOpen, setManualOpen] = useState(false);
 
   useEffect(() => {
     pendingRef.current = isPending;
@@ -93,11 +95,17 @@ export function QrScanner({ organizationName }: { organizationName: string }) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
+      <Toast
+        show={state.status === "success" || state.status === "error"}
+        tone={state.status === "error" ? "error" : "success"}
+        title={state.status === "error" ? "Check-in failed" : "Check-in registered"}
+        message={state.status === "success" ? state.itemName : state.message}
+      />
       <section className="overflow-hidden rounded-xl border bg-card shadow-sm">
-        <div className="relative min-h-[26rem] bg-zinc-950">
+        <div className="relative min-h-[62vh] bg-zinc-950 lg:min-h-[34rem]">
           <div id={scannerElementId} className="absolute inset-0 [&_video]:h-full [&_video]:w-full [&_video]:object-cover" />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0,transparent_38%,rgba(9,9,11,0.72)_39%)]" />
-          <div className="pointer-events-none absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-3xl border-2 border-white/80 shadow-[0_0_0_999px_rgba(0,0,0,0.08)] sm:h-72 sm:w-72" />
+          <div className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-3xl border-2 border-white/80 shadow-[0_0_0_999px_rgba(0,0,0,0.08)] sm:h-80 sm:w-80" />
           <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-sm font-medium text-zinc-900 shadow-sm">
             {cameraState === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
             {cameraState === "ready" ? "Camera active" : cameraState === "error" ? "Camera unavailable" : "Starting camera"}
@@ -137,16 +145,23 @@ export function QrScanner({ organizationName }: { organizationName: string }) {
           </div>
         </div>
 
-        <form action={formAction} className="rounded-xl border bg-card p-5 shadow-sm">
-          <label className="block space-y-2">
-            <span className="text-sm font-medium">Manual QR value</span>
-            <Input name="qrValue" placeholder="hofadmin:qr:..." autoComplete="off" />
-          </label>
-          <Button type="submit" className="mt-4 h-11 w-full" disabled={isPending}>
-            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-            Submit check-in
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
+          <Button type="button" variant="secondary" className="h-11 w-full" onClick={() => setManualOpen((value) => !value)}>
+            {manualOpen ? "Hide manual fallback" : "Use manual fallback"}
           </Button>
-        </form>
+          {manualOpen ? (
+            <form action={formAction} className="mt-4">
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">Manual QR value</span>
+                <Input name="qrValue" placeholder="hofadmin:qr:..." autoComplete="off" />
+              </label>
+              <Button type="submit" className="mt-4 h-11 w-full" disabled={isPending}>
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                Submit check-in
+              </Button>
+            </form>
+          ) : null}
+        </div>
 
         <div className="rounded-xl border bg-zinc-50 p-5 text-sm leading-6 text-muted-foreground dark:bg-zinc-900/60">
           <p>{cameraMessage}</p>
