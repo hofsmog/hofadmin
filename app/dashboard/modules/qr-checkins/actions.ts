@@ -1,11 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { recordActivityEvent } from "@/lib/activity";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { canManageOrganization } from "@/lib/organizations";
 import type { QrItemType } from "@/types/database";
 
 const validQrTypes = new Set<QrItemType>(["general", "event", "member", "asset", "location"]);
+
+export type ScannerActionState = {
+  status: "idle" | "success" | "error";
+  message: string;
+  itemName?: string;
+};
 
 export async function createQrItemAction(formData: FormData) {
   const { user, supabase, organizationContext } = await requireOrganizationContext();
@@ -26,20 +33,36 @@ export async function createQrItemAction(formData: FormData) {
     throw new Error("Invalid QR item type.");
   }
 
-  const { error } = await supabase.from("qr_items").insert({
-    organization_id: organizationContext.activeOrganization.id,
-    name,
-    type,
-    description,
-    qr_value: createQrValue(organizationContext.activeOrganization.id),
-    created_by: user.id,
-  });
+  const qrValue = createQrValue(organizationContext.activeOrganization.id);
+  const { data: qrItem, error } = await supabase
+    .from("qr_items")
+    .insert({
+      organization_id: organizationContext.activeOrganization.id,
+      name,
+      type,
+      description,
+      qr_value: qrValue,
+      created_by: user.id,
+    })
+    .select("id, name, type")
+    .single();
 
-  if (error) {
-    throw new Error(error.message);
+  if (error || !qrItem) {
+    throw new Error(error?.message ?? "QR item could not be created.");
   }
 
+  await recordActivityEvent({
+    supabase,
+    organizationId: organizationContext.activeOrganization.id,
+    type: "qr_created",
+    title: "QR created",
+    description: `${qrItem.name} was created as a ${qrItem.type} QR item.`,
+    actorId: user.id,
+    metadata: { qrItemId: qrItem.id, qrValue },
+  });
+
   revalidatePath("/dashboard/modules/qr-checkins");
+  revalidatePath("/dashboard");
 }
 
 export async function manualCheckinAction(formData: FormData) {
@@ -63,20 +86,97 @@ export async function manualCheckinAction(formData: FormData) {
     throw new Error("QR item could not be found for this organization.");
   }
 
-  const { error } = await supabase.from("checkins").insert({
-    organization_id: organizationContext.activeOrganization.id,
-    qr_item_id: qrItem.id,
-    checkin_value: qrItem.qr_value,
-    attendee_name: attendeeName,
-    notes,
-    checked_in_by: user.id,
-  });
+  const { data: checkin, error } = await supabase
+    .from("checkins")
+    .insert({
+      organization_id: organizationContext.activeOrganization.id,
+      qr_item_id: qrItem.id,
+      checkin_value: qrItem.qr_value,
+      attendee_name: attendeeName,
+      notes,
+      checked_in_by: user.id,
+    })
+    .select("id")
+    .single();
 
-  if (error) {
-    throw new Error(error.message);
+  if (error || !checkin) {
+    throw new Error(error?.message ?? "Check-in could not be registered.");
   }
 
+  await recordActivityEvent({
+    supabase,
+    organizationId: organizationContext.activeOrganization.id,
+    type: "checkin_created",
+    title: "Check-in registered",
+    description: attendeeName ? `${attendeeName} checked in.` : "A check-in was registered.",
+    actorId: user.id,
+    metadata: { checkinId: checkin.id, qrItemId: qrItem.id, source: "manual" },
+  });
+
   revalidatePath("/dashboard/modules/qr-checkins");
+  revalidatePath("/dashboard");
+}
+
+export async function scanCheckinAction(
+  _state: ScannerActionState,
+  formData: FormData,
+): Promise<ScannerActionState> {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const qrValue = String(formData.get("qrValue") || "").trim();
+
+  if (!qrValue) {
+    return { status: "error", message: "No QR value was detected." };
+  }
+
+  const { data: qrItem, error: qrItemError } = await supabase
+    .from("qr_items")
+    .select("id, name, qr_value, is_active")
+    .eq("qr_value", qrValue)
+    .eq("organization_id", organizationContext.activeOrganization.id)
+    .single();
+
+  if (qrItemError || !qrItem) {
+    return { status: "error", message: "This QR code does not belong to the active organization." };
+  }
+
+  if (!qrItem.is_active) {
+    return { status: "error", message: "This QR item is inactive." };
+  }
+
+  const { data: checkin, error } = await supabase
+    .from("checkins")
+    .insert({
+      organization_id: organizationContext.activeOrganization.id,
+      qr_item_id: qrItem.id,
+      checkin_value: qrItem.qr_value,
+      notes: "Camera scan",
+      checked_in_by: user.id,
+    })
+    .select("id")
+    .single();
+
+  if (error || !checkin) {
+    return { status: "error", message: error?.message ?? "Check-in could not be registered." };
+  }
+
+  await recordActivityEvent({
+    supabase,
+    organizationId: organizationContext.activeOrganization.id,
+    type: "checkin_created",
+    title: "QR check-in scanned",
+    description: `${qrItem.name} was scanned from the camera scanner.`,
+    actorId: user.id,
+    metadata: { checkinId: checkin.id, qrItemId: qrItem.id, source: "scanner" },
+  });
+
+  revalidatePath("/dashboard/modules/qr-checkins");
+  revalidatePath("/dashboard");
+
+  return {
+    status: "success",
+    message: "Check-in registered.",
+    itemName: qrItem.name,
+  };
 }
 
 function createQrValue(organizationId: string) {

@@ -1,7 +1,8 @@
 import { Clock3, Plus, QrCode, ScanLine } from "lucide-react";
 import { ActionSubmitButton } from "@/components/dashboard/action-submit-button";
+import { ActivityFeed } from "@/components/dashboard/activity-feed";
+import { QrCodeCard } from "@/components/dashboard/qr-code-card";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,7 @@ export default async function QrCheckinsPage() {
   const { activeOrganization, activeMembership } = organizationContext;
   const canCreateQr = canManageOrganization(activeMembership.role);
 
-  const [{ data: qrItems }, { data: checkins }] = await Promise.all([
+  const [{ data: qrItems }, { data: checkins }, { data: activityEvents }] = await Promise.all([
     supabase
       .from("qr_items")
       .select("*")
@@ -26,6 +27,12 @@ export default async function QrCheckinsPage() {
       .eq("organization_id", activeOrganization.id)
       .order("created_at", { ascending: false })
       .limit(20),
+    supabase
+      .from("activity_events")
+      .select("id, type, title, description, created_at")
+      .eq("organization_id", activeOrganization.id)
+      .order("created_at", { ascending: false })
+      .limit(8),
   ]);
 
   const qrItemsById = new Map((qrItems ?? []).map((item) => [item.id, item]));
@@ -99,7 +106,7 @@ export default async function QrCheckinsPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <CardTitle>QR items</CardTitle>
-                  <CardDescription>Generated values are stable identifiers ready for QR image generation later.</CardDescription>
+                  <CardDescription>Downloadable QR cards with stable organization-scoped values.</CardDescription>
                 </div>
                 <QrCode className="h-5 w-5 text-muted-foreground" />
               </div>
@@ -107,32 +114,24 @@ export default async function QrCheckinsPage() {
             <div className="space-y-3 p-5 pt-0">
               {(qrItems ?? []).length ? (
                 qrItems?.map((item) => (
-                  <div key={item.id} className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-semibold">{item.name}</h3>
-                          <Badge className="capitalize">{item.type}</Badge>
-                        </div>
-                        {item.description ? (
-                          <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p>
-                        ) : null}
-                      </div>
-                      <Badge>{item.is_active ? "Active" : "Inactive"}</Badge>
-                    </div>
-                    <code className="mt-3 block overflow-x-auto rounded-xl border bg-white px-3 py-2 text-xs text-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
-                      {item.qr_value}
-                    </code>
-                  </div>
+                  <QrCodeCard key={item.id} item={item} organizationName={activeOrganization.name} />
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground">No QR items yet.</p>
+                <div className="rounded-xl border border-dashed p-6 text-center">
+                  <QrCode className="mx-auto h-9 w-9 text-muted-foreground" />
+                  <p className="mt-3 font-medium">No QR items yet</p>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    Create the first access point to generate a printable QR card.
+                  </p>
+                </div>
               )}
             </div>
           </Card>
         </div>
 
         <div className="space-y-4">
+          <ActivityFeed events={activityEvents ?? []} title="Module activity" description="QR, scanner, invite, and settings activity for this organization." />
+
           <Card>
             <CardHeader>
               <CardTitle>Manual check-in</CardTitle>

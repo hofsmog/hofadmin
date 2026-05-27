@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { recordActivityEvent } from "@/lib/activity";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import {
   canManageMembers,
@@ -83,7 +84,18 @@ export async function updateOrganizationAction(formData: FormData) {
     throw new Error(error.message);
   }
 
+  await recordActivityEvent({
+    supabase,
+    organizationId: context.activeOrganization.id,
+    type: "organization_updated",
+    title: "Organization updated",
+    description: `${name} profile settings were updated.`,
+    actorId: user.id,
+    metadata: { avatarUrlChanged: avatarUrl !== context.activeOrganization.avatarUrl },
+  });
+
   revalidatePath("/dashboard/settings");
+  revalidatePath("/dashboard");
 }
 
 export async function inviteMemberAction(formData: FormData) {
@@ -122,5 +134,16 @@ export async function inviteMemberAction(formData: FormData) {
     throw new Error(error.message);
   }
 
+  await recordActivityEvent({
+    supabase,
+    organizationId: context.activeOrganization.id,
+    type: "member_invited",
+    title: "Member invited",
+    description: `${email} was invited as ${role}.`,
+    actorId: user.id,
+    metadata: { email, role },
+  });
+
   revalidatePath("/dashboard/team");
+  revalidatePath("/dashboard");
 }

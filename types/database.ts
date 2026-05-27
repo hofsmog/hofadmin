@@ -1,5 +1,6 @@
 export type OrganizationRole = "owner" | "admin" | "member";
 export type QrItemType = "general" | "event" | "member" | "asset" | "location";
+export type ActivityEventType = "qr_created" | "checkin_created" | "member_invited" | "organization_updated";
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -204,6 +205,47 @@ export type Database = {
           },
         ];
       };
+      activity_events: {
+        Row: {
+          id: string;
+          organization_id: string;
+          type: ActivityEventType;
+          title: string;
+          description: string | null;
+          metadata: Json;
+          actor_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          type: ActivityEventType;
+          title: string;
+          description?: string | null;
+          metadata?: Json;
+          actor_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          type?: ActivityEventType;
+          title?: string;
+          description?: string | null;
+          metadata?: Json;
+          actor_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "activity_events_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -220,6 +262,7 @@ export type Database = {
       organization_role: OrganizationRole;
       invitation_status: "pending" | "accepted" | "revoked";
       qr_item_type: QrItemType;
+      activity_event_type: ActivityEventType;
     };
     CompositeTypes: Record<string, never>;
   };
