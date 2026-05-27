@@ -34,7 +34,31 @@ const checklist = ["Create first QR item", "Add first member", "Invite team memb
 export function OnboardingForm({ defaultOrganizationName }: { defaultOrganizationName: string }) {
   const [state, action, pending] = useActionState(completeOnboardingAction, initialState);
   const [step, setStep] = useState(0);
+  const [organizationType, setOrganizationType] = useState<OrganizationType>("business");
+  const [organizationName, setOrganizationName] = useState(defaultOrganizationName);
+  const [selectedModules, setSelectedModules] = useState(["qr-checkins", "members"]);
   const progress = useMemo(() => ((step + 1) / 4) * 100, [step]);
+  const canContinue =
+    step === 0 ||
+    (step === 1 && organizationType && organizationName.trim().length >= 2) ||
+    (step === 2 && selectedModules.length > 0) ||
+    step === 3;
+
+  function goForward() {
+    if (!canContinue) {
+      return;
+    }
+
+    setStep((value) => Math.min(3, value + 1));
+  }
+
+  function toggleStarterModule(moduleValue: string) {
+    setSelectedModules((currentModules) =>
+      currentModules.includes(moduleValue)
+        ? currentModules.filter((value) => value !== moduleValue)
+        : [...currentModules, moduleValue],
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-4xl">
@@ -55,6 +79,12 @@ export function OnboardingForm({ defaultOrganizationName }: { defaultOrganizatio
       </div>
 
       <form action={action} className="overflow-hidden rounded-2xl border bg-white shadow-sm dark:bg-zinc-950">
+        <input type="hidden" name="organizationType" value={organizationType} />
+        <input type="hidden" name="organizationName" value={organizationName} />
+        {selectedModules.map((moduleValue) => (
+          <input key={moduleValue} type="hidden" name="starterModules" value={moduleValue} />
+        ))}
+
         <div className={cn("p-6 md:p-8", step === 0 ? "block" : "hidden")}>
           <div className="grid gap-6 lg:grid-cols-[1fr_18rem]">
             <div>
@@ -76,18 +106,32 @@ export function OnboardingForm({ defaultOrganizationName }: { defaultOrganizatio
           <h2 className="text-xl font-semibold tracking-tight">Choose organization type</h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {organizationTypes.map((type) => (
-              <label key={type.value} className="cursor-pointer rounded-xl border bg-zinc-50 p-4 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm dark:bg-zinc-900/60 dark:hover:bg-zinc-900">
-                <input type="radio" name="organizationType" value={type.value} defaultChecked={type.value === "business"} className="peer sr-only" />
-                <span className="flex items-center justify-between text-sm font-medium">
+              <button
+                key={type.value}
+                type="button"
+                aria-pressed={organizationType === type.value}
+                onClick={() => setOrganizationType(type.value)}
+                className={cn(
+                  "rounded-xl border bg-zinc-50 p-4 text-left transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:bg-zinc-900/60 dark:hover:bg-zinc-900 dark:focus:ring-offset-zinc-950",
+                  organizationType === type.value
+                    ? "border-zinc-950 bg-white shadow-sm ring-2 ring-zinc-950/10 dark:border-zinc-100 dark:bg-zinc-900 dark:ring-white/10"
+                    : "",
+                )}
+              >
+                <span className="flex items-center justify-between gap-3 text-sm font-medium">
                   {type.label}
-                  <Check className="h-4 w-4 opacity-0 peer-checked:opacity-100" />
+                  <Check className={cn("h-4 w-4 transition", organizationType === type.value ? "opacity-100" : "opacity-0")} />
                 </span>
-              </label>
+              </button>
             ))}
           </div>
           <label className="mt-6 block space-y-2">
             <span className="text-sm font-medium">Confirm organization name</span>
-            <Input name="organizationName" defaultValue={defaultOrganizationName} required />
+            <Input
+              value={organizationName}
+              onChange={(event) => setOrganizationName(event.target.value)}
+              required
+            />
           </label>
         </div>
 
@@ -96,10 +140,23 @@ export function OnboardingForm({ defaultOrganizationName }: { defaultOrganizatio
           <p className="mt-2 text-sm leading-6 text-muted-foreground">Start small. These choices help shape your first dashboard.</p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {starterModules.map((module) => (
-              <label key={module.value} className="flex cursor-pointer items-center gap-3 rounded-xl border bg-zinc-50 p-4 transition hover:bg-white dark:bg-zinc-900/60">
-                <input type="checkbox" name="starterModules" value={module.value} defaultChecked={module.value === "qr-checkins" || module.value === "members"} className="h-4 w-4 rounded border-zinc-300" />
+              <button
+                key={module.value}
+                type="button"
+                aria-pressed={selectedModules.includes(module.value)}
+                onClick={() => toggleStarterModule(module.value)}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl border bg-zinc-50 p-4 text-left transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:bg-zinc-900/60 dark:focus:ring-offset-zinc-950",
+                  selectedModules.includes(module.value)
+                    ? "border-zinc-950 bg-white shadow-sm dark:border-zinc-100 dark:bg-zinc-900"
+                    : "",
+                )}
+              >
+                <span className={cn("grid h-5 w-5 place-items-center rounded border", selectedModules.includes(module.value) ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950" : "border-zinc-300")}>
+                  {selectedModules.includes(module.value) ? <Check className="h-3.5 w-3.5" /> : null}
+                </span>
                 <span className="text-sm font-medium">{module.label}</span>
-              </label>
+              </button>
             ))}
           </div>
         </div>
@@ -126,7 +183,7 @@ export function OnboardingForm({ defaultOrganizationName }: { defaultOrganizatio
             Back
           </Button>
           {step < 3 ? (
-            <Button type="button" disabled={pending} onClick={() => setStep((value) => Math.min(3, value + 1))}>
+            <Button type="button" disabled={pending || !canContinue} onClick={goForward}>
               Continue
               <ArrowRight className="h-4 w-4" />
             </Button>
