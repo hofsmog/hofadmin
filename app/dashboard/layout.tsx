@@ -1,5 +1,15 @@
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { getCurrentUser } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return <DashboardShell>{children}</DashboardShell>;
+export const dynamic = "force-dynamic";
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  return <DashboardShell userEmail={user.email ?? "Account"}>{children}</DashboardShell>;
 }

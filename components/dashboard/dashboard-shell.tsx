@@ -1,17 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Bell, ChevronDown, Menu, Search, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Bell, ChevronDown, Loader2, LogOut, Menu, Search, X } from "lucide-react";
 import { useState } from "react";
 import { BrandLockup } from "@/components/ui/brand";
+import { createClient } from "@/lib/supabase/client";
 import { organizations } from "@/lib/organizations";
 import { dashboardNavItems } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
-export function DashboardShell({ children }: { children: React.ReactNode }) {
+export function DashboardShell({
+  children,
+  userEmail,
+}: {
+  children: React.ReactNode;
+  userEmail: string;
+}) {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const initials = getInitials(userEmail);
+
+  async function handleSignOut() {
+    setIsSigningOut(true);
+
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.replace("/login");
+      router.refresh();
+    } finally {
+      setIsSigningOut(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
@@ -64,12 +87,21 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <Bell className="h-5 w-5" />
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
             </button>
-            <button className="flex items-center gap-2 rounded-xl border bg-white px-2 py-1.5 shadow-sm transition hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800">
+            <div className="flex items-center gap-2 rounded-xl border bg-white px-2 py-1.5 shadow-sm dark:bg-zinc-900">
               <span className="grid h-7 w-7 place-items-center rounded-lg bg-zinc-950 text-xs font-semibold text-white dark:bg-zinc-100 dark:text-zinc-950">
-                HK
+                {initials}
               </span>
-              <span className="hidden text-sm font-medium sm:inline">Kim</span>
+              <span className="hidden max-w-40 truncate text-sm font-medium sm:inline">{userEmail}</span>
               <ChevronDown className="hidden h-4 w-4 text-zinc-500 sm:block" />
+            </div>
+            <button
+              type="button"
+              aria-label="Logout"
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border bg-white text-zinc-600 shadow-sm transition hover:bg-zinc-50 hover:text-zinc-950 disabled:pointer-events-none disabled:opacity-60 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+            >
+              {isSigningOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
             </button>
           </div>
         </header>
@@ -78,6 +110,23 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </div>
     </div>
   );
+}
+
+function getInitials(email: string) {
+  const clean = email.trim();
+
+  if (!clean) {
+    return "HA";
+  }
+
+  const [name] = clean.split("@");
+  const parts = name.split(/[._-]/).filter(Boolean);
+
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+
+  return name.slice(0, 2).toUpperCase();
 }
 
 function Sidebar({
