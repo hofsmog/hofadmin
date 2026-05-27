@@ -75,7 +75,7 @@ export function AuthCard({
       }
 
       if (mode === "signup") {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -88,6 +88,23 @@ export function AuthCard({
 
         if (signUpError) {
           setError(signUpError.message);
+          return;
+        }
+
+        if (data.session) {
+          const bootstrapResponse = await fetch("/auth/bootstrap-organization", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ organizationName }),
+          });
+
+          if (!bootstrapResponse.ok) {
+            setError("Account created, but the organization could not be prepared. Please try logging in.");
+            return;
+          }
+
+          router.replace("/dashboard");
+          router.refresh();
           return;
         }
 

@@ -5,17 +5,20 @@ import { usePathname, useRouter } from "next/navigation";
 import { Bell, ChevronDown, Loader2, LogOut, Menu, Search, X } from "lucide-react";
 import { useState } from "react";
 import { BrandLockup } from "@/components/ui/brand";
+import { OrganizationSwitcher } from "@/components/dashboard/organization-switcher";
 import { createClient } from "@/lib/supabase/client";
-import { organizations } from "@/lib/organizations";
 import { dashboardNavItems } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
+import type { OrganizationContext } from "@/types";
 
 export function DashboardShell({
   children,
   userEmail,
+  organizationContext,
 }: {
   children: React.ReactNode;
   userEmail: string;
+  organizationContext: OrganizationContext;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -39,7 +42,7 @@ export function DashboardShell({
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r bg-white/90 backdrop-blur-xl dark:bg-zinc-950/90 lg:flex lg:flex-col">
-        <Sidebar pathname={pathname} />
+        <Sidebar pathname={pathname} organizationContext={organizationContext} />
       </aside>
 
       {mobileOpen ? (
@@ -59,7 +62,11 @@ export function DashboardShell({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <Sidebar pathname={pathname} onNavigate={() => setMobileOpen(false)} />
+            <Sidebar
+              pathname={pathname}
+              organizationContext={organizationContext}
+              onNavigate={() => setMobileOpen(false)}
+            />
           </aside>
         </div>
       ) : null}
@@ -131,9 +138,11 @@ function getInitials(email: string) {
 
 function Sidebar({
   pathname,
+  organizationContext,
   onNavigate,
 }: {
   pathname: string;
+  organizationContext: OrganizationContext;
   onNavigate?: () => void;
 }) {
   return (
@@ -144,13 +153,7 @@ function Sidebar({
           <p className="mt-2 text-xs text-muted-foreground">Core workspace</p>
         </div>
 
-        <button className="mt-5 flex w-full items-center justify-between rounded-xl border bg-zinc-50 px-3 py-2.5 text-left shadow-sm transition hover:bg-white dark:bg-zinc-900 dark:hover:bg-zinc-900/70">
-          <div>
-            <p className="text-sm font-medium">{organizations[0].name}</p>
-            <p className="text-xs text-muted-foreground">{organizations[0].plan} plan</p>
-          </div>
-          <ChevronDown className="h-4 w-4 text-zinc-500" />
-        </button>
+        <OrganizationSwitcher context={organizationContext} />
       </div>
 
       <nav className="flex-1 space-y-1 p-4">

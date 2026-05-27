@@ -4,21 +4,23 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button";
 import { modules } from "@/lib/modules";
+import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const { organizationContext } = await requireOrganizationContext();
   const enabledModules = modules.filter((module) => module.status === "enabled").length;
 
   return (
     <>
       <PageHeader
         title="Dashboard"
-        description="A starter command center for organization health, tenant operations, and enabled modules."
+        description={`A command center for ${organizationContext.activeOrganization.name}, tenant operations, and enabled modules.`}
         actions={<ButtonLink href="/dashboard/modules">Manage modules</ButtonLink>}
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Organizations" value="2" detail="Prepared for tenant switching" icon={Building2} />
-        <StatCard label="Team members" value="42" detail="Role-based access planned" icon={UsersRound} />
+        <StatCard label="Organizations" value={`${organizationContext.organizations.length}`} detail="Tenant switching ready" icon={Building2} />
+        <StatCard label="Your role" value={organizationContext.activeMembership.role} detail="Organization-scoped access" icon={UsersRound} />
         <StatCard label="Enabled modules" value={`${enabledModules}`} detail="Frontend module controls ready" icon={Layers3} />
         <StatCard label="Audit events" value="0" detail="Backend event stream pending" icon={Activity} />
       </div>

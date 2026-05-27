@@ -17,5 +17,4 @@ export const rolePermissions: Record<Role, Permission[]> = {
     "audit:read",
   ],
   member: ["organization:read"],
-  viewer: ["organization:read", "audit:read"],
 };

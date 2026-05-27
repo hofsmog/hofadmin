@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ComponentType } from "react";
+import Link from "next/link";
 import {
   CalendarCheck,
   ClipboardList,
@@ -47,9 +48,18 @@ export function ModuleCard({ module }: { module: ModuleDefinition }) {
       </CardHeader>
       <CardContent className="flex items-center justify-between">
         <Badge>{module.category}</Badge>
-        <span className="text-xs font-medium text-muted-foreground">
-          {enabled ? "Enabled" : "Disabled"}
-        </span>
+        {module.href && enabled ? (
+          <Link
+            href={module.href}
+            className="rounded-lg px-2 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:text-zinc-50"
+          >
+            Open module
+          </Link>
+        ) : (
+          <span className="text-xs font-medium text-muted-foreground">
+            {enabled ? "Enabled" : "Disabled"}
+          </span>
+        )}
       </CardContent>
     </Card>
   );

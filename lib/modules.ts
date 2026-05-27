@@ -2,12 +2,13 @@ import type { ModuleDefinition } from "@/types";
 
 export const modules: ModuleDefinition[] = [
   {
-    id: "qr-system",
-    name: "QR System",
-    description: "Issue QR flows for menus, check-ins, events, and resource access.",
+    id: "qr-checkins",
+    name: "QR + Check-ins",
+    description: "Generate QR access points and register organization-scoped check-ins.",
     category: "Operations",
     status: "enabled",
     icon: "qr",
+    href: "/dashboard/modules/qr-checkins",
   },
   {
     id: "forms",
@@ -40,13 +41,5 @@ export const modules: ModuleDefinition[] = [
     category: "Engagement",
     status: "enabled",
     icon: "members",
-  },
-  {
-    id: "check-ins",
-    name: "Check-ins",
-    description: "Validate attendance, visits, shift presence, and secure entry points.",
-    category: "Operations",
-    status: "disabled",
-    icon: "checkIns",
   },
 ];

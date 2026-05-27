@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseConfig } from "@/lib/supabase/config";
+import type { Database } from "@/types/database";
 
 const authRoutes = new Set(["/login", "/signup", "/forgot-password"]);
 
@@ -30,7 +31,7 @@ export async function updateSession(request: NextRequest) {
 
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient(config.url, config.anonKey, {
+  const supabase = createServerClient<Database>(config.url, config.anonKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();

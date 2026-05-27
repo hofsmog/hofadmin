@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
+import type { OrganizationRole } from "@/types/database";
 
-export type Role = "owner" | "admin" | "member" | "viewer";
+export type Role = OrganizationRole;
 
 export type Permission =
   | "organization:read"
@@ -14,8 +15,22 @@ export type Organization = {
   id: string;
   name: string;
   slug: string;
-  plan: "Starter" | "Scale" | "Enterprise";
-  memberCount: number;
+  avatarUrl: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type OrganizationMembership = {
+  organizationId: string;
+  userId: string;
+  role: OrganizationRole;
+  joinedAt: string;
+};
+
+export type OrganizationContext = {
+  activeOrganization: Organization;
+  activeMembership: OrganizationMembership;
+  organizations: Array<Organization & { role: OrganizationRole }>;
 };
 
 export type ModuleStatus = "enabled" | "disabled";
@@ -34,6 +49,7 @@ export type ModuleDefinition = {
   category: "Operations" | "Engagement" | "Commerce" | "Workspace";
   status: ModuleStatus;
   icon: ModuleIconKey;
+  href?: string;
 };
 
 export type DashboardNavItem = {
