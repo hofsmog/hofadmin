@@ -9,16 +9,22 @@ import { inventoryNavItems } from "@/lib/module-nav";
 export default async function InventoryOverviewPage() {
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const soon = new Date(today);
+  soon.setDate(soon.getDate() + 7);
   const [
     { count: totalItems },
-    { count: availableItems },
-    { count: inUseItems },
-    { count: maintenanceItems },
+    { count: loanedItems },
+    { count: overdueItems },
+    { count: dueSoonItems },
+    { count: attentionItems },
     { data: events },
   ] = await Promise.all([
     supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
-    supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "available"),
     supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "in_use"),
+    supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "in_use").lt("loan_due_date", today.toISOString().slice(0, 10)),
+    supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "in_use").gte("loan_due_date", today.toISOString().slice(0, 10)).lte("loan_due_date", soon.toISOString().slice(0, 10)),
     supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).in("status", ["maintenance", "lost"]),
     supabase.from("inventory_events").select("id, event_type, note, created_at, inventory_items(name)").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(6),
   ]);
@@ -27,15 +33,15 @@ export default async function InventoryOverviewPage() {
     <>
       <ModuleHeader
         title="Inventory"
-        description="Track equipment, devices, kits, tools, keys, and QR-ready assets across your organization."
+        description={`Track equipment, devices, kits, tools, keys, and QR-ready assets across your organization. ${attentionItems ?? 0} maintenance or lost.`}
         items={inventoryNavItems}
         action={{ href: "/dashboard/inventory/create", label: "Add item" }}
       />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Total items" value={`${totalItems ?? 0}`} detail="Tracked assets" icon={Boxes} />
-        <StatCard label="Available" value={`${availableItems ?? 0}`} detail="Ready to assign" icon={PackageCheck} />
-        <StatCard label="In use" value={`${inUseItems ?? 0}`} detail="Assigned or checked out" icon={ClipboardList} />
-        <StatCard label="Needs attention" value={`${maintenanceItems ?? 0}`} detail="Maintenance or lost" icon={AlertTriangle} />
+        <StatCard label="Loaned out" value={`${loanedItems ?? 0}`} detail="Assigned to members" icon={ClipboardList} />
+        <StatCard label="Overdue" value={`${overdueItems ?? 0}`} detail="Past due date" icon={AlertTriangle} />
+        <StatCard label="Due soon" value={`${dueSoonItems ?? 0}`} detail="Due within 7 days" icon={PackageCheck} />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_22rem]">

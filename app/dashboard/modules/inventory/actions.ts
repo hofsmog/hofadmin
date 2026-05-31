@@ -35,6 +35,8 @@ export async function createInventoryItemAction(
   const condition = String(formData.get("condition") || "good") as InventoryItemCondition;
   const location = clean(formData.get("location"));
   const assignedToMemberId = clean(formData.get("assignedToMemberId"));
+  const loanDueDate = clean(formData.get("loanDueDate"));
+  const loanNote = clean(formData.get("loanNote"));
   const purchaseDate = clean(formData.get("purchaseDate"));
   const purchasePrice = clean(formData.get("purchasePrice"));
   const notes = clean(formData.get("notes"));
@@ -62,6 +64,9 @@ export async function createInventoryItemAction(
       condition,
       location,
       assigned_to_member_id: assignedToMemberId,
+      loan_due_date: assignedToMemberId ? loanDueDate : null,
+      loan_note: assignedToMemberId ? loanNote : null,
+      last_assigned_at: assignedToMemberId ? new Date().toISOString() : null,
       qr_value: clean(formData.get("qrValue")),
       purchase_date: purchaseDate,
       purchase_price: purchasePrice ? Number(purchasePrice) : null,
@@ -212,8 +217,11 @@ export async function updateInventoryItemStatusAction(formData: FormData) {
   const condition = String(formData.get("condition") || "") as InventoryItemCondition;
   const location = clean(formData.get("location"));
   const assignedToMemberId = clean(formData.get("assignedToMemberId"));
+  const loanDueDate = clean(formData.get("loanDueDate"));
+  const loanNote = clean(formData.get("loanNote"));
   const notes = clean(formData.get("notes"));
   const savedStatus = assignedToMemberId && status === "available" ? "in_use" : status;
+  const now = new Date().toISOString();
 
   if (!itemId || !statuses.has(status) || !conditions.has(condition)) {
     redirect("/dashboard/inventory/items?error=invalid");
@@ -221,7 +229,7 @@ export async function updateInventoryItemStatusAction(formData: FormData) {
 
   const { data: existing } = await supabase
     .from("inventory_items")
-    .select("id, status, location, assigned_to_member_id")
+    .select("id, status, location, assigned_to_member_id, loan_due_date")
     .eq("id", itemId)
     .eq("organization_id", organizationId)
     .single();
@@ -237,8 +245,12 @@ export async function updateInventoryItemStatusAction(formData: FormData) {
       condition,
       location,
       assigned_to_member_id: assignedToMemberId,
+      loan_due_date: assignedToMemberId ? loanDueDate : null,
+      loan_note: assignedToMemberId ? loanNote : null,
+      last_assigned_at: !existing.assigned_to_member_id && assignedToMemberId ? now : undefined,
+      last_returned_at: existing.assigned_to_member_id && !assignedToMemberId ? now : undefined,
       notes,
-      updated_at: new Date().toISOString(),
+      updated_at: now,
     })
     .eq("id", itemId)
     .eq("organization_id", organizationId);
@@ -256,6 +268,8 @@ export async function updateInventoryItemStatusAction(formData: FormData) {
           : "returned"
         : existing.location !== location
           ? "location_changed"
+          : existing.loan_due_date !== loanDueDate
+            ? "due_date_changed"
           : existing.status !== savedStatus
             ? savedStatus === "maintenance"
               ? "maintenance"
@@ -267,7 +281,7 @@ export async function updateInventoryItemStatusAction(formData: FormData) {
     organizationId,
     itemId,
     eventType,
-    note: clean(formData.get("eventNote")) ?? "Inventory item updated.",
+    note: clean(formData.get("eventNote")) ?? buildInventoryEventNote(eventType, loanDueDate),
     userId: user.id,
   });
 
@@ -311,6 +325,22 @@ function revalidateInventory() {
   revalidatePath("/dashboard/inventory/create");
   revalidatePath("/dashboard/inventory/categories");
   revalidatePath("/dashboard/inventory/activity");
+}
+
+function buildInventoryEventNote(eventType: InventoryEventType, dueDate: string | null) {
+  if (eventType === "returned") {
+    return `Item returned at ${new Date().toLocaleString()}.`;
+  }
+
+  if (eventType === "assigned" && dueDate) {
+    return `Item assigned. Due back ${dueDate}.`;
+  }
+
+  if (eventType === "due_date_changed") {
+    return dueDate ? `Due date changed to ${dueDate}.` : "Due date cleared.";
+  }
+
+  return "Inventory item updated.";
 }
 
 function buildInventoryQrValue(itemId: string) {

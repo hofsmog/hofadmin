@@ -19,6 +19,8 @@ export default async function DashboardPage() {
   const accentColor = organizationContext.activeOrganization.accentColor ?? "#111827";
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
+  const sevenDaysFromToday = new Date(todayStart);
+  sevenDaysFromToday.setDate(sevenDaysFromToday.getDate() + 7);
 
   const [
     { count: todayCheckins },
@@ -29,6 +31,9 @@ export default async function DashboardPage() {
     { count: submissionsNeedingHandling },
     { data: latestNewSubmissions },
     { count: inventoryNeedsAttention },
+    { count: inventoryLoanedOut },
+    { count: inventoryOverdue },
+    { count: inventoryDueSoon },
     { count: pendingInvitations },
     { data: activityEvents },
     { data: recentInventoryEvents },
@@ -72,6 +77,24 @@ export default async function DashboardPage() {
       .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId)
       .in("status", ["maintenance", "lost"]),
+    supabase
+      .from("inventory_items")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", organizationId)
+      .eq("status", "in_use"),
+    supabase
+      .from("inventory_items")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", organizationId)
+      .eq("status", "in_use")
+      .lt("loan_due_date", todayStart.toISOString().slice(0, 10)),
+    supabase
+      .from("inventory_items")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", organizationId)
+      .eq("status", "in_use")
+      .gte("loan_due_date", todayStart.toISOString().slice(0, 10))
+      .lte("loan_due_date", sevenDaysFromToday.toISOString().slice(0, 10)),
     supabase
       .from("organization_invitations")
       .select("id", { count: "exact", head: true })
@@ -139,6 +162,11 @@ export default async function DashboardPage() {
       href: "/dashboard/inventory/items?status=maintenance",
     },
     {
+      label: "Overdue inventory",
+      value: inventoryOverdue ?? 0,
+      href: "/dashboard/inventory/items?status=overdue",
+    },
+    {
       label: "Pending invitations",
       value: pendingInvitations ?? 0,
       href: "/dashboard/team",
@@ -173,7 +201,7 @@ export default async function DashboardPage() {
         <StatCard label="New submissions" value={`${newSubmissionsCount ?? 0}`} detail={`${submissionsNeedingHandling ?? 0} need handling`} icon={Inbox} />
         <StatCard label="Check-ins today" value={`${todayCheckins ?? 0}`} detail="Attendance and access scans" icon={CheckCircle2} />
         <StatCard label="Members" value={`${totalMembers ?? 0}`} detail="People in this organization" icon={UsersRound} />
-        <StatCard label="Inventory alerts" value={`${inventoryNeedsAttention ?? 0}`} detail="Maintenance or lost items" icon={AlertTriangle} />
+        <StatCard label="Inventory alerts" value={`${(inventoryNeedsAttention ?? 0) + (inventoryOverdue ?? 0)}`} detail={`${inventoryLoanedOut ?? 0} loaned, ${inventoryDueSoon ?? 0} due soon`} icon={AlertTriangle} />
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">

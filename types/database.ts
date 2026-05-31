@@ -13,7 +13,7 @@ export type FormSubmissionReadStatus = "new" | "read";
 export type FormSubmissionHandlingStatus = "unhandled" | "partially_handled" | "handled" | "archived";
 export type InventoryItemStatus = "available" | "in_use" | "maintenance" | "lost" | "retired";
 export type InventoryItemCondition = "new" | "good" | "fair" | "poor" | "broken";
-export type InventoryEventType = "created" | "updated" | "assigned" | "returned" | "status_changed" | "location_changed" | "maintenance" | "retired";
+export type InventoryEventType = "created" | "updated" | "assigned" | "returned" | "status_changed" | "location_changed" | "maintenance" | "retired" | "due_date_changed";
 export type ActivityEventType =
   | "qr_created"
   | "checkin_created"
@@ -708,8 +708,12 @@ export type Database = {
           status: InventoryItemStatus;
           condition: InventoryItemCondition;
           location: string | null;
-          assigned_to_member_id: string | null;
-          qr_value: string | null;
+            assigned_to_member_id: string | null;
+            loan_due_date: string | null;
+            loan_note: string | null;
+            last_assigned_at: string | null;
+            last_returned_at: string | null;
+            qr_value: string | null;
           purchase_date: string | null;
           purchase_price: number | null;
           notes: string | null;
@@ -728,8 +732,12 @@ export type Database = {
           status?: InventoryItemStatus;
           condition?: InventoryItemCondition;
           location?: string | null;
-          assigned_to_member_id?: string | null;
-          qr_value?: string | null;
+            assigned_to_member_id?: string | null;
+            loan_due_date?: string | null;
+            loan_note?: string | null;
+            last_assigned_at?: string | null;
+            last_returned_at?: string | null;
+            qr_value?: string | null;
           purchase_date?: string | null;
           purchase_price?: number | null;
           notes?: string | null;
@@ -748,8 +756,12 @@ export type Database = {
           status?: InventoryItemStatus;
           condition?: InventoryItemCondition;
           location?: string | null;
-          assigned_to_member_id?: string | null;
-          qr_value?: string | null;
+            assigned_to_member_id?: string | null;
+            loan_due_date?: string | null;
+            loan_note?: string | null;
+            last_assigned_at?: string | null;
+            last_returned_at?: string | null;
+            qr_value?: string | null;
           purchase_date?: string | null;
           purchase_price?: number | null;
           notes?: string | null;

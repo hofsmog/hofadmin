@@ -78,6 +78,14 @@ export function InventoryCreateForm({ categories, members }: { categories: Categ
             <option value="">Unassigned</option>
             {members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}
           </Select>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium">Due date</span>
+            <Input name="loanDueDate" type="date" />
+          </label>
+          <label className="block space-y-2 md:col-span-2">
+            <span className="text-sm font-medium">Loan note</span>
+            <Input name="loanNote" placeholder="Optional handover note" />
+          </label>
         </section>
 
         <section className="grid gap-4 rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900/60 md:grid-cols-2">
