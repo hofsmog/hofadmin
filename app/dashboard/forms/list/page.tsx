@@ -6,6 +6,8 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { formsNavItems } from "@/lib/module-nav";
 
+const publicFormsBaseUrl = "https://hofadmin.vercel.app/forms";
+
 export default async function FormsListPage() {
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
@@ -34,6 +36,8 @@ export default async function FormsListPage() {
         <div className="space-y-3 p-5 pt-0">
           {(forms ?? []).length ? forms?.map((form) => {
             const formFields = fieldsByFormId.get(form.id) ?? [];
+            const publicUrl = `${publicFormsBaseUrl}/${form.slug}`;
+
             return (
               <article key={form.id} className="rounded-xl border bg-zinc-50 p-4 transition hover:bg-white hover:shadow-sm dark:bg-zinc-900/60 dark:hover:bg-zinc-900">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -55,9 +59,9 @@ export default async function FormsListPage() {
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <div className="flex items-center gap-2"><ExternalLink className="h-4 w-4" />Public share link</div>
-                      <code className="mt-2 block overflow-x-auto text-xs">/forms/{form.slug}</code>
+                      <code className="mt-2 block overflow-x-auto text-xs">{publicUrl}</code>
                     </div>
-                    <ButtonLink href={`/forms/${form.slug}`} variant="secondary" className="h-9 px-3">
+                    <ButtonLink href={publicUrl} variant="secondary" className="h-9 px-3" target="_blank">
                       Open
                     </ButtonLink>
                   </div>

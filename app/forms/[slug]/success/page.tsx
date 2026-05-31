@@ -14,8 +14,8 @@ export default function PublicFormSuccessPage() {
             <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
               <CheckCircle2 className="h-7 w-7" />
             </div>
-            <CardTitle>Thank you for your submission.</CardTitle>
-            <CardDescription>Your response has been saved.</CardDescription>
+            <CardTitle>Thank you. Your response has been submitted.</CardTitle>
+            <CardDescription>Your answers were saved successfully.</CardDescription>
           </CardHeader>
         </Card>
       </div>

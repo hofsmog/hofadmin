@@ -1,16 +1,25 @@
 import { Inbox } from "lucide-react";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { formsNavItems } from "@/lib/module-nav";
 
-export default async function FormsSubmissionsPage() {
+export default async function FormsSubmissionsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ formId?: string; q?: string }>;
+}) {
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
-  const [{ data: forms }, { data: submissions }] = await Promise.all([
+  const params = (await searchParams) ?? {};
+  const formId = String(params.formId ?? "all");
+  const query = String(params.q ?? "").trim();
+  const [{ data: forms }, submissionsResult] = await Promise.all([
     supabase.from("forms").select("id, title").eq("organization_id", organizationId),
-    supabase.from("form_submissions").select("*").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(100),
+    buildSubmissionsQuery(supabase, organizationId, formId),
   ]);
+  const submissions = submissionsResult.data;
   const submissionIds = (submissions ?? []).map((submission) => submission.id);
   const { data: submissionValues } = submissionIds.length
     ? await supabase
@@ -26,6 +35,24 @@ export default async function FormsSubmissionsPage() {
     valuesBySubmissionId.set(value.submission_id, [...(valuesBySubmissionId.get(value.submission_id) ?? []), value]);
   }
 
+  const filteredSubmissions = (submissions ?? []).filter((submission) => {
+    if (!query) {
+      return true;
+    }
+
+    const normalizedQuery = query.toLowerCase();
+    const form = formsById.get(submission.form_id);
+    const values = valuesBySubmissionId.get(submission.id) ?? [];
+
+    return (
+      form?.title.toLowerCase().includes(normalizedQuery) ||
+      submission.submitter_email?.toLowerCase().includes(normalizedQuery) ||
+      values.some((value) =>
+        `${value.field_label} ${value.value ?? ""}`.toLowerCase().includes(normalizedQuery),
+      )
+    );
+  });
+
   return (
     <>
       <ModuleHeader title="Form Submissions" description="Review captured form responses." items={formsNavItems} />
@@ -39,8 +66,26 @@ export default async function FormsSubmissionsPage() {
             <Inbox className="h-5 w-5 text-muted-foreground" />
           </div>
         </CardHeader>
+        <form className="grid gap-3 p-5 pt-0 md:grid-cols-[1fr_14rem_auto]">
+          <Input name="q" defaultValue={query} placeholder="Search submitted values" />
+          <select
+            name="formId"
+            defaultValue={formId}
+            className="h-11 rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
+          >
+            <option value="all">All forms</option>
+            {(forms ?? []).map((form) => (
+              <option key={form.id} value={form.id}>
+                {form.title}
+              </option>
+            ))}
+          </select>
+          <button className="h-11 rounded-xl bg-zinc-950 px-4 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950" type="submit">
+            Filter
+          </button>
+        </form>
         <div className="divide-y px-5 pb-5">
-          {(submissions ?? []).length ? submissions?.map((submission) => {
+          {filteredSubmissions.length ? filteredSubmissions.map((submission) => {
             const values = valuesBySubmissionId.get(submission.id) ?? [];
 
             return (
@@ -65,12 +110,31 @@ export default async function FormsSubmissionsPage() {
           }) : (
             <div className="py-8 text-center">
               <Inbox className="mx-auto h-8 w-8 text-muted-foreground" />
-              <p className="mt-3 text-sm font-medium">No submissions yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">Submissions will appear here after collection is connected.</p>
+              <p className="mt-3 text-sm font-medium">No submissions found</p>
+              <p className="mt-1 text-sm text-muted-foreground">Submissions will appear here after public forms are completed.</p>
             </div>
           )}
         </div>
       </Card>
     </>
   );
+}
+
+function buildSubmissionsQuery(
+  supabase: Awaited<ReturnType<typeof requireOrganizationContext>>["supabase"],
+  organizationId: string,
+  formId: string,
+) {
+  let query = supabase
+    .from("form_submissions")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (formId !== "all") {
+    query = query.eq("form_id", formId);
+  }
+
+  return query;
 }
