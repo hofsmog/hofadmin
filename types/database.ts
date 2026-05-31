@@ -1,4 +1,5 @@
 export type OrganizationRole = "owner" | "admin" | "member";
+export type OrganizationSidebarStyle = "light" | "dark" | "system";
 export type QrItemType = "general" | "event" | "member" | "asset" | "location";
 export type OrganizationType = "school" | "club" | "business" | "restaurant" | "cafe" | "event" | "other";
 export type MemberStatus = "active" | "inactive";
@@ -39,7 +40,14 @@ export type Database = {
           slug: string;
           avatar_url: string | null;
           logo_url: string | null;
+          favicon_url: string | null;
           accent_color: string | null;
+          background_color: string | null;
+          sidebar_style: OrganizationSidebarStyle;
+          public_branding_enabled: boolean;
+          custom_welcome_message: string | null;
+          support_email: string | null;
+          website_url: string | null;
           organization_type: OrganizationType | null;
           starter_modules: string[];
           onboarding_checklist: Json;
@@ -55,7 +63,14 @@ export type Database = {
           slug: string;
           avatar_url?: string | null;
           logo_url?: string | null;
+          favicon_url?: string | null;
           accent_color?: string | null;
+          background_color?: string | null;
+          sidebar_style?: OrganizationSidebarStyle;
+          public_branding_enabled?: boolean;
+          custom_welcome_message?: string | null;
+          support_email?: string | null;
+          website_url?: string | null;
           organization_type?: OrganizationType | null;
           starter_modules?: string[];
           onboarding_checklist?: Json;
@@ -71,7 +86,14 @@ export type Database = {
           slug?: string;
           avatar_url?: string | null;
           logo_url?: string | null;
+          favicon_url?: string | null;
           accent_color?: string | null;
+          background_color?: string | null;
+          sidebar_style?: OrganizationSidebarStyle;
+          public_branding_enabled?: boolean;
+          custom_welcome_message?: string | null;
+          support_email?: string | null;
+          website_url?: string | null;
           organization_type?: OrganizationType | null;
           starter_modules?: string[];
           onboarding_checklist?: Json;
@@ -805,6 +827,7 @@ export type Database = {
     };
     Enums: {
       organization_role: OrganizationRole;
+      organization_sidebar_style: OrganizationSidebarStyle;
       invitation_status: "pending" | "accepted" | "revoked";
       qr_item_type: QrItemType;
       activity_event_type: ActivityEventType;

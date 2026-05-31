@@ -12,10 +12,11 @@ import {
   sanitizeOrganizationName,
   setActiveOrganizationCookie,
 } from "@/lib/organizations";
-import type { OrganizationRole, OrganizationType } from "@/types/database";
+import type { OrganizationRole, OrganizationSidebarStyle, OrganizationType } from "@/types/database";
 
 const validRoles = new Set<OrganizationRole>(["owner", "admin", "member"]);
 const validOrganizationTypes = new Set<OrganizationType>(["school", "club", "business", "restaurant", "cafe", "event", "other"]);
+const validSidebarStyles = new Set<OrganizationSidebarStyle>(["light", "dark", "system"]);
 
 export type OrganizationBrandingState = {
   status: "idle" | "success" | "error";
@@ -96,10 +97,17 @@ async function updateOrganization(formData: FormData) {
   const name = sanitizeOrganizationName(String(formData.get("name") || ""));
   const displayName = sanitizeOptionalDisplayName(String(formData.get("displayName") || ""));
   const organizationType = sanitizeOrganizationType(String(formData.get("organizationType") || ""));
-  const logoUrl = String(formData.get("logoUrl") || "").trim() || null;
-  const fallbackAvatarUrl = String(formData.get("avatarUrl") || "").trim() || null;
+  const logoUrl = sanitizeOptionalUrl(String(formData.get("logoUrl") || ""));
+  const faviconUrl = sanitizeOptionalUrl(String(formData.get("faviconUrl") || ""));
+  const fallbackAvatarUrl = sanitizeOptionalUrl(String(formData.get("avatarUrl") || ""));
   const avatarUrl = logoUrl ?? fallbackAvatarUrl;
   const accentColor = sanitizeAccentColor(String(formData.get("accentColor") || ""));
+  const backgroundColor = sanitizeColor(String(formData.get("backgroundColor") || ""), "Background color");
+  const sidebarStyle = sanitizeSidebarStyle(String(formData.get("sidebarStyle") || ""));
+  const publicBrandingEnabled = formData.get("publicBrandingEnabled") === "on";
+  const customWelcomeMessage = sanitizeOptionalLongText(String(formData.get("customWelcomeMessage") || ""), 240, "Welcome message");
+  const supportEmail = sanitizeOptionalEmail(String(formData.get("supportEmail") || ""));
+  const websiteUrl = sanitizeOptionalUrl(String(formData.get("websiteUrl") || ""));
 
   const { error } = await supabase
     .from("organizations")
@@ -109,7 +117,14 @@ async function updateOrganization(formData: FormData) {
       organization_type: organizationType,
       avatar_url: avatarUrl,
       logo_url: logoUrl,
+      favicon_url: faviconUrl,
       accent_color: accentColor,
+      background_color: backgroundColor,
+      sidebar_style: sidebarStyle,
+      public_branding_enabled: publicBrandingEnabled,
+      custom_welcome_message: customWelcomeMessage,
+      support_email: supportEmail,
+      website_url: websiteUrl,
       updated_at: new Date().toISOString(),
     })
     .eq("id", context.activeOrganization.id);
@@ -128,6 +143,7 @@ async function updateOrganization(formData: FormData) {
     metadata: {
       logoChanged: logoUrl !== context.activeOrganization.logoUrl,
       accentColor,
+      backgroundColor,
       organizationType,
     },
   });
@@ -151,6 +167,10 @@ function sanitizeOptionalDisplayName(value: string) {
 }
 
 function sanitizeAccentColor(value: string) {
+  return sanitizeColor(value, "Accent color");
+}
+
+function sanitizeColor(value: string, label: string) {
   const trimmed = value.trim();
 
   if (!trimmed) {
@@ -158,10 +178,62 @@ function sanitizeAccentColor(value: string) {
   }
 
   if (!/^#[0-9A-Fa-f]{6}$/.test(trimmed)) {
-    throw new Error("Accent color must be a valid hex color like #2563eb.");
+    throw new Error(`${label} must be a valid hex color like #2563eb.`);
   }
 
   return trimmed;
+}
+
+function sanitizeSidebarStyle(value: string) {
+  const trimmed = value.trim() as OrganizationSidebarStyle;
+  return validSidebarStyles.has(trimmed) ? trimmed : "system";
+}
+
+function sanitizeOptionalLongText(value: string, maxLength: number, label: string) {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (trimmed.length > maxLength) {
+    throw new Error(`${label} must be ${maxLength} characters or fewer.`);
+  }
+
+  return trimmed;
+}
+
+function sanitizeOptionalEmail(value: string) {
+  const trimmed = value.trim().toLowerCase();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (!trimmed.includes("@")) {
+    throw new Error("Support email must be a valid email address.");
+  }
+
+  return trimmed;
+}
+
+function sanitizeOptionalUrl(value: string) {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol === "https:" || url.protocol === "http:") {
+      return trimmed;
+    }
+  } catch {
+    // Handled below.
+  }
+
+  throw new Error("URLs must start with http:// or https://.");
 }
 
 function sanitizeOrganizationType(value: string) {

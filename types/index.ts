@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import type { OrganizationRole, OrganizationType } from "@/types/database";
+import type { OrganizationRole, OrganizationSidebarStyle, OrganizationType } from "@/types/database";
 
 export type Role = OrganizationRole;
 
@@ -18,7 +18,14 @@ export type Organization = {
   slug: string;
   avatarUrl: string | null;
   logoUrl: string | null;
+  faviconUrl: string | null;
   accentColor: string | null;
+  backgroundColor: string | null;
+  sidebarStyle: OrganizationSidebarStyle;
+  publicBrandingEnabled: boolean;
+  customWelcomeMessage: string | null;
+  supportEmail: string | null;
+  websiteUrl: string | null;
   organizationType: OrganizationType | null;
   starterModules: string[];
   onboardingChecklist: unknown;

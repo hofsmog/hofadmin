@@ -16,6 +16,7 @@ export default async function DashboardPage() {
     organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name;
   const organizationLogo =
     organizationContext.activeOrganization.logoUrl ?? organizationContext.activeOrganization.avatarUrl;
+  const accentColor = organizationContext.activeOrganization.accentColor ?? "#111827";
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
@@ -143,7 +144,7 @@ export default async function DashboardPage() {
               </p>
             </div>
           </div>
-          <ButtonLink href="/dashboard/forms/create" className="shrink-0">
+          <ButtonLink href="/dashboard/forms/create" className="shrink-0" style={{ backgroundColor: accentColor }}>
             <Plus className="h-4 w-4" />
             Create form
           </ButtonLink>

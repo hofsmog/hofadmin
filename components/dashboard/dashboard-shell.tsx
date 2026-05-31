@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Bell, ChevronDown, Loader2, LogOut, Menu, Search, X } from "lucide-react";
 import { useState } from "react";
 import { BrandLockup } from "@/components/ui/brand";
+import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
 import { OrganizationSwitcher } from "@/components/dashboard/organization-switcher";
 import { createClient } from "@/lib/supabase/client";
 import { dashboardNavItems } from "@/lib/navigation";
@@ -27,6 +28,8 @@ export function DashboardShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const initials = getInitials(userEmail);
+  const accentColor = organizationContext.activeOrganization.accentColor ?? "#111827";
+  const backgroundColor = organizationContext.activeOrganization.backgroundColor ?? undefined;
 
   async function handleSignOut() {
     setIsSigningOut(true);
@@ -42,7 +45,7 @@ export function DashboardShell({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
+    <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50" style={backgroundColor ? { backgroundColor } : undefined}>
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r bg-white/90 backdrop-blur-xl dark:bg-zinc-950/90 lg:flex lg:flex-col">
         <Sidebar pathname={pathname} organizationContext={organizationContext} newSubmissionsCount={newSubmissionsCount} />
       </aside>
@@ -96,7 +99,7 @@ export function DashboardShell({
             >
               <Bell className="h-5 w-5" />
               {newSubmissionsCount > 0 ? (
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full ring-2 ring-white dark:ring-zinc-900" style={{ backgroundColor: accentColor }} />
               ) : null}
             </button>
             <div className="flex items-center gap-2 rounded-xl border bg-white px-2 py-1.5 shadow-sm dark:bg-zinc-900">
@@ -157,7 +160,17 @@ function Sidebar({
       <div className="border-b p-5">
         <div>
           <BrandLockup size="sm" onClick={onNavigate} />
-          <p className="mt-2 text-xs text-muted-foreground">Core workspace</p>
+          <div className="mt-4 flex items-center gap-3">
+            <OrganizationAvatar
+              name={organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name}
+              avatarUrl={organizationContext.activeOrganization.logoUrl ?? organizationContext.activeOrganization.avatarUrl}
+              className="h-9 w-9"
+            />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name}</p>
+              <p className="text-xs text-muted-foreground">Powered by HofAdmin</p>
+            </div>
+          </div>
         </div>
 
         <OrganizationSwitcher context={organizationContext} />
@@ -178,9 +191,10 @@ function Sidebar({
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
                 active
-                  ? "bg-zinc-950 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-950"
+                  ? "text-white shadow-sm dark:text-white"
                   : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-50",
               )}
+              style={active ? { backgroundColor: organizationContext.activeOrganization.accentColor ?? "#111827" } : undefined}
             >
               <Icon className="h-4 w-4" />
               <span className="min-w-0 flex-1 truncate">{item.title}</span>

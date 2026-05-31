@@ -23,12 +23,12 @@ export function OrganizationSwitcher({ context }: { context: OrganizationContext
       >
         <span className="flex min-w-0 items-center gap-3">
           <OrganizationAvatar
-            name={context.activeOrganization.name}
-            avatarUrl={context.activeOrganization.avatarUrl}
+            name={context.activeOrganization.displayName ?? context.activeOrganization.name}
+            avatarUrl={context.activeOrganization.logoUrl ?? context.activeOrganization.avatarUrl}
             className="h-9 w-9"
           />
           <span className="min-w-0">
-            <span className="block truncate text-sm font-medium">{context.activeOrganization.name}</span>
+            <span className="block truncate text-sm font-medium">{context.activeOrganization.displayName ?? context.activeOrganization.name}</span>
             <span className="block text-xs capitalize text-muted-foreground">{context.activeMembership.role}</span>
           </span>
         </span>
@@ -47,12 +47,12 @@ export function OrganizationSwitcher({ context }: { context: OrganizationContext
                   onClick={() => setOpen(false)}
                 >
                   <OrganizationAvatar
-                    name={organization.name}
-                    avatarUrl={organization.avatarUrl}
+                    name={organization.displayName ?? organization.name}
+                    avatarUrl={organization.logoUrl ?? organization.avatarUrl}
                     className="h-8 w-8"
                   />
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium">{organization.name}</span>
+                    <span className="block truncate text-sm font-medium">{organization.displayName ?? organization.name}</span>
                     <span className="block text-xs capitalize text-muted-foreground">{organization.role}</span>
                   </span>
                 </button>
