@@ -81,7 +81,9 @@ export async function createMemberAction(
   });
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/modules/members");
+  revalidatePath("/dashboard/members");
+  revalidatePath("/dashboard/members/list");
+  revalidatePath("/dashboard/members/create");
 
   return { status: "success", message: `${member.name} was added.` };
 }

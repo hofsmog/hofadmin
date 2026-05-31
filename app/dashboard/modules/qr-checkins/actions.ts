@@ -61,7 +61,8 @@ export async function createQrItemAction(formData: FormData) {
     metadata: { qrItemId: qrItem.id, qrValue },
   });
 
-  revalidatePath("/dashboard/modules/qr-checkins");
+  revalidatePath("/dashboard/qr");
+  revalidatePath("/dashboard/qr/items");
   revalidatePath("/dashboard");
 }
 
@@ -113,7 +114,8 @@ export async function manualCheckinAction(formData: FormData) {
     metadata: { checkinId: checkin.id, qrItemId: qrItem.id, source: "manual" },
   });
 
-  revalidatePath("/dashboard/modules/qr-checkins");
+  revalidatePath("/dashboard/qr");
+  revalidatePath("/dashboard/qr/check-ins");
   revalidatePath("/dashboard");
 }
 
@@ -169,7 +171,9 @@ export async function scanCheckinAction(
     metadata: { checkinId: checkin.id, qrItemId: qrItem.id, source: "scanner" },
   });
 
-  revalidatePath("/dashboard/modules/qr-checkins");
+  revalidatePath("/dashboard/qr");
+  revalidatePath("/dashboard/qr/check-ins");
+  revalidatePath("/dashboard/qr/scanner");
   revalidatePath("/dashboard");
 
   return {

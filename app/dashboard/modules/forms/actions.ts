@@ -96,7 +96,9 @@ export async function createFormAction(
   });
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/modules/forms");
+  revalidatePath("/dashboard/forms");
+  revalidatePath("/dashboard/forms/list");
+  revalidatePath("/dashboard/forms/create");
 
   return { status: "success", message: `${createdForm.title} was created.` };
 }

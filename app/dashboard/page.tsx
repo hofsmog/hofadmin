@@ -140,8 +140,8 @@ export default async function DashboardPage() {
               <CardDescription>Keep moving toward a useful first workspace.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <ChecklistItem done={(totalQrItems ?? 0) > 0} label="Create first QR item" href="/dashboard/modules/qr-checkins#create-qr" />
-              <ChecklistItem done={(totalMembers ?? 0) > 0} label="Add first member" href="/dashboard/modules/members#add-member" />
+              <ChecklistItem done={(totalQrItems ?? 0) > 0} label="Create first QR item" href="/dashboard/qr/items#create-qr" />
+              <ChecklistItem done={(totalMembers ?? 0) > 0} label="Add first member" href="/dashboard/members/create#add-member" />
               <ChecklistItem done={(teamMembers ?? 0) > 1} label="Invite team member" href="/dashboard/team" />
               <ChecklistItem done={Boolean(organizationContext.activeOrganization.logoUrl || organizationContext.activeOrganization.accentColor)} label="Customize branding" href="/dashboard/settings" />
             </CardContent>
@@ -190,7 +190,7 @@ export default async function DashboardPage() {
               ) : (
                 <div className="rounded-xl border border-dashed p-5 text-center">
                   <p className="text-sm font-medium">No members yet</p>
-                  <ButtonLink href="/dashboard/modules/members#add-member" variant="ghost" className="mt-2 h-8">
+                  <ButtonLink href="/dashboard/members/create#add-member" variant="ghost" className="mt-2 h-8">
                     Add first member
                   </ButtonLink>
                 </div>
@@ -217,7 +217,7 @@ export default async function DashboardPage() {
               ) : (
                 <div className="rounded-xl border border-dashed p-5 text-center">
                   <p className="text-sm font-medium">No form submissions yet</p>
-                  <ButtonLink href="/dashboard/modules/forms#create-form" variant="ghost" className="mt-2 h-8">
+                  <ButtonLink href="/dashboard/forms/create#create-form" variant="ghost" className="mt-2 h-8">
                     Create first form
                   </ButtonLink>
                 </div>
@@ -231,8 +231,8 @@ export default async function DashboardPage() {
               <CardDescription>Jump into the common workflows for today.</CardDescription>
             </CardHeader>
             <div className="grid gap-3 p-5 pt-0 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              <QuickAction href="/dashboard/modules/qr-checkins#create-qr" icon={Plus} label="Create QR item" />
-              <QuickAction href="/dashboard/modules/qr-checkins/scanner" icon={ScanLine} label="Open scanner" />
+              <QuickAction href="/dashboard/qr/items#create-qr" icon={Plus} label="Create QR item" />
+              <QuickAction href="/dashboard/qr/scanner" icon={ScanLine} label="Open scanner" />
               <QuickAction href="/dashboard/team" icon={MailPlus} label="Invite member" />
               <QuickAction href="/dashboard/modules" icon={Layers3} label="Manage modules" />
             </div>

@@ -8,7 +8,7 @@ export const modules: ModuleDefinition[] = [
     category: "Operations",
     status: "enabled",
     icon: "qr",
-    href: "/dashboard/modules/qr-checkins",
+    href: "/dashboard/qr",
   },
   {
     id: "members",
@@ -17,7 +17,7 @@ export const modules: ModuleDefinition[] = [
     category: "Engagement",
     status: "enabled",
     icon: "members",
-    href: "/dashboard/modules/members",
+    href: "/dashboard/members",
   },
   {
     id: "inventory",
@@ -34,7 +34,7 @@ export const modules: ModuleDefinition[] = [
     category: "Workspace",
     status: "enabled",
     icon: "forms",
-    href: "/dashboard/modules/forms",
+    href: "/dashboard/forms",
   },
   {
     id: "bookings",
