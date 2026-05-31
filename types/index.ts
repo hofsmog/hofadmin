@@ -26,6 +26,7 @@ export type Organization = {
   customWelcomeMessage: string | null;
   supportEmail: string | null;
   websiteUrl: string | null;
+  defaultLoanAgreementText: string;
   organizationType: OrganizationType | null;
   starterModules: string[];
   onboardingChecklist: unknown;

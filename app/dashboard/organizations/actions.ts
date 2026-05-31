@@ -80,6 +80,54 @@ export async function updateOrganizationBrandingAction(
   }
 }
 
+export async function updateInventorySettingsAction(
+  _state: OrganizationBrandingState,
+  formData: FormData,
+): Promise<OrganizationBrandingState> {
+  try {
+    const user = await getCurrentUser();
+    const supabase = await createClient();
+
+    if (!user || !supabase) {
+      redirect("/login");
+    }
+
+    const context = await getOrganizationContext(supabase, user);
+
+    if (!canManageOrganization(context.activeMembership.role)) {
+      throw new Error("You do not have permission to update inventory settings.");
+    }
+
+    const agreementText = sanitizeOptionalLongText(String(formData.get("defaultLoanAgreementText") || ""), 1200, "Loan agreement");
+
+    if (!agreementText) {
+      throw new Error("Loan agreement text is required.");
+    }
+
+    const { error } = await supabase
+      .from("organizations")
+      .update({
+        default_loan_agreement_text: agreementText,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", context.activeOrganization.id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    revalidatePath("/dashboard/settings");
+    revalidatePath("/dashboard/inventory");
+
+    return { status: "success", message: "Inventory settings saved." };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Inventory settings could not be saved.",
+    };
+  }
+}
+
 async function updateOrganization(formData: FormData) {
   const user = await getCurrentUser();
   const supabase = await createClient();

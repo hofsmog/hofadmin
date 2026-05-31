@@ -49,6 +49,7 @@ export type Database = {
           custom_welcome_message: string | null;
           support_email: string | null;
           website_url: string | null;
+          default_loan_agreement_text: string;
           organization_type: OrganizationType | null;
           starter_modules: string[];
           onboarding_checklist: Json;
@@ -72,6 +73,7 @@ export type Database = {
           custom_welcome_message?: string | null;
           support_email?: string | null;
           website_url?: string | null;
+          default_loan_agreement_text?: string;
           organization_type?: OrganizationType | null;
           starter_modules?: string[];
           onboarding_checklist?: Json;
@@ -95,6 +97,7 @@ export type Database = {
           custom_welcome_message?: string | null;
           support_email?: string | null;
           website_url?: string | null;
+          default_loan_agreement_text?: string;
           organization_type?: OrganizationType | null;
           starter_modules?: string[];
           onboarding_checklist?: Json;

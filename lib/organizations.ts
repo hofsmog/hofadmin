@@ -26,6 +26,7 @@ export function mapOrganization(row: OrganizationRow): Organization {
     customWelcomeMessage: row.custom_welcome_message,
     supportEmail: row.support_email,
     websiteUrl: row.website_url,
+    defaultLoanAgreementText: row.default_loan_agreement_text,
     organizationType: row.organization_type,
     starterModules: row.starter_modules,
     onboardingChecklist: row.onboarding_checklist,

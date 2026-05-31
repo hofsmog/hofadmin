@@ -81,6 +81,33 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
             </CardContent>
           </Card>
 
+          <div className="rounded-2xl border bg-white p-5 shadow-sm dark:bg-zinc-950">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Status</p>
+                {item.assigned_to_member_id ? (
+                  <div className="mt-1">
+                    <p className="text-xl font-semibold">Loaned to: {assignedMemberName}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Return date: {item.loan_due_date ?? "No return date"}</p>
+                  </div>
+                ) : (
+                  <p className="mt-1 text-xl font-semibold">Available</p>
+                )}
+              </div>
+              <ButtonLink href="#loan-item" className="h-12 px-6 text-base">
+                Loan Item
+              </ButtonLink>
+            </div>
+            {activeLoan ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                <ButtonLink href={`/dashboard/inventory/loans/${activeLoan.id}`} variant="secondary" className="h-10 px-3">
+                  View Loan Agreement
+                </ButtonLink>
+                <QuickInventoryAction item={item} status="available" assignedToMemberId="" label="Return Item" note="Item was returned and is available." />
+              </div>
+            ) : null}
+          </div>
+
           <Card className={loanState === "overdue" ? "border-red-200 bg-red-50/60 dark:border-red-900 dark:bg-red-950/20" : ""}>
             <CardHeader>
               <div className="flex items-start gap-3">
@@ -141,8 +168,8 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
                   <CardTitle>Actions</CardTitle>
                   <CardDescription>Common inventory updates for assignment and lifecycle tracking.</CardDescription>
                 </div>
-                <ButtonLink href="#edit-inventory-item" variant="secondary" className="h-9 px-3">
-                  Assign item
+                <ButtonLink href="#loan-item" variant="secondary" className="h-9 px-3">
+                  Loan Item
                 </ButtonLink>
               </div>
             </CardHeader>
@@ -226,12 +253,14 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
         </div>
 
         <div className="space-y-4">
-        <Card id="edit-inventory-item">
-          <CardHeader><CardTitle>Assign with signature</CardTitle><CardDescription>Choose a borrower, review the agreement, and capture a signature.</CardDescription></CardHeader>
+        <Card id="loan-item">
+          <CardHeader><CardTitle>Loan Item</CardTitle><CardDescription>One clear step at a time: borrower, return date, agreement, signature, complete.</CardDescription></CardHeader>
           <CardContent>
             <InventoryLoanAgreementForm
               itemId={item.id}
+              itemName={item.name}
               members={members ?? []}
+              agreementTemplate={organizationContext.activeOrganization.defaultLoanAgreementText}
               defaultMemberId={item.assigned_to_member_id}
               defaultDueDate={item.loan_due_date}
               defaultNote={item.loan_note}
