@@ -82,20 +82,45 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
           </Card>
 
           {item.qr_value ? (
-            <QrCodeCard
-              organizationName={organizationContext.activeOrganization.name}
-              item={{
-                id: item.id,
-                name: item.name,
-                type: "asset",
-                description: "Inventory QR value. Future scans can open this item detail.",
-                qr_value: item.qr_value,
-                is_active: item.status !== "retired",
-                created_at: item.created_at,
-              }}
-            />
+            <div className="space-y-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="font-semibold">Inventory QR</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">Scan this code to open the item detail page.</p>
+                </div>
+                <ButtonLink href="/dashboard/inventory/scan" variant="secondary" className="h-9 px-3">
+                  <QrCode className="h-4 w-4" />
+                  Open scanner
+                </ButtonLink>
+              </div>
+              <QrCodeCard
+                organizationName={organizationContext.activeOrganization.name}
+                item={{
+                  id: item.id,
+                  name: item.name,
+                  type: "asset",
+                  description: "Inventory QR value for opening this item detail page.",
+                  qr_value: item.qr_value,
+                  is_active: item.status !== "retired",
+                  created_at: item.created_at,
+                }}
+              />
+            </div>
           ) : (
-            <Card><CardHeader><CardTitle>No QR value yet</CardTitle><CardDescription>This item can receive an inventory QR value when edited or recreated with QR enabled.</CardDescription></CardHeader></Card>
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <CardTitle>No QR value yet</CardTitle>
+                    <CardDescription>This item can receive an inventory QR value when recreated with QR enabled.</CardDescription>
+                  </div>
+                  <ButtonLink href="/dashboard/inventory/scan" variant="secondary" className="h-9 px-3">
+                    <QrCode className="h-4 w-4" />
+                    Open scanner
+                  </ButtonLink>
+                </div>
+              </CardHeader>
+            </Card>
           )}
 
           <Card>

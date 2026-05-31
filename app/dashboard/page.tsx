@@ -305,7 +305,7 @@ export default async function DashboardPage() {
               <QuickAction href="/dashboard/forms/create" icon={ClipboardList} label="Create form" />
               <QuickAction href="/dashboard/members/create#add-member" icon={UserPlus} label="Add member" />
               <QuickAction href="/dashboard/inventory/create" icon={Package} label="Add inventory item" />
-              <QuickAction href="/dashboard/qr/scanner" icon={ScanLine} label="Open scanner" />
+              <QuickAction href="/dashboard/inventory/scan" icon={ScanLine} label="Scan inventory item" />
             </CardContent>
           </Card>
 

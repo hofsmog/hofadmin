@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Package, QrCode, Search } from "lucide-react";
+import { Package, QrCode, ScanLine, Search } from "lucide-react";
 import { InventoryConditionBadge, InventoryStatusBadge } from "@/components/dashboard/inventory/inventory-badges";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { Badge } from "@/components/ui/badge";
@@ -49,8 +49,16 @@ export default async function InventoryItemsPage({
       <ModuleHeader title="Inventory Items" description="Search, filter, and open tracked assets." items={inventoryNavItems} action={{ href: "/dashboard/inventory/create", label: "Add item" }} />
       <Card>
         <CardHeader>
-          <CardTitle>Item list</CardTitle>
-          <CardDescription>Filter by status, condition, category, location, and asset identifiers.</CardDescription>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle>Item list</CardTitle>
+              <CardDescription>Filter by status, condition, category, assignee, and asset identifiers.</CardDescription>
+            </div>
+            <ButtonLink href="/dashboard/inventory/scan" variant="secondary" className="h-9 px-3">
+              <ScanLine className="h-4 w-4" />
+              Scan inventory QR
+            </ButtonLink>
+          </div>
         </CardHeader>
         <form className="grid gap-3 p-5 pt-0 md:grid-cols-[1fr_10rem_10rem_12rem_12rem_auto]">
           <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input name="q" defaultValue={q} placeholder="Search name, tag, serial, location" className="pl-9" /></div>

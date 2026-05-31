@@ -13,6 +13,13 @@ export type InventoryFormState = {
   message: string;
 };
 
+export type InventoryScanState = {
+  status: "idle" | "loading" | "success" | "error";
+  message: string;
+  itemName?: string;
+  itemHref?: string;
+};
+
 export async function createInventoryItemAction(
   _state: InventoryFormState,
   formData: FormData,
@@ -42,10 +49,6 @@ export async function createInventoryItemAction(
     return { status: "error", message: "Choose a valid inventory status and condition." };
   }
 
-  const qrValue = shouldGenerateQr
-    ? `hofadmin://inventory/${organizationId}/${crypto.randomUUID()}`
-    : clean(formData.get("qrValue"));
-
   const { data: item, error } = await supabase
     .from("inventory_items")
     .insert({
@@ -59,7 +62,7 @@ export async function createInventoryItemAction(
       condition,
       location,
       assigned_to_member_id: assignedToMemberId,
-      qr_value: qrValue,
+      qr_value: clean(formData.get("qrValue")),
       purchase_date: purchaseDate,
       purchase_price: purchasePrice ? Number(purchasePrice) : null,
       notes,
@@ -70,6 +73,14 @@ export async function createInventoryItemAction(
 
   if (error || !item) {
     return { status: "error", message: error?.message ?? "Inventory item could not be created." };
+  }
+
+  if (shouldGenerateQr) {
+    await supabase
+      .from("inventory_items")
+      .update({ qr_value: buildInventoryQrValue(item.id), updated_at: new Date().toISOString() })
+      .eq("id", item.id)
+      .eq("organization_id", organizationId);
   }
 
   await recordInventoryEvent({
@@ -94,6 +105,51 @@ export async function createInventoryItemAction(
 
   revalidateInventory();
   return { status: "success", message: `${item.name} was added to inventory.` };
+}
+
+export async function resolveInventoryQrAction(
+  _state: InventoryScanState,
+  formData: FormData,
+): Promise<InventoryScanState> {
+  const { supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const qrValue = String(formData.get("qrValue") || "").trim();
+  const itemId = parseInventoryQrItemId(qrValue);
+
+  if (!qrValue) {
+    return { status: "error", message: "Scan or enter an inventory QR value." };
+  }
+
+  const { data: qrItem, error: qrError } = await supabase
+    .from("inventory_items")
+    .select("id, name")
+    .eq("organization_id", organizationId)
+    .eq("qr_value", qrValue)
+    .maybeSingle();
+
+  if (qrError) {
+    return { status: "error", message: "No inventory item found for this QR code." };
+  }
+
+  const { data: item, error } = qrItem || !itemId
+    ? { data: qrItem, error: null }
+    : await supabase
+        .from("inventory_items")
+        .select("id, name")
+        .eq("organization_id", organizationId)
+        .eq("id", itemId)
+        .maybeSingle();
+
+  if (error || !item) {
+    return { status: "error", message: "No inventory item found for this QR code." };
+  }
+
+  return {
+    status: "success",
+    message: "Inventory item found. Opening item details...",
+    itemName: item.name,
+    itemHref: `/dashboard/inventory/items/${item.id}`,
+  };
 }
 
 export async function createInventoryCategoryAction(formData: FormData) {
@@ -255,4 +311,13 @@ function revalidateInventory() {
   revalidatePath("/dashboard/inventory/create");
   revalidatePath("/dashboard/inventory/categories");
   revalidatePath("/dashboard/inventory/activity");
+}
+
+function buildInventoryQrValue(itemId: string) {
+  return `inventory:item:${itemId}`;
+}
+
+function parseInventoryQrItemId(qrValue: string) {
+  const match = qrValue.match(/^inventory:item:([0-9a-fA-F-]{36})$/);
+  return match?.[1] ?? null;
 }

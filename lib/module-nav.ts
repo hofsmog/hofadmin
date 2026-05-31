@@ -9,6 +9,7 @@ export const qrNavItems = [
 export const inventoryNavItems = [
   { title: "Overview", href: "/dashboard/inventory" },
   { title: "Items", href: "/dashboard/inventory/items" },
+  { title: "Scan", href: "/dashboard/inventory/scan" },
   { title: "Create", href: "/dashboard/inventory/create" },
   { title: "Categories", href: "/dashboard/inventory/categories" },
   { title: "Activity", href: "/dashboard/inventory/activity" },

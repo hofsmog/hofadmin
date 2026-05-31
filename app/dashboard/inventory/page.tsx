@@ -1,4 +1,4 @@
-import { AlertTriangle, Boxes, ClipboardList, PackageCheck, PackagePlus } from "lucide-react";
+import { AlertTriangle, Boxes, ClipboardList, PackageCheck, PackagePlus, ScanLine } from "lucide-react";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { ButtonLink } from "@/components/ui/button";
@@ -61,6 +61,7 @@ export default async function InventoryOverviewPage() {
           </CardHeader>
           <div className="grid gap-3 p-5 pt-0">
             <ButtonLink href="/dashboard/inventory/create" className="justify-start"><PackagePlus className="h-4 w-4" />Add item</ButtonLink>
+            <ButtonLink href="/dashboard/inventory/scan" variant="secondary" className="justify-start"><ScanLine className="h-4 w-4" />Scan inventory QR</ButtonLink>
             <ButtonLink href="/dashboard/inventory/items" variant="secondary" className="justify-start">View items</ButtonLink>
             <ButtonLink href="/dashboard/inventory/categories" variant="secondary" className="justify-start">Create category</ButtonLink>
           </div>
