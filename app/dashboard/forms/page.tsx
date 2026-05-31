@@ -19,13 +19,13 @@ export default async function FormsOverviewPage() {
     { count: unreadSubmissions },
     { count: needsHandling },
   ] = await Promise.all([
-    supabase.from("forms").select("*").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(5),
-    supabase.from("form_submissions").select("*").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(5),
-    supabase.from("form_submissions").select("*").eq("organization_id", organizationId).eq("read_status", "new").order("created_at", { ascending: false }).limit(5),
-    supabase.from("forms").select("*", { count: "exact", head: true }).eq("organization_id", organizationId),
-    supabase.from("form_submissions").select("*", { count: "exact", head: true }).eq("organization_id", organizationId),
-    supabase.from("form_submissions").select("*", { count: "exact", head: true }).eq("organization_id", organizationId).eq("read_status", "new"),
-    supabase.from("form_submissions").select("*", { count: "exact", head: true }).eq("organization_id", organizationId).in("handling_status", ["unhandled", "partially_handled"]),
+    supabase.from("forms").select("id, title, status, created_at").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(5),
+    supabase.from("form_submissions").select("id, form_id, submitter_email, created_at").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(5),
+    supabase.from("form_submissions").select("id, form_id, submitter_email, created_at").eq("organization_id", organizationId).eq("read_status", "new").order("created_at", { ascending: false }).limit(5),
+    supabase.from("forms").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    supabase.from("form_submissions").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    supabase.from("form_submissions").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("read_status", "new"),
+    supabase.from("form_submissions").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).in("handling_status", ["unhandled", "partially_handled"]),
   ]);
   const formsById = new Map((forms ?? []).map((form) => [form.id, form]));
   const newSubmissionIds = (newSubmissions ?? []).map((submission) => submission.id);

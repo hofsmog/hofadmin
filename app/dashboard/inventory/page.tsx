@@ -16,11 +16,11 @@ export default async function InventoryOverviewPage() {
     { count: maintenanceItems },
     { data: events },
   ] = await Promise.all([
-    supabase.from("inventory_items").select("*", { count: "exact", head: true }).eq("organization_id", organizationId),
-    supabase.from("inventory_items").select("*", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "available"),
-    supabase.from("inventory_items").select("*", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "in_use"),
-    supabase.from("inventory_items").select("*", { count: "exact", head: true }).eq("organization_id", organizationId).in("status", ["maintenance", "lost"]),
-    supabase.from("inventory_events").select("*, inventory_items(name)").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(6),
+    supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "available"),
+    supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "in_use"),
+    supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).in("status", ["maintenance", "lost"]),
+    supabase.from("inventory_events").select("id, event_type, note, created_at, inventory_items(name)").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(6),
   ]);
 
   return (

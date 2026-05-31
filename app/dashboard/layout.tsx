@@ -13,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { count: newSubmissionsCount } = await supabase
     .from("form_submissions")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .eq("organization_id", organizationContext.activeOrganization.id)
     .eq("read_status", "new");
 

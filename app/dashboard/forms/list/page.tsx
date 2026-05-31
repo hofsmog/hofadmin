@@ -15,14 +15,25 @@ export default async function FormsListPage({ searchParams }: { searchParams?: P
   const organizationId = organizationContext.activeOrganization.id;
   const params = (await searchParams) ?? {};
   const statusFilter: "all" | FormStatus = params.status === "draft" || params.status === "published" || params.status === "archived" ? params.status : "all";
-  let formsQuery = supabase.from("forms").select("*").eq("organization_id", organizationId).order("created_at", { ascending: false });
+  let formsQuery = supabase
+    .from("forms")
+    .select("id, title, description, status, slug, created_at")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false })
+    .limit(50);
   if (statusFilter !== "all") {
     formsQuery = formsQuery.eq("status", statusFilter);
   }
-  const [{ data: forms }, { data: fields }] = await Promise.all([
-    formsQuery,
-    supabase.from("form_fields").select("*").eq("organization_id", organizationId).order("sort_order", { ascending: true }),
-  ]);
+  const { data: forms } = await formsQuery;
+  const formIds = (forms ?? []).map((form) => form.id);
+  const { data: fields } = formIds.length
+    ? await supabase
+      .from("form_fields")
+      .select("id, form_id, label, field_type, sort_order")
+      .eq("organization_id", organizationId)
+      .in("form_id", formIds)
+      .order("sort_order", { ascending: true })
+    : { data: [] };
   const fieldsByFormId = new Map<string, typeof fields>();
   for (const field of fields ?? []) {
     fieldsByFormId.set(field.form_id, [...(fieldsByFormId.get(field.form_id) ?? []), field]);

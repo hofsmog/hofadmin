@@ -9,10 +9,10 @@ export default async function InventoryActivityPage() {
   const { supabase, organizationContext } = await requireOrganizationContext();
   const { data: events } = await supabase
     .from("inventory_events")
-    .select("*, inventory_items(name, asset_tag)")
+    .select("id, event_type, note, created_at, inventory_items(name, asset_tag)")
     .eq("organization_id", organizationContext.activeOrganization.id)
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(25);
 
   return (
     <>

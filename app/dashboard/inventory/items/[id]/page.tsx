@@ -19,9 +19,14 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
   const [{ data: item }, { data: members }, { data: events }] = await Promise.all([
-    supabase.from("inventory_items").select("*, inventory_categories(name, color)").eq("id", id).eq("organization_id", organizationId).single(),
+    supabase
+      .from("inventory_items")
+      .select("id, name, description, asset_tag, serial_number, status, condition, location, assigned_to_member_id, qr_value, purchase_date, purchase_price, notes, created_at, inventory_categories(name, color)")
+      .eq("id", id)
+      .eq("organization_id", organizationId)
+      .single(),
     supabase.from("members").select("id, name").eq("organization_id", organizationId).order("name", { ascending: true }),
-    supabase.from("inventory_events").select("*").eq("inventory_item_id", id).eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(10),
+    supabase.from("inventory_events").select("id, event_type, note, created_at").eq("inventory_item_id", id).eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(10),
   ]);
 
   if (!item) notFound();

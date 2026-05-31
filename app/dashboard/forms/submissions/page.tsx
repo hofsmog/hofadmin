@@ -209,7 +209,7 @@ function buildSubmissionsQuery(
     .select("id, organization_id, form_id, submitted_by, submitter_email, read_status, handling_status, handled_at, created_at")
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(25);
 
   if (filters.formId !== "all") {
     query = query.eq("form_id", filters.formId);

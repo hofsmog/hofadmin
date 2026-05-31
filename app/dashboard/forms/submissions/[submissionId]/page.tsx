@@ -31,7 +31,7 @@ export default async function SubmissionDetailPage({
   const organizationId = organizationContext.activeOrganization.id;
   const { data: submission } = await supabase
     .from("form_submissions")
-    .select("*, forms(id, title, slug)")
+    .select("id, organization_id, form_id, submitter_email, read_status, handling_status, handled_note, handled_at, created_at, forms(id, title, slug)")
     .eq("id", submissionId)
     .eq("organization_id", organizationId)
     .single();
@@ -78,7 +78,7 @@ export default async function SubmissionDetailPage({
   const [{ data: values }, { data: formFields }] = await Promise.all([
     supabase
       .from("form_submission_values")
-      .select("*")
+      .select("id, field_id, field_label, value, created_at")
       .eq("organization_id", organizationId)
       .eq("submission_id", submission.id)
       .order("created_at", { ascending: true }),

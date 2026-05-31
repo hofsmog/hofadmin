@@ -13,7 +13,7 @@ export default async function InventoryCategoriesPage({ searchParams }: { search
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
   const [{ data: categories }, { data: items }] = await Promise.all([
-    supabase.from("inventory_categories").select("*").eq("organization_id", organizationId).order("name", { ascending: true }),
+    supabase.from("inventory_categories").select("id, name, description, color").eq("organization_id", organizationId).order("name", { ascending: true }),
     supabase.from("inventory_items").select("id, category_id").eq("organization_id", organizationId),
   ]);
   const itemCounts = new Map<string, number>();

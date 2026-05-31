@@ -34,29 +34,29 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     supabase
       .from("checkins")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId)
       .gte("created_at", todayStart.toISOString()),
     supabase
       .from("members")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId),
     supabase
       .from("forms")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId),
     supabase
       .from("inventory_items")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId),
     supabase
       .from("form_submissions")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId)
       .eq("read_status", "new"),
     supabase
       .from("form_submissions")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId)
       .in("handling_status", ["unhandled", "partially_handled"]),
     supabase
@@ -68,12 +68,12 @@ export default async function DashboardPage() {
       .limit(3),
     supabase
       .from("inventory_items")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId)
       .in("status", ["maintenance", "lost"]),
     supabase
       .from("organization_invitations")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId)
       .eq("status", "pending"),
     supabase

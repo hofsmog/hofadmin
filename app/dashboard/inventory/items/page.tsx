@@ -25,9 +25,10 @@ export default async function InventoryItemsPage({
   const location = String(params.location ?? "").trim();
   let query = supabase
     .from("inventory_items")
-    .select("*, inventory_categories(name, color)")
+    .select("id, name, asset_tag, status, condition, location, assigned_to_member_id, qr_value, updated_at, category_id, inventory_categories(name, color)")
     .eq("organization_id", organizationId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   if (q) query = query.or(`name.ilike.%${q}%,asset_tag.ilike.%${q}%,serial_number.ilike.%${q}%`);
   if (status !== "all") query = query.eq("status", status);
