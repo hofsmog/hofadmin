@@ -15,16 +15,16 @@ export default async function InventoryOverviewPage() {
   soon.setDate(soon.getDate() + 7);
   const [
     { count: totalItems },
-    { count: loanedItems },
-    { count: overdueItems },
-    { count: dueSoonItems },
+    { count: activeLoans },
+    { count: overdueLoans },
+    { count: dueSoonLoans },
     { count: attentionItems },
     { data: events },
   ] = await Promise.all([
     supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
-    supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "in_use"),
-    supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "in_use").lt("loan_due_date", today.toISOString().slice(0, 10)),
-    supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "in_use").gte("loan_due_date", today.toISOString().slice(0, 10)).lte("loan_due_date", soon.toISOString().slice(0, 10)),
+    supabase.from("inventory_loans").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "active"),
+    supabase.from("inventory_loans").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "active").lt("due_date", today.toISOString().slice(0, 10)),
+    supabase.from("inventory_loans").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "active").gte("due_date", today.toISOString().slice(0, 10)).lte("due_date", soon.toISOString().slice(0, 10)),
     supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).in("status", ["maintenance", "lost"]),
     supabase.from("inventory_events").select("id, event_type, note, created_at, inventory_items(name)").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(6),
   ]);
@@ -39,9 +39,9 @@ export default async function InventoryOverviewPage() {
       />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Total items" value={`${totalItems ?? 0}`} detail="Tracked assets" icon={Boxes} />
-        <StatCard label="Loaned out" value={`${loanedItems ?? 0}`} detail="Assigned to members" icon={ClipboardList} />
-        <StatCard label="Overdue" value={`${overdueItems ?? 0}`} detail="Past due date" icon={AlertTriangle} />
-        <StatCard label="Due soon" value={`${dueSoonItems ?? 0}`} detail="Due within 7 days" icon={PackageCheck} />
+        <StatCard label="Active loans" value={`${activeLoans ?? 0}`} detail="Signed and loaned out" icon={ClipboardList} />
+        <StatCard label="Overdue loans" value={`${overdueLoans ?? 0}`} detail="Past due date" icon={AlertTriangle} />
+        <StatCard label="Due soon" value={`${dueSoonLoans ?? 0}`} detail="Due within 7 days" icon={PackageCheck} />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_22rem]">

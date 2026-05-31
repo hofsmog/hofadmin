@@ -14,6 +14,7 @@ export type FormSubmissionHandlingStatus = "unhandled" | "partially_handled" | "
 export type InventoryItemStatus = "available" | "in_use" | "maintenance" | "lost" | "retired";
 export type InventoryItemCondition = "new" | "good" | "fair" | "poor" | "broken";
 export type InventoryEventType = "created" | "updated" | "assigned" | "returned" | "status_changed" | "location_changed" | "maintenance" | "retired" | "due_date_changed";
+export type InventoryLoanStatus = "active" | "returned" | "overdue" | "cancelled";
 export type ActivityEventType =
   | "qr_created"
   | "checkin_created"
@@ -830,9 +831,94 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+        };
+      inventory_loans: {
+          Row: {
+            id: string;
+            organization_id: string;
+            inventory_item_id: string;
+            member_id: string;
+            loaned_by: string;
+            loaned_at: string;
+            due_date: string | null;
+            returned_at: string | null;
+            status: InventoryLoanStatus;
+            loan_note: string | null;
+            agreement_text: string;
+            borrower_name: string;
+            borrower_email: string | null;
+            borrower_phone: string | null;
+            signature_data_url: string;
+            signed_at: string;
+            created_at: string;
+            updated_at: string;
+          };
+          Insert: {
+            id?: string;
+            organization_id: string;
+            inventory_item_id: string;
+            member_id: string;
+            loaned_by: string;
+            loaned_at?: string;
+            due_date?: string | null;
+            returned_at?: string | null;
+            status?: InventoryLoanStatus;
+            loan_note?: string | null;
+            agreement_text: string;
+            borrower_name: string;
+            borrower_email?: string | null;
+            borrower_phone?: string | null;
+            signature_data_url: string;
+            signed_at?: string;
+            created_at?: string;
+            updated_at?: string;
+          };
+          Update: {
+            id?: string;
+            organization_id?: string;
+            inventory_item_id?: string;
+            member_id?: string;
+            loaned_by?: string;
+            loaned_at?: string;
+            due_date?: string | null;
+            returned_at?: string | null;
+            status?: InventoryLoanStatus;
+            loan_note?: string | null;
+            agreement_text?: string;
+            borrower_name?: string;
+            borrower_email?: string | null;
+            borrower_phone?: string | null;
+            signature_data_url?: string;
+            signed_at?: string;
+            created_at?: string;
+            updated_at?: string;
+          };
+          Relationships: [
+            {
+              foreignKeyName: "inventory_loans_organization_id_fkey";
+              columns: ["organization_id"];
+              isOneToOne: false;
+              referencedRelation: "organizations";
+              referencedColumns: ["id"];
+            },
+            {
+              foreignKeyName: "inventory_loans_inventory_item_id_fkey";
+              columns: ["inventory_item_id"];
+              isOneToOne: false;
+              referencedRelation: "inventory_items";
+              referencedColumns: ["id"];
+            },
+            {
+              foreignKeyName: "inventory_loans_member_id_fkey";
+              columns: ["member_id"];
+              isOneToOne: false;
+              referencedRelation: "members";
+              referencedColumns: ["id"];
+            },
+          ];
+        };
       };
-    };
-    Views: Record<string, never>;
+      Views: Record<string, never>;
     Functions: {
       create_organization_with_owner: {
         Args: {
@@ -855,9 +941,10 @@ export type Database = {
       form_status: FormStatus;
       form_field_type: FormFieldType;
       inventory_item_status: InventoryItemStatus;
-      inventory_item_condition: InventoryItemCondition;
-      inventory_event_type: InventoryEventType;
-    };
+        inventory_item_condition: InventoryItemCondition;
+        inventory_event_type: InventoryEventType;
+        inventory_loan_status: InventoryLoanStatus;
+      };
     CompositeTypes: Record<string, never>;
   };
 };

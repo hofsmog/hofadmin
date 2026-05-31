@@ -31,9 +31,9 @@ export default async function DashboardPage() {
     { count: submissionsNeedingHandling },
     { data: latestNewSubmissions },
     { count: inventoryNeedsAttention },
-    { count: inventoryLoanedOut },
-    { count: inventoryOverdue },
-    { count: inventoryDueSoon },
+    { count: activeInventoryLoans },
+    { count: overdueInventoryLoans },
+    { count: dueSoonInventoryLoans },
     { count: pendingInvitations },
     { data: activityEvents },
     { data: recentInventoryEvents },
@@ -78,23 +78,23 @@ export default async function DashboardPage() {
       .eq("organization_id", organizationId)
       .in("status", ["maintenance", "lost"]),
     supabase
-      .from("inventory_items")
+      .from("inventory_loans")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId)
-      .eq("status", "in_use"),
+      .eq("status", "active"),
     supabase
-      .from("inventory_items")
+      .from("inventory_loans")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId)
-      .eq("status", "in_use")
-      .lt("loan_due_date", todayStart.toISOString().slice(0, 10)),
+      .eq("status", "active")
+      .lt("due_date", todayStart.toISOString().slice(0, 10)),
     supabase
-      .from("inventory_items")
+      .from("inventory_loans")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId)
-      .eq("status", "in_use")
-      .gte("loan_due_date", todayStart.toISOString().slice(0, 10))
-      .lte("loan_due_date", sevenDaysFromToday.toISOString().slice(0, 10)),
+      .eq("status", "active")
+      .gte("due_date", todayStart.toISOString().slice(0, 10))
+      .lte("due_date", sevenDaysFromToday.toISOString().slice(0, 10)),
     supabase
       .from("organization_invitations")
       .select("id", { count: "exact", head: true })
@@ -163,7 +163,7 @@ export default async function DashboardPage() {
     },
     {
       label: "Overdue inventory",
-      value: inventoryOverdue ?? 0,
+      value: overdueInventoryLoans ?? 0,
       href: "/dashboard/inventory/items?status=overdue",
     },
     {
@@ -201,7 +201,7 @@ export default async function DashboardPage() {
         <StatCard label="New submissions" value={`${newSubmissionsCount ?? 0}`} detail={`${submissionsNeedingHandling ?? 0} need handling`} icon={Inbox} />
         <StatCard label="Check-ins today" value={`${todayCheckins ?? 0}`} detail="Attendance and access scans" icon={CheckCircle2} />
         <StatCard label="Members" value={`${totalMembers ?? 0}`} detail="People in this organization" icon={UsersRound} />
-        <StatCard label="Inventory alerts" value={`${(inventoryNeedsAttention ?? 0) + (inventoryOverdue ?? 0)}`} detail={`${inventoryLoanedOut ?? 0} loaned, ${inventoryDueSoon ?? 0} due soon`} icon={AlertTriangle} />
+        <StatCard label="Inventory alerts" value={`${(inventoryNeedsAttention ?? 0) + (overdueInventoryLoans ?? 0)}`} detail={`${activeInventoryLoans ?? 0} active loans, ${dueSoonInventoryLoans ?? 0} due soon`} icon={AlertTriangle} />
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">

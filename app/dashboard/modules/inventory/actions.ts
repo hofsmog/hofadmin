@@ -7,6 +7,8 @@ import type { InventoryEventType, InventoryItemCondition, InventoryItemStatus } 
 
 const statuses = new Set<InventoryItemStatus>(["available", "in_use", "maintenance", "lost", "retired"]);
 const conditions = new Set<InventoryItemCondition>(["new", "good", "fair", "poor", "broken"]);
+const defaultLoanAgreementText =
+  "I confirm that I have received this item and that I am responsible for returning it in the same condition by the agreed return date.";
 
 export type InventoryFormState = {
   status: "idle" | "success" | "error";
@@ -259,6 +261,10 @@ export async function updateInventoryItemStatusAction(formData: FormData) {
     redirect(`/dashboard/inventory/items/${itemId}?error=update`);
   }
 
+  if (existing.assigned_to_member_id && !assignedToMemberId) {
+    await markActiveLoanReturned({ supabase, organizationId, itemId, returnedAt: now });
+  }
+
   const eventType: InventoryEventType =
     savedStatus === "retired"
       ? "retired"
@@ -287,6 +293,97 @@ export async function updateInventoryItemStatusAction(formData: FormData) {
 
   revalidateInventory();
   redirect(`/dashboard/inventory/items/${itemId}?updated=1`);
+}
+
+export async function completeInventoryLoanAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const itemId = String(formData.get("itemId") || "").trim();
+  const memberId = String(formData.get("memberId") || "").trim();
+  const dueDate = clean(formData.get("dueDate"));
+  const loanNote = clean(formData.get("loanNote"));
+  const agreementText = String(formData.get("agreementText") || defaultLoanAgreementText).trim();
+  const signatureDataUrl = String(formData.get("signatureDataUrl") || "").trim();
+  const now = new Date().toISOString();
+
+  if (!itemId || !memberId || agreementText.length < 20 || !signatureDataUrl.startsWith("data:image/png;base64,")) {
+    redirect(`/dashboard/inventory/items/${itemId || ""}?error=loan`);
+  }
+
+  const [{ data: item }, { data: member }] = await Promise.all([
+    supabase
+      .from("inventory_items")
+      .select("id, name")
+      .eq("id", itemId)
+      .eq("organization_id", organizationId)
+      .single(),
+    supabase
+      .from("members")
+      .select("id, name, email, phone")
+      .eq("id", memberId)
+      .eq("organization_id", organizationId)
+      .single(),
+  ]);
+
+  if (!item || !member) {
+    redirect(`/dashboard/inventory/items/${itemId}?error=loan`);
+  }
+
+  await markActiveLoanReturned({ supabase, organizationId, itemId, returnedAt: now, status: "cancelled" });
+
+  const { data: loan, error: loanError } = await supabase
+    .from("inventory_loans")
+    .insert({
+      organization_id: organizationId,
+      inventory_item_id: itemId,
+      member_id: memberId,
+      loaned_by: user.id,
+      loaned_at: now,
+      due_date: dueDate,
+      status: "active",
+      loan_note: loanNote,
+      agreement_text: agreementText,
+      borrower_name: member.name,
+      borrower_email: member.email,
+      borrower_phone: member.phone,
+      signature_data_url: signatureDataUrl,
+      signed_at: now,
+    })
+    .select("id")
+    .single();
+
+  if (loanError || !loan) {
+    redirect(`/dashboard/inventory/items/${itemId}?error=loan`);
+  }
+
+  const { error: itemError } = await supabase
+    .from("inventory_items")
+    .update({
+      status: "in_use",
+      assigned_to_member_id: memberId,
+      loan_due_date: dueDate,
+      loan_note: loanNote,
+      last_assigned_at: now,
+      updated_at: now,
+    })
+    .eq("id", itemId)
+    .eq("organization_id", organizationId);
+
+  if (itemError) {
+    redirect(`/dashboard/inventory/items/${itemId}?error=loan`);
+  }
+
+  await recordInventoryEvent({
+    supabase,
+    organizationId,
+    itemId,
+    eventType: "assigned",
+    note: `${item.name} loaned to ${member.name}${dueDate ? ` until ${dueDate}` : ""}.`,
+    userId: user.id,
+  });
+
+  revalidateInventory();
+  redirect(`/dashboard/inventory/items/${itemId}?loaned=1`);
 }
 
 function clean(value: FormDataEntryValue | null) {
@@ -325,6 +422,28 @@ function revalidateInventory() {
   revalidatePath("/dashboard/inventory/create");
   revalidatePath("/dashboard/inventory/categories");
   revalidatePath("/dashboard/inventory/activity");
+  revalidatePath("/dashboard/inventory/loans");
+}
+
+async function markActiveLoanReturned({
+  supabase,
+  organizationId,
+  itemId,
+  returnedAt,
+  status = "returned",
+}: {
+  supabase: Awaited<ReturnType<typeof requireOrganizationContext>>["supabase"];
+  organizationId: string;
+  itemId: string;
+  returnedAt: string;
+  status?: "returned" | "cancelled";
+}) {
+  await supabase
+    .from("inventory_loans")
+    .update({ status, returned_at: returnedAt, updated_at: returnedAt })
+    .eq("organization_id", organizationId)
+    .eq("inventory_item_id", itemId)
+    .eq("status", "active");
 }
 
 function buildInventoryEventNote(eventType: InventoryEventType, dueDate: string | null) {

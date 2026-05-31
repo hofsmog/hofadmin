@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { AlertTriangle, Calendar, MapPin, QrCode, UserRound } from "lucide-react";
 import { updateInventoryItemStatusAction } from "@/app/dashboard/modules/inventory/actions";
+import { InventoryLoanAgreementForm } from "@/components/dashboard/inventory/inventory-loan-agreement-form";
 import { InventoryConditionBadge, InventoryStatusBadge, inventoryConditionLabels, inventoryStatusLabels } from "@/components/dashboard/inventory/inventory-badges";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { QrCodeCard } from "@/components/dashboard/qr-code-card";
@@ -15,30 +16,39 @@ import type { InventoryItemCondition, InventoryItemStatus } from "@/types/databa
 const statuses: InventoryItemStatus[] = ["available", "in_use", "maintenance", "lost", "retired"];
 const conditions: InventoryItemCondition[] = ["new", "good", "fair", "poor", "broken"];
 
-export default async function InventoryDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams?: Promise<{ updated?: string; error?: string }> }) {
+export default async function InventoryDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams?: Promise<{ updated?: string; loaned?: string; error?: string }> }) {
   const { id } = await params;
   const query = (await searchParams) ?? {};
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
-  const [{ data: item }, { data: members }, { data: events }] = await Promise.all([
+  const [{ data: item }, { data: members }, { data: events }, { data: loans }] = await Promise.all([
     supabase
       .from("inventory_items")
       .select("id, name, description, asset_tag, serial_number, status, condition, location, assigned_to_member_id, loan_due_date, loan_note, last_assigned_at, last_returned_at, qr_value, purchase_date, purchase_price, notes, created_at, inventory_categories(name, color)")
       .eq("id", id)
       .eq("organization_id", organizationId)
       .single(),
-    supabase.from("members").select("id, name").eq("organization_id", organizationId).order("name", { ascending: true }),
+    supabase.from("members").select("id, name, email, phone").eq("organization_id", organizationId).order("name", { ascending: true }),
     supabase.from("inventory_events").select("id, event_type, note, created_at").eq("inventory_item_id", id).eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(10),
+    supabase
+      .from("inventory_loans")
+      .select("id, member_id, loaned_at, due_date, returned_at, status, loan_note, agreement_text, borrower_name, signature_data_url, signed_at, created_at")
+      .eq("inventory_item_id", id)
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: false })
+      .limit(8),
   ]);
 
   if (!item) notFound();
   const assignedMemberName = item.assigned_to_member_id ? members?.find((member) => member.id === item.assigned_to_member_id)?.name ?? "Unknown member" : "Unassigned";
   const loanState = getLoanState(item.loan_due_date, item.status);
+  const activeLoan = (loans ?? []).find((loan) => loan.status === "active");
 
   return (
     <>
       <ModuleHeader title={item.name} description="Inventory item detail, QR readiness, assignment, status, and event history." items={inventoryNavItems} />
       <Toast show={query.updated === "1"} title="Inventory item updated" message="Status, assignment, and notes were saved." />
+      <Toast show={query.loaned === "1"} title="Loan completed" message="The agreement was signed and the item is now loaned out." />
       <Toast show={Boolean(query.error)} tone="error" title="Could not update item" message="Please review the details and try again." />
       <div className="grid gap-4 xl:grid-cols-[1fr_24rem]">
         <div className="space-y-4">
@@ -92,6 +102,36 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
                 </div>
               </CardContent>
             ) : null}
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Loan agreement</CardTitle>
+              <CardDescription>{activeLoan ? "Current signed agreement for this loan." : "No active signed loan agreement."}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {activeLoan ? (
+                <div className="space-y-3">
+                  <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900/60">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="font-medium">{activeLoan.borrower_name}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">Signed {new Date(activeLoan.signed_at).toLocaleString()}</p>
+                        {activeLoan.due_date ? <p className="mt-1 text-sm text-muted-foreground">Due {activeLoan.due_date}</p> : null}
+                      </div>
+                      <ButtonLink href={`/dashboard/inventory/loans/${activeLoan.id}`} variant="secondary" className="h-9 px-3">
+                        View agreement
+                      </ButtonLink>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed p-6 text-center">
+                  <p className="text-sm font-medium">No signed agreement yet</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Assign this item to a member to capture a signature.</p>
+                </div>
+              )}
+            </CardContent>
           </Card>
 
           <Card>
@@ -168,18 +208,47 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
               )) : <p className="py-6 text-sm text-muted-foreground">No events yet.</p>}
             </div>
           </Card>
+
+          <Card>
+            <CardHeader><CardTitle>Loan history</CardTitle><CardDescription>Signed agreements and returns for this item.</CardDescription></CardHeader>
+            <div className="divide-y px-5 pb-5">
+              {(loans ?? []).length ? loans?.map((loan) => (
+                <div key={loan.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-medium">{loan.borrower_name}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{loan.status} - loaned {new Date(loan.loaned_at).toLocaleDateString()}{loan.due_date ? ` - due ${loan.due_date}` : ""}</p>
+                  </div>
+                  <ButtonLink href={`/dashboard/inventory/loans/${loan.id}`} variant="ghost" className="h-8 px-2">View</ButtonLink>
+                </div>
+              )) : <p className="py-6 text-sm text-muted-foreground">No loan history yet.</p>}
+            </div>
+          </Card>
         </div>
 
+        <div className="space-y-4">
         <Card id="edit-inventory-item">
-          <CardHeader><CardTitle>Edit item</CardTitle><CardDescription>Assign, return, change status, update location, and record internal notes.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Assign with signature</CardTitle><CardDescription>Choose a borrower, review the agreement, and capture a signature.</CardDescription></CardHeader>
+          <CardContent>
+            <InventoryLoanAgreementForm
+              itemId={item.id}
+              members={members ?? []}
+              defaultMemberId={item.assigned_to_member_id}
+              defaultDueDate={item.loan_due_date}
+              defaultNote={item.loan_note}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Item controls</CardTitle><CardDescription>Change status, update location, and record internal notes. Use signed assignment above for loans.</CardDescription></CardHeader>
           <CardContent>
             <form action={updateInventoryItemStatusAction} className="space-y-4">
               <input type="hidden" name="itemId" value={item.id} />
+              <input type="hidden" name="assignedToMemberId" value={item.assigned_to_member_id ?? ""} />
+              <input type="hidden" name="loanDueDate" value={item.loan_due_date ?? ""} />
+              <input type="hidden" name="loanNote" value={item.loan_note ?? ""} />
               <Select name="status" label="Status" defaultValue={item.status}>{statuses.map((status) => <option key={status} value={status}>{inventoryStatusLabels[status]}</option>)}</Select>
               <Select name="condition" label="Condition" defaultValue={item.condition}>{conditions.map((condition) => <option key={condition} value={condition}>{inventoryConditionLabels[condition]}</option>)}</Select>
-              <Select name="assignedToMemberId" label="Assigned member" defaultValue={item.assigned_to_member_id ?? ""}><option value="">Unassigned</option>{(members ?? []).map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</Select>
-              <label className="block space-y-2"><span className="text-sm font-medium">Due date</span><input name="loanDueDate" type="date" defaultValue={item.loan_due_date ?? ""} className="h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950" /></label>
-              <label className="block space-y-2"><span className="text-sm font-medium">Loan note</span><textarea name="loanNote" defaultValue={item.loan_note ?? ""} rows={3} className="w-full rounded-xl border bg-white px-3 py-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950" /></label>
               <label className="block space-y-2"><span className="text-sm font-medium">Location</span><input name="location" defaultValue={item.location ?? ""} className="h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950" /></label>
               <label className="block space-y-2"><span className="text-sm font-medium">Notes</span><textarea name="notes" defaultValue={item.notes ?? ""} rows={4} className="w-full rounded-xl border bg-white px-3 py-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950" /></label>
               <label className="block space-y-2"><span className="text-sm font-medium">Event note</span><input name="eventNote" placeholder="What changed?" className="h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950" /></label>
@@ -187,6 +256,7 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
             </form>
           </CardContent>
         </Card>
+        </div>
       </div>
     </>
   );
