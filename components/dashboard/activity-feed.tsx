@@ -1,4 +1,4 @@
-import { Building2, CheckCircle2, LayoutGrid, MailPlus, PlugZap, QrCode } from "lucide-react";
+import { Building2, CheckCircle2, ClipboardList, LayoutGrid, MailPlus, PlugZap, QrCode } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ActivityEventType } from "@/types/database";
@@ -16,6 +16,7 @@ const eventConfig = {
   checkin_created: { icon: CheckCircle2, label: "Check-in" },
   member_invited: { icon: MailPlus, label: "Invite" },
   member_created: { icon: MailPlus, label: "Member" },
+  form_created: { icon: ClipboardList, label: "Form" },
   organization_updated: { icon: Building2, label: "Org" },
   module_opened: { icon: LayoutGrid, label: "Module" },
   module_enabled: { icon: PlugZap, label: "Module" },

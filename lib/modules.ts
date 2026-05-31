@@ -32,8 +32,9 @@ export const modules: ModuleDefinition[] = [
     name: "Forms",
     description: "Collect structured requests, surveys, applications, and feedback.",
     category: "Workspace",
-    status: "disabled",
+    status: "enabled",
     icon: "forms",
+    href: "/dashboard/modules/forms",
   },
   {
     id: "bookings",

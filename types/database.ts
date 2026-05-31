@@ -3,11 +3,14 @@ export type QrItemType = "general" | "event" | "member" | "asset" | "location";
 export type OrganizationType = "school" | "club" | "business" | "restaurant" | "cafe" | "event" | "other";
 export type MemberStatus = "active" | "inactive";
 export type MemberType = "student" | "staff" | "player" | "volunteer" | "employee" | "customer" | "guest" | "other";
+export type FormStatus = "draft" | "active" | "archived";
+export type FormFieldType = "text" | "textarea" | "email" | "phone" | "number" | "date" | "select" | "checkbox";
 export type ActivityEventType =
   | "qr_created"
   | "checkin_created"
   | "member_invited"
   | "member_created"
+  | "form_created"
   | "organization_updated"
   | "module_opened"
   | "module_enabled";
@@ -376,6 +379,198 @@ export type Database = {
           },
         ];
       };
+      forms: {
+        Row: {
+          id: string;
+          organization_id: string;
+          title: string;
+          description: string | null;
+          status: FormStatus;
+          slug: string;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          title: string;
+          description?: string | null;
+          status?: FormStatus;
+          slug: string;
+          created_by: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          title?: string;
+          description?: string | null;
+          status?: FormStatus;
+          slug?: string;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "forms_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      form_fields: {
+        Row: {
+          id: string;
+          organization_id: string;
+          form_id: string;
+          label: string;
+          field_type: FormFieldType;
+          is_required: boolean;
+          options: Json;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          form_id: string;
+          label: string;
+          field_type: FormFieldType;
+          is_required?: boolean;
+          options?: Json;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          form_id?: string;
+          label?: string;
+          field_type?: FormFieldType;
+          is_required?: boolean;
+          options?: Json;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "form_fields_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "form_fields_form_id_fkey";
+            columns: ["form_id"];
+            isOneToOne: false;
+            referencedRelation: "forms";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      form_submissions: {
+        Row: {
+          id: string;
+          organization_id: string;
+          form_id: string;
+          submitted_by: string | null;
+          submitter_email: string | null;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          form_id: string;
+          submitted_by?: string | null;
+          submitter_email?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          form_id?: string;
+          submitted_by?: string | null;
+          submitter_email?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "form_submissions_form_id_fkey";
+            columns: ["form_id"];
+            isOneToOne: false;
+            referencedRelation: "forms";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      form_submission_values: {
+        Row: {
+          id: string;
+          organization_id: string;
+          submission_id: string;
+          field_id: string | null;
+          field_label: string;
+          value: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          submission_id: string;
+          field_id?: string | null;
+          field_label: string;
+          value?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          submission_id?: string;
+          field_id?: string | null;
+          field_label?: string;
+          value?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "form_submission_values_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "form_submission_values_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: false;
+            referencedRelation: "form_submissions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "form_submission_values_field_id_fkey";
+            columns: ["field_id"];
+            isOneToOne: false;
+            referencedRelation: "form_fields";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -396,6 +591,8 @@ export type Database = {
       organization_type: OrganizationType;
       member_status: MemberStatus;
       member_type: MemberType;
+      form_status: FormStatus;
+      form_field_type: FormFieldType;
     };
     CompositeTypes: Record<string, never>;
   };

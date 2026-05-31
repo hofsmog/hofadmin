@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Building2, CheckCircle2, Layers3, MailPlus, Plus, QrCode, ScanLine, UserRoundCheck, UsersRound } from "lucide-react";
+import { Building2, CheckCircle2, ClipboardList, Inbox, Layers3, MailPlus, Plus, QrCode, ScanLine, UserRoundCheck, UsersRound } from "lucide-react";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -29,6 +29,8 @@ export default async function DashboardPage() {
     { count: totalMembers },
     { count: activeMembers },
     { data: recentMembers },
+    { count: totalForms },
+    { data: recentSubmissions },
     { data: activityEvents },
   ] = await Promise.all([
     supabase
@@ -56,6 +58,16 @@ export default async function DashboardPage() {
     supabase
       .from("members")
       .select("id, name, type, status, created_at")
+      .eq("organization_id", organizationContext.activeOrganization.id)
+      .order("created_at", { ascending: false })
+      .limit(4),
+    supabase
+      .from("forms")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", organizationContext.activeOrganization.id),
+    supabase
+      .from("form_submissions")
+      .select("id, form_id, submitter_email, created_at")
       .eq("organization_id", organizationContext.activeOrganization.id)
       .order("created_at", { ascending: false })
       .limit(4),
@@ -99,6 +111,10 @@ export default async function DashboardPage() {
               <span className="text-sm text-muted-foreground">Team users</span>
               <span className="text-sm font-medium">{teamMembers ?? 0}</span>
             </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Active modules</span>
+              <span className="text-sm font-medium">{enabledModules}</span>
+            </div>
             <ButtonLink href="/dashboard/settings" variant="secondary" className="h-10 w-full">
               <Building2 className="h-4 w-4" />
               Edit branding
@@ -111,7 +127,7 @@ export default async function DashboardPage() {
         <StatCard label="QR items" value={`${totalQrItems ?? 0}`} detail="Active QR inventory" icon={QrCode} />
         <StatCard label="Check-ins today" value={`${todayCheckins ?? 0}`} detail="Since local midnight" icon={CheckCircle2} />
         <StatCard label="Total members" value={`${totalMembers ?? 0}`} detail={`${activeMembers ?? 0} active records`} icon={UsersRound} />
-        <StatCard label="Active modules" value={`${enabledModules}`} detail="Operational modules available" icon={Layers3} />
+        <StatCard label="Forms" value={`${totalForms ?? 0}`} detail={`${recentSubmissions?.length ?? 0} recent submissions`} icon={ClipboardList} />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
@@ -176,6 +192,33 @@ export default async function DashboardPage() {
                   <p className="text-sm font-medium">No members yet</p>
                   <ButtonLink href="/dashboard/modules/members#add-member" variant="ghost" className="mt-2 h-8">
                     Add first member
+                  </ButtonLink>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent submissions</CardTitle>
+              <CardDescription>Latest form responses across active forms.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(recentSubmissions ?? []).length ? (
+                recentSubmissions?.map((submission) => (
+                  <div key={submission.id} className="flex items-center justify-between gap-3 rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900/60">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{submission.submitter_email ?? "Internal submission"}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(submission.created_at).toLocaleString()}</p>
+                    </div>
+                    <Inbox className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-xl border border-dashed p-5 text-center">
+                  <p className="text-sm font-medium">No form submissions yet</p>
+                  <ButtonLink href="/dashboard/modules/forms#create-form" variant="ghost" className="mt-2 h-8">
+                    Create first form
                   </ButtonLink>
                 </div>
               )}
