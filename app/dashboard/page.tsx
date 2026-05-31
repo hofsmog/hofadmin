@@ -9,6 +9,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { modules } from "@/lib/modules";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
+import { getRespondentName, groupSubmissionValues } from "@/lib/forms/submissions";
 
 export default async function DashboardPage() {
   const { supabase, organizationContext } = await requireOrganizationContext();
@@ -31,6 +32,8 @@ export default async function DashboardPage() {
     { data: recentMembers },
     { count: totalForms },
     { data: recentSubmissions },
+    { count: newSubmissionsCount },
+    { data: latestNewSubmissions },
     { data: activityEvents },
   ] = await Promise.all([
     supabase
@@ -67,10 +70,22 @@ export default async function DashboardPage() {
       .eq("organization_id", organizationContext.activeOrganization.id),
     supabase
       .from("form_submissions")
-      .select("id, form_id, submitter_email, created_at")
+      .select("id, form_id, submitter_email, read_status, handling_status, created_at")
       .eq("organization_id", organizationContext.activeOrganization.id)
       .order("created_at", { ascending: false })
       .limit(4),
+    supabase
+      .from("form_submissions")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", organizationContext.activeOrganization.id)
+      .eq("read_status", "new"),
+    supabase
+      .from("form_submissions")
+      .select("id, form_id, submitter_email, read_status, handling_status, created_at")
+      .eq("organization_id", organizationContext.activeOrganization.id)
+      .eq("read_status", "new")
+      .order("created_at", { ascending: false })
+      .limit(5),
     supabase
       .from("activity_events")
       .select("id, type, title, description, created_at")
@@ -78,6 +93,15 @@ export default async function DashboardPage() {
       .order("created_at", { ascending: false })
       .limit(6),
   ]);
+  const latestNewSubmissionIds = (latestNewSubmissions ?? []).map((submission) => submission.id);
+  const { data: latestNewSubmissionValues } = latestNewSubmissionIds.length
+    ? await supabase
+        .from("form_submission_values")
+        .select("id, submission_id, field_label, value")
+        .eq("organization_id", organizationContext.activeOrganization.id)
+        .in("submission_id", latestNewSubmissionIds)
+    : { data: [] };
+  const valuesBySubmissionId = groupSubmissionValues(latestNewSubmissionValues ?? []);
 
   return (
     <>
@@ -127,13 +151,44 @@ export default async function DashboardPage() {
         <StatCard label="QR items" value={`${totalQrItems ?? 0}`} detail="Active QR inventory" icon={QrCode} />
         <StatCard label="Check-ins today" value={`${todayCheckins ?? 0}`} detail="Since local midnight" icon={CheckCircle2} />
         <StatCard label="Total members" value={`${totalMembers ?? 0}`} detail={`${activeMembers ?? 0} active records`} icon={UsersRound} />
-        <StatCard label="Forms" value={`${totalForms ?? 0}`} detail={`${recentSubmissions?.length ?? 0} recent submissions`} icon={ClipboardList} />
+        <StatCard label="Forms" value={`${totalForms ?? 0}`} detail={`${newSubmissionsCount ?? 0} new submissions`} icon={ClipboardList} />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         <ActivityFeed events={activityEvents ?? []} />
 
         <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>New submissions</CardTitle>
+              <CardDescription>Unread form responses that need visibility.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(latestNewSubmissions ?? []).length ? (
+                latestNewSubmissions?.map((submission) => {
+                  const values = valuesBySubmissionId.get(submission.id) ?? [];
+
+                  return (
+                    <ButtonLink key={submission.id} href={`/dashboard/forms/submissions/${submission.id}`} variant="ghost" className="h-auto w-full justify-between rounded-xl border bg-emerald-50/70 p-3 text-left dark:bg-emerald-950/20">
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold">{getRespondentName(values)}</span>
+                        <span className="mt-1 block truncate text-xs text-muted-foreground">{submission.submitter_email ?? "No email captured"}</span>
+                      </span>
+                      <span className="ml-3 shrink-0 rounded-full bg-emerald-600 px-2 py-1 text-xs font-medium text-white">New</span>
+                    </ButtonLink>
+                  );
+                })
+              ) : (
+                <div className="rounded-xl border border-dashed p-5 text-center">
+                  <p className="text-sm font-medium">No new submissions</p>
+                  <ButtonLink href="/dashboard/forms/submissions" variant="ghost" className="mt-2 h-8">
+                    Open inbox
+                  </ButtonLink>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Setup checklist</CardTitle>
@@ -182,7 +237,7 @@ export default async function DashboardPage() {
                   <div key={member.id} className="flex items-center justify-between gap-3 rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900/60">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">{member.name}</p>
-                      <p className="text-xs capitalize text-muted-foreground">{member.type} • {member.status}</p>
+                      <p className="text-xs capitalize text-muted-foreground">{member.type} - {member.status}</p>
                     </div>
                     <UserRoundCheck className="h-4 w-4 text-muted-foreground" />
                   </div>
@@ -206,13 +261,13 @@ export default async function DashboardPage() {
             <CardContent className="space-y-3">
               {(recentSubmissions ?? []).length ? (
                 recentSubmissions?.map((submission) => (
-                  <div key={submission.id} className="flex items-center justify-between gap-3 rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900/60">
+                  <ButtonLink key={submission.id} href={`/dashboard/forms/submissions/${submission.id}`} variant="ghost" className="h-auto w-full justify-between rounded-xl border bg-zinc-50 p-3 text-left dark:bg-zinc-900/60">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">{submission.submitter_email ?? "Internal submission"}</p>
                       <p className="text-xs text-muted-foreground">{new Date(submission.created_at).toLocaleString()}</p>
                     </div>
                     <Inbox className="h-4 w-4 text-muted-foreground" />
-                  </div>
+                  </ButtonLink>
                 ))
               ) : (
                 <div className="rounded-xl border border-dashed p-5 text-center">

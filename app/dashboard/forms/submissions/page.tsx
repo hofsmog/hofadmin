@@ -1,78 +1,95 @@
-import { Inbox } from "lucide-react";
+import Link from "next/link";
+import { Clock3, Inbox, Search } from "lucide-react";
 import { ModuleHeader } from "@/components/dashboard/module-header";
+import { HandlingStatusBadge, ReadStatusBadge } from "@/components/dashboard/submission-status-badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
+import { getRespondentName, groupSubmissionValues, handlingStatusLabels } from "@/lib/forms/submissions";
 import { formsNavItems } from "@/lib/module-nav";
+import { cn } from "@/lib/utils";
+import type { FormSubmissionHandlingStatus, FormSubmissionReadStatus } from "@/types/database";
+
+const readStatusOptions: Array<"all" | FormSubmissionReadStatus> = ["all", "new", "read"];
+const handlingStatusOptions: Array<"all" | FormSubmissionHandlingStatus> = [
+  "all",
+  "unhandled",
+  "partially_handled",
+  "handled",
+  "archived",
+];
 
 export default async function FormsSubmissionsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ formId?: string; q?: string }>;
+  searchParams?: Promise<{
+    formId?: string;
+    q?: string;
+    readStatus?: string;
+    handlingStatus?: string;
+  }>;
 }) {
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
   const params = (await searchParams) ?? {};
   const formId = String(params.formId ?? "all");
   const query = String(params.q ?? "").trim();
+  const readStatus = sanitizeReadStatus(params.readStatus);
+  const handlingStatus = sanitizeHandlingStatus(params.handlingStatus);
   const [{ data: forms }, submissionsResult] = await Promise.all([
-    supabase.from("forms").select("id, title").eq("organization_id", organizationId),
-    buildSubmissionsQuery(supabase, organizationId, formId),
+    supabase.from("forms").select("id, title").eq("organization_id", organizationId).order("title", { ascending: true }),
+    buildSubmissionsQuery(supabase, organizationId, { formId, readStatus, handlingStatus }),
   ]);
-  const submissions = submissionsResult.data;
-  const submissionIds = (submissions ?? []).map((submission) => submission.id);
+  const submissions = submissionsResult.data ?? [];
+  const submissionIds = submissions.map((submission) => submission.id);
   const { data: submissionValues } = submissionIds.length
     ? await supabase
         .from("form_submission_values")
-        .select("*")
+        .select("id, submission_id, field_label, value")
         .eq("organization_id", organizationId)
         .in("submission_id", submissionIds)
     : { data: [] };
   const formsById = new Map((forms ?? []).map((form) => [form.id, form]));
-  const valuesBySubmissionId = new Map<string, typeof submissionValues>();
-
-  for (const value of submissionValues ?? []) {
-    valuesBySubmissionId.set(value.submission_id, [...(valuesBySubmissionId.get(value.submission_id) ?? []), value]);
-  }
-
-  const filteredSubmissions = (submissions ?? []).filter((submission) => {
+  const valuesBySubmissionId = groupSubmissionValues(submissionValues ?? []);
+  const filteredSubmissions = submissions.filter((submission) => {
     if (!query) {
       return true;
     }
 
     const normalizedQuery = query.toLowerCase();
-    const form = formsById.get(submission.form_id);
     const values = valuesBySubmissionId.get(submission.id) ?? [];
+    const respondentName = getRespondentName(values).toLowerCase();
 
     return (
-      form?.title.toLowerCase().includes(normalizedQuery) ||
+      respondentName.includes(normalizedQuery) ||
+      formsById.get(submission.form_id)?.title.toLowerCase().includes(normalizedQuery) ||
       submission.submitter_email?.toLowerCase().includes(normalizedQuery) ||
-      values.some((value) =>
-        `${value.field_label} ${value.value ?? ""}`.toLowerCase().includes(normalizedQuery),
-      )
+      values.some((value) => `${value.field_label} ${value.value ?? ""}`.toLowerCase().includes(normalizedQuery))
     );
   });
 
   return (
     <>
-      <ModuleHeader title="Form Submissions" description="Review captured form responses." items={formsNavItems} />
-      <Card>
+      <ModuleHeader title="Form Submissions" description="Triage new responses, assign handling status, and open details only when needed." items={formsNavItems} />
+      <Card className="overflow-hidden">
         <CardHeader>
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <CardTitle>Submissions</CardTitle>
-              <CardDescription>Latest responses across organization forms.</CardDescription>
+              <CardTitle>Submission inbox</CardTitle>
+              <CardDescription>Compact list view for high-volume response workflows.</CardDescription>
             </div>
-            <Inbox className="h-5 w-5 text-muted-foreground" />
+            <div className="rounded-full border bg-zinc-50 px-3 py-1 text-xs font-medium text-muted-foreground dark:bg-zinc-900">
+              {filteredSubmissions.length} shown
+            </div>
           </div>
         </CardHeader>
-        <form className="grid gap-3 p-5 pt-0 md:grid-cols-[1fr_14rem_auto]">
-          <Input name="q" defaultValue={query} placeholder="Search submitted values" />
-          <select
-            name="formId"
-            defaultValue={formId}
-            className="h-11 rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
-          >
+
+        <form className="grid gap-3 border-t p-5 md:grid-cols-[1fr_13rem_10rem_13rem_auto]">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+            <Input name="q" defaultValue={query} placeholder="Search name, email, form, values" className="pl-9" />
+          </div>
+          <select name="formId" defaultValue={formId} className="h-11 rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800">
             <option value="all">All forms</option>
             {(forms ?? []).map((form) => (
               <option key={form.id} value={form.id}>
@@ -80,38 +97,69 @@ export default async function FormsSubmissionsPage({
               </option>
             ))}
           </select>
+          <select name="readStatus" defaultValue={readStatus} className="h-11 rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800">
+            {readStatusOptions.map((status) => (
+              <option key={status} value={status}>
+                {status === "all" ? "All read" : status === "new" ? "New" : "Read"}
+              </option>
+            ))}
+          </select>
+          <select name="handlingStatus" defaultValue={handlingStatus} className="h-11 rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800">
+            {handlingStatusOptions.map((status) => (
+              <option key={status} value={status}>
+                {status === "all" ? "All handling" : handlingStatusLabels[status]}
+              </option>
+            ))}
+          </select>
           <button className="h-11 rounded-xl bg-zinc-950 px-4 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950" type="submit">
             Filter
           </button>
         </form>
-        <div className="divide-y px-5 pb-5">
-          {filteredSubmissions.length ? filteredSubmissions.map((submission) => {
-            const values = valuesBySubmissionId.get(submission.id) ?? [];
 
-            return (
-              <div key={submission.id} className="py-4">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-medium">{formsById.get(submission.form_id)?.title ?? "Unknown form"}</p>
-                  <span className="text-xs text-muted-foreground">{new Date(submission.created_at).toLocaleString()}</span>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">{submission.submitter_email ?? "Internal submission"} · {submission.id.slice(0, 8)}</p>
-                {values.length ? (
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    {values.map((value) => (
-                      <div key={value.id} className="rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900/60">
-                        <p className="text-xs font-medium text-muted-foreground">{value.field_label}</p>
-                        <p className="mt-1 break-words text-sm">{value.value || "No value"}</p>
-                      </div>
-                    ))}
+        <div className="divide-y border-t">
+          {filteredSubmissions.length ? (
+            filteredSubmissions.map((submission) => {
+              const values = valuesBySubmissionId.get(submission.id) ?? [];
+              const respondentName = getRespondentName(values);
+              const submittedAt = new Date(submission.created_at);
+              const isNew = submission.read_status === "new";
+
+              return (
+                <Link
+                  key={submission.id}
+                  href={`/dashboard/forms/submissions/${submission.id}`}
+                  className={cn(
+                    "grid gap-3 px-5 py-4 transition hover:bg-zinc-50 dark:hover:bg-zinc-900/60 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)_11rem_20rem]",
+                    isNew && "bg-emerald-50/70 dark:bg-emerald-950/20",
+                  )}
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      {isNew ? <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> : null}
+                      <p className={cn("truncate text-sm", isNew ? "font-semibold text-zinc-950 dark:text-zinc-50" : "font-medium")}>{respondentName}</p>
+                    </div>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">{submission.submitter_email ?? "No email captured"}</p>
                   </div>
-                ) : null}
-              </div>
-            );
-          }) : (
-            <div className="py-8 text-center">
-              <Inbox className="mx-auto h-8 w-8 text-muted-foreground" />
+                  <div className="min-w-0">
+                    <p className={cn("truncate text-sm", isNew ? "font-semibold" : "font-medium")}>{formsById.get(submission.form_id)?.title ?? "Unknown form"}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{submission.id.slice(0, 8)}</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Clock3 className="h-4 w-4" />
+                    <span>{submittedAt.toLocaleDateString()} {submittedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                    <ReadStatusBadge status={submission.read_status} />
+                    <HandlingStatusBadge status={submission.handling_status} />
+                  </div>
+                </Link>
+              );
+            })
+          ) : (
+            <div className="px-5 py-10 text-center">
+              <Inbox className="mx-auto h-9 w-9 text-muted-foreground" />
               <p className="mt-3 text-sm font-medium">No submissions found</p>
-              <p className="mt-1 text-sm text-muted-foreground">Submissions will appear here after public forms are completed.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Try a different filter, or wait for public form responses to arrive.</p>
             </div>
           )}
         </div>
@@ -120,20 +168,42 @@ export default async function FormsSubmissionsPage({
   );
 }
 
+function sanitizeReadStatus(status: string | undefined): "all" | FormSubmissionReadStatus {
+  return status === "new" || status === "read" ? status : "all";
+}
+
+function sanitizeHandlingStatus(status: string | undefined): "all" | FormSubmissionHandlingStatus {
+  return status === "unhandled" || status === "partially_handled" || status === "handled" || status === "archived"
+    ? status
+    : "all";
+}
+
 function buildSubmissionsQuery(
   supabase: Awaited<ReturnType<typeof requireOrganizationContext>>["supabase"],
   organizationId: string,
-  formId: string,
+  filters: {
+    formId: string;
+    readStatus: "all" | FormSubmissionReadStatus;
+    handlingStatus: "all" | FormSubmissionHandlingStatus;
+  },
 ) {
   let query = supabase
     .from("form_submissions")
-    .select("*")
+    .select("id, organization_id, form_id, submitted_by, submitter_email, read_status, handling_status, handled_at, created_at")
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: false })
     .limit(100);
 
-  if (formId !== "all") {
-    query = query.eq("form_id", formId);
+  if (filters.formId !== "all") {
+    query = query.eq("form_id", filters.formId);
+  }
+
+  if (filters.readStatus !== "all") {
+    query = query.eq("read_status", filters.readStatus);
+  }
+
+  if (filters.handlingStatus !== "all") {
+    query = query.eq("handling_status", filters.handlingStatus);
   }
 
   return query;

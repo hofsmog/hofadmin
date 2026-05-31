@@ -15,10 +15,12 @@ export function DashboardShell({
   children,
   userEmail,
   organizationContext,
+  newSubmissionsCount = 0,
 }: {
   children: React.ReactNode;
   userEmail: string;
   organizationContext: OrganizationContext;
+  newSubmissionsCount?: number;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -42,7 +44,7 @@ export function DashboardShell({
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r bg-white/90 backdrop-blur-xl dark:bg-zinc-950/90 lg:flex lg:flex-col">
-        <Sidebar pathname={pathname} organizationContext={organizationContext} />
+        <Sidebar pathname={pathname} organizationContext={organizationContext} newSubmissionsCount={newSubmissionsCount} />
       </aside>
 
       {mobileOpen ? (
@@ -65,6 +67,7 @@ export function DashboardShell({
             <Sidebar
               pathname={pathname}
               organizationContext={organizationContext}
+              newSubmissionsCount={newSubmissionsCount}
               onNavigate={() => setMobileOpen(false)}
             />
           </aside>
@@ -92,7 +95,9 @@ export function DashboardShell({
               className="relative rounded-xl border bg-white p-2 shadow-sm transition hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800"
             >
               <Bell className="h-5 w-5" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
+              {newSubmissionsCount > 0 ? (
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
+              ) : null}
             </button>
             <div className="flex items-center gap-2 rounded-xl border bg-white px-2 py-1.5 shadow-sm dark:bg-zinc-900">
               <span className="grid h-7 w-7 place-items-center rounded-lg bg-zinc-950 text-xs font-semibold text-white dark:bg-zinc-100 dark:text-zinc-950">
@@ -139,10 +144,12 @@ function getInitials(email: string) {
 function Sidebar({
   pathname,
   organizationContext,
+  newSubmissionsCount,
   onNavigate,
 }: {
   pathname: string;
   organizationContext: OrganizationContext;
+  newSubmissionsCount: number;
   onNavigate?: () => void;
 }) {
   return (
@@ -176,7 +183,15 @@ function Sidebar({
               )}
             >
               <Icon className="h-4 w-4" />
-              {item.title}
+              <span className="min-w-0 flex-1 truncate">{item.title}</span>
+              {item.title === "Forms" && newSubmissionsCount > 0 ? (
+                <span className={cn(
+                  "ml-auto rounded-full px-2 py-0.5 text-xs font-semibold",
+                  active ? "bg-white/20 text-current dark:bg-zinc-950/15" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
+                )}>
+                  {newSubmissionsCount > 99 ? "99+" : newSubmissionsCount}
+                </span>
+              ) : null}
             </Link>
           );
         })}

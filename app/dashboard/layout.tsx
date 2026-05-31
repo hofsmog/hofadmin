@@ -5,16 +5,23 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, organizationContext } = await requireOrganizationContext();
+  const { user, organizationContext, supabase } = await requireOrganizationContext();
 
   if (!organizationContext.activeOrganization.onboardingCompletedAt) {
     redirect("/onboarding");
   }
 
+  const { count: newSubmissionsCount } = await supabase
+    .from("form_submissions")
+    .select("*", { count: "exact", head: true })
+    .eq("organization_id", organizationContext.activeOrganization.id)
+    .eq("read_status", "new");
+
   return (
     <DashboardShell
       userEmail={user.email ?? "Account"}
       organizationContext={organizationContext}
+      newSubmissionsCount={newSubmissionsCount ?? 0}
     >
       {children}
     </DashboardShell>

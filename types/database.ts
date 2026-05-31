@@ -5,12 +5,17 @@ export type MemberStatus = "active" | "inactive";
 export type MemberType = "student" | "staff" | "player" | "volunteer" | "employee" | "customer" | "guest" | "other";
 export type FormStatus = "draft" | "active" | "archived";
 export type FormFieldType = "text" | "textarea" | "email" | "phone" | "number" | "date" | "select" | "checkbox";
+export type FormSubmissionReadStatus = "new" | "read";
+export type FormSubmissionHandlingStatus = "unhandled" | "partially_handled" | "handled" | "archived";
 export type ActivityEventType =
   | "qr_created"
   | "checkin_created"
   | "member_invited"
   | "member_created"
   | "form_created"
+  | "form_submission_received"
+  | "form_submission_read"
+  | "form_submission_handling_changed"
   | "organization_updated"
   | "module_opened"
   | "module_enabled";
@@ -481,6 +486,11 @@ export type Database = {
           form_id: string;
           submitted_by: string | null;
           submitter_email: string | null;
+          read_status: FormSubmissionReadStatus;
+          handling_status: FormSubmissionHandlingStatus;
+          handled_note: string | null;
+          handled_by: string | null;
+          handled_at: string | null;
           metadata: Json;
           created_at: string;
         };
@@ -490,6 +500,11 @@ export type Database = {
           form_id: string;
           submitted_by?: string | null;
           submitter_email?: string | null;
+          read_status?: FormSubmissionReadStatus;
+          handling_status?: FormSubmissionHandlingStatus;
+          handled_note?: string | null;
+          handled_by?: string | null;
+          handled_at?: string | null;
           metadata?: Json;
           created_at?: string;
         };
@@ -499,6 +514,11 @@ export type Database = {
           form_id?: string;
           submitted_by?: string | null;
           submitter_email?: string | null;
+          read_status?: FormSubmissionReadStatus;
+          handling_status?: FormSubmissionHandlingStatus;
+          handled_note?: string | null;
+          handled_by?: string | null;
+          handled_at?: string | null;
           metadata?: Json;
           created_at?: string;
         };
