@@ -32,6 +32,7 @@ export async function createInventoryItemAction(
   const purchasePrice = clean(formData.get("purchasePrice"));
   const notes = clean(formData.get("notes"));
   const shouldGenerateQr = formData.get("generateQr") === "on";
+  const savedStatus = assignedToMemberId && status === "available" ? "in_use" : status;
 
   if (name.length < 2 || name.length > 140) {
     return { status: "error", message: "Item name must be between 2 and 140 characters." };
@@ -54,7 +55,7 @@ export async function createInventoryItemAction(
       category_id: categoryId,
       asset_tag: assetTag,
       serial_number: serialNumber,
-      status,
+      status: savedStatus,
       condition,
       location,
       assigned_to_member_id: assignedToMemberId,
@@ -79,6 +80,17 @@ export async function createInventoryItemAction(
     note: `${item.name} was added to inventory.`,
     userId: user.id,
   });
+
+  if (assignedToMemberId) {
+    await recordInventoryEvent({
+      supabase,
+      organizationId,
+      itemId: item.id,
+      eventType: "assigned",
+      note: `${item.name} was assigned when it was created.`,
+      userId: user.id,
+    });
+  }
 
   revalidateInventory();
   return { status: "success", message: `${item.name} was added to inventory.` };
@@ -110,6 +122,32 @@ export async function createInventoryCategoryAction(formData: FormData) {
   redirect("/dashboard/inventory/categories?created=1");
 }
 
+export async function updateInventoryCategoryAction(formData: FormData) {
+  const { supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const categoryId = String(formData.get("categoryId") || "").trim();
+  const name = String(formData.get("name") || "").trim();
+  const description = clean(formData.get("description"));
+  const color = /^#[0-9A-Fa-f]{6}$/.test(String(formData.get("color") || "")) ? String(formData.get("color")) : "#2563eb";
+
+  if (!categoryId || name.length < 2 || name.length > 80) {
+    redirect("/dashboard/inventory/categories?error=invalid");
+  }
+
+  const { error } = await supabase
+    .from("inventory_categories")
+    .update({ name, description, color })
+    .eq("id", categoryId)
+    .eq("organization_id", organizationId);
+
+  if (error) {
+    redirect("/dashboard/inventory/categories?error=update");
+  }
+
+  revalidateInventory();
+  redirect("/dashboard/inventory/categories?updated=1");
+}
+
 export async function updateInventoryItemStatusAction(formData: FormData) {
   const { user, supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
@@ -119,6 +157,7 @@ export async function updateInventoryItemStatusAction(formData: FormData) {
   const location = clean(formData.get("location"));
   const assignedToMemberId = clean(formData.get("assignedToMemberId"));
   const notes = clean(formData.get("notes"));
+  const savedStatus = assignedToMemberId && status === "available" ? "in_use" : status;
 
   if (!itemId || !statuses.has(status) || !conditions.has(condition)) {
     redirect("/dashboard/inventory/items?error=invalid");
@@ -138,7 +177,7 @@ export async function updateInventoryItemStatusAction(formData: FormData) {
   const { error } = await supabase
     .from("inventory_items")
     .update({
-      status,
+      status: savedStatus,
       condition,
       location,
       assigned_to_member_id: assignedToMemberId,
@@ -153,7 +192,7 @@ export async function updateInventoryItemStatusAction(formData: FormData) {
   }
 
   const eventType: InventoryEventType =
-    status === "retired"
+    savedStatus === "retired"
       ? "retired"
       : existing.assigned_to_member_id !== assignedToMemberId
         ? assignedToMemberId
@@ -161,8 +200,8 @@ export async function updateInventoryItemStatusAction(formData: FormData) {
           : "returned"
         : existing.location !== location
           ? "location_changed"
-          : existing.status !== status
-            ? status === "maintenance"
+          : existing.status !== savedStatus
+            ? savedStatus === "maintenance"
               ? "maintenance"
               : "status_changed"
             : "updated";

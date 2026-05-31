@@ -13,7 +13,7 @@ import type { InventoryItemCondition, InventoryItemStatus } from "@/types/databa
 export default async function InventoryItemsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ q?: string; status?: InventoryItemStatus | "all"; condition?: InventoryItemCondition | "all"; category?: string; location?: string }>;
+  searchParams?: Promise<{ q?: string; status?: InventoryItemStatus | "all"; condition?: InventoryItemCondition | "all"; category?: string; assignedMember?: string }>;
 }) {
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
@@ -22,7 +22,7 @@ export default async function InventoryItemsPage({
   const status = params.status ?? "all";
   const condition = params.condition ?? "all";
   const category = params.category ?? "all";
-  const location = String(params.location ?? "").trim();
+  const assignedMember = String(params.assignedMember ?? "all");
   let query = supabase
     .from("inventory_items")
     .select("id, name, asset_tag, status, condition, location, assigned_to_member_id, qr_value, updated_at, category_id, inventory_categories(name, color)")
@@ -30,11 +30,12 @@ export default async function InventoryItemsPage({
     .order("created_at", { ascending: false })
     .limit(50);
 
-  if (q) query = query.or(`name.ilike.%${q}%,asset_tag.ilike.%${q}%,serial_number.ilike.%${q}%`);
+  if (q) query = query.or(`name.ilike.%${q}%,asset_tag.ilike.%${q}%,serial_number.ilike.%${q}%,location.ilike.%${q}%`);
   if (status !== "all") query = query.eq("status", status);
   if (condition !== "all") query = query.eq("condition", condition);
   if (category !== "all") query = query.eq("category_id", category);
-  if (location) query = query.ilike("location", `%${location}%`);
+  if (assignedMember === "unassigned") query = query.is("assigned_to_member_id", null);
+  if (assignedMember !== "all" && assignedMember !== "unassigned") query = query.eq("assigned_to_member_id", assignedMember);
 
   const [{ data: items }, { data: categories }, { data: members }] = await Promise.all([
     query,
@@ -51,12 +52,16 @@ export default async function InventoryItemsPage({
           <CardTitle>Item list</CardTitle>
           <CardDescription>Filter by status, condition, category, location, and asset identifiers.</CardDescription>
         </CardHeader>
-        <form className="grid gap-3 p-5 pt-0 md:grid-cols-[1fr_10rem_10rem_12rem_10rem_auto]">
-          <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input name="q" defaultValue={q} placeholder="Search items" className="pl-9" /></div>
+        <form className="grid gap-3 p-5 pt-0 md:grid-cols-[1fr_10rem_10rem_12rem_12rem_auto]">
+          <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input name="q" defaultValue={q} placeholder="Search name, tag, serial, location" className="pl-9" /></div>
           <Select name="status" defaultValue={status}><option value="all">All status</option><option value="available">Available</option><option value="in_use">In use</option><option value="maintenance">Maintenance</option><option value="lost">Lost</option><option value="retired">Retired</option></Select>
           <Select name="condition" defaultValue={condition}><option value="all">All condition</option><option value="new">New</option><option value="good">Good</option><option value="fair">Fair</option><option value="poor">Poor</option><option value="broken">Broken</option></Select>
           <Select name="category" defaultValue={category}><option value="all">All categories</option>{(categories ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select>
-          <Input name="location" defaultValue={location} placeholder="Location" />
+          <Select name="assignedMember" defaultValue={assignedMember}>
+            <option value="all">All assignees</option>
+            <option value="unassigned">Unassigned</option>
+            {(members ?? []).map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}
+          </Select>
           <button className="h-11 rounded-xl bg-zinc-950 px-4 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950" type="submit">Filter</button>
         </form>
         <div className="space-y-3 p-5 pt-0">

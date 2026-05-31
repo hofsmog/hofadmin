@@ -5,6 +5,7 @@ import { InventoryConditionBadge, InventoryStatusBadge, inventoryConditionLabels
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { QrCodeCard } from "@/components/dashboard/qr-code-card";
 import { Toast } from "@/components/ui/toast";
+import { ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { inventoryNavItems } from "@/lib/module-nav";
@@ -52,10 +53,31 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
             <CardContent className="grid gap-3 sm:grid-cols-2">
               <Info icon={QrCode} label="Asset tag" value={item.asset_tag ?? "No asset tag"} />
               <Info icon={QrCode} label="Serial number" value={item.serial_number ?? "No serial number"} />
+              <Info icon={QrCode} label="Category" value={item.inventory_categories?.name ?? "Uncategorized"} />
               <Info icon={MapPin} label="Location" value={item.location ?? "No location"} />
               <Info icon={UserRound} label="Assigned to" value={assignedMemberName} />
               <Info icon={Calendar} label="Purchase date" value={item.purchase_date ?? "Not recorded"} />
               <Info icon={Calendar} label="Purchase price" value={item.purchase_price ? `${item.purchase_price}` : "Not recorded"} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <CardTitle>Actions</CardTitle>
+                  <CardDescription>Common inventory updates for assignment and lifecycle tracking.</CardDescription>
+                </div>
+                <ButtonLink href="#edit-inventory-item" variant="secondary" className="h-9 px-3">
+                  Edit item
+                </ButtonLink>
+              </div>
+            </CardHeader>
+            <CardContent className="grid gap-2 sm:grid-cols-2">
+              <QuickInventoryAction item={item} status="available" assignedToMemberId="" label="Mark as returned" note="Item was returned and is available." />
+              <QuickInventoryAction item={item} status="maintenance" label="Send to maintenance" note="Item was sent to maintenance." />
+              <QuickInventoryAction item={item} status="lost" label="Mark as lost" note="Item was marked as lost." />
+              <QuickInventoryAction item={item} status="retired" label="Retire item" note="Item was retired from inventory." />
             </CardContent>
           </Card>
 
@@ -90,8 +112,8 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
           </Card>
         </div>
 
-        <Card>
-          <CardHeader><CardTitle>Update item</CardTitle><CardDescription>Adjust handling status, assignment, location, and internal notes.</CardDescription></CardHeader>
+        <Card id="edit-inventory-item">
+          <CardHeader><CardTitle>Edit item</CardTitle><CardDescription>Assign, return, change status, update location, and record internal notes.</CardDescription></CardHeader>
           <CardContent>
             <form action={updateInventoryItemStatusAction} className="space-y-4">
               <input type="hidden" name="itemId" value={item.id} />
@@ -107,6 +129,42 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
         </Card>
       </div>
     </>
+  );
+}
+
+function QuickInventoryAction({
+  item,
+  status,
+  assignedToMemberId,
+  label,
+  note,
+}: {
+  item: {
+    id: string;
+    status: InventoryItemStatus;
+    condition: InventoryItemCondition;
+    location: string | null;
+    assigned_to_member_id: string | null;
+    notes: string | null;
+  };
+  status: InventoryItemStatus;
+  assignedToMemberId?: string;
+  label: string;
+  note: string;
+}) {
+  return (
+    <form action={updateInventoryItemStatusAction}>
+      <input type="hidden" name="itemId" value={item.id} />
+      <input type="hidden" name="status" value={status} />
+      <input type="hidden" name="condition" value={item.condition} />
+      <input type="hidden" name="assignedToMemberId" value={assignedToMemberId ?? item.assigned_to_member_id ?? ""} />
+      <input type="hidden" name="location" value={item.location ?? ""} />
+      <input type="hidden" name="notes" value={item.notes ?? ""} />
+      <input type="hidden" name="eventNote" value={note} />
+      <button type="submit" className="h-10 w-full rounded-xl border bg-white px-3 text-sm font-medium shadow-sm transition hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800">
+        {label}
+      </button>
+    </form>
   );
 }
 

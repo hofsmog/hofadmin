@@ -31,6 +31,7 @@ export default async function DashboardPage() {
     { count: inventoryNeedsAttention },
     { count: pendingInvitations },
     { data: activityEvents },
+    { data: recentInventoryEvents },
   ] = await Promise.all([
     supabase
       .from("checkins")
@@ -82,6 +83,12 @@ export default async function DashboardPage() {
       .eq("organization_id", organizationId)
       .order("created_at", { ascending: false })
       .limit(5),
+    supabase
+      .from("inventory_events")
+      .select("id, event_type, note, created_at, inventory_items(name, asset_tag)")
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: false })
+      .limit(3),
   ]);
 
   const latestSubmissionIds = (latestNewSubmissions ?? []).map((submission) => submission.id);
@@ -251,6 +258,37 @@ export default async function DashboardPage() {
                 <div className="rounded-xl border border-dashed p-6 text-center">
                   <p className="text-sm font-medium">No new submissions</p>
                   <p className="mt-1 text-sm text-muted-foreground">Unread responses will appear here.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-start justify-between gap-4 pb-3">
+              <div>
+                <CardTitle>Inventory updates</CardTitle>
+                <CardDescription>Latest asset changes and assignments.</CardDescription>
+              </div>
+              <ButtonLink href="/dashboard/inventory/activity" variant="ghost" className="h-8 px-2">
+                View all
+              </ButtonLink>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {(recentInventoryEvents ?? []).length ? (
+                recentInventoryEvents?.map((event) => (
+                  <ButtonLink key={event.id} href="/dashboard/inventory/activity" variant="ghost" className="h-auto w-full justify-start rounded-xl bg-zinc-50 p-3 text-left dark:bg-zinc-900/60">
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-medium">{event.inventory_items?.name ?? "Inventory item"}</span>
+                      <span className="mt-1 block truncate text-xs text-muted-foreground">
+                        {event.event_type.replaceAll("_", " ")} - {new Date(event.created_at).toLocaleString()}
+                      </span>
+                    </span>
+                  </ButtonLink>
+                ))
+              ) : (
+                <div className="rounded-xl border border-dashed p-6 text-center">
+                  <p className="text-sm font-medium">No inventory updates yet</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Item assignments and status changes will appear here.</p>
                 </div>
               )}
             </CardContent>

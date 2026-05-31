@@ -1,5 +1,5 @@
 import { FolderPlus } from "lucide-react";
-import { createInventoryCategoryAction } from "@/app/dashboard/modules/inventory/actions";
+import { createInventoryCategoryAction, updateInventoryCategoryAction } from "@/app/dashboard/modules/inventory/actions";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { Toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { inventoryNavItems } from "@/lib/module-nav";
 
-export default async function InventoryCategoriesPage({ searchParams }: { searchParams?: Promise<{ created?: string; error?: string }> }) {
+export default async function InventoryCategoriesPage({ searchParams }: { searchParams?: Promise<{ created?: string; updated?: string; error?: string }> }) {
   const params = (await searchParams) ?? {};
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
@@ -25,6 +25,7 @@ export default async function InventoryCategoriesPage({ searchParams }: { search
     <>
       <ModuleHeader title="Inventory Categories" description="Group assets by device type, equipment class, location, or team use." items={inventoryNavItems} />
       <Toast show={params.created === "1"} title="Category created" message="Inventory category is ready to use." />
+      <Toast show={params.updated === "1"} title="Category updated" message="Inventory category details were saved." />
       <Toast show={Boolean(params.error)} tone="error" title="Category not saved" message="Check the category details and try again." />
       <div className="grid gap-4 lg:grid-cols-[22rem_1fr]">
         <Card>
@@ -40,12 +41,23 @@ export default async function InventoryCategoriesPage({ searchParams }: { search
           <CardHeader><CardTitle>Categories</CardTitle><CardDescription>Inventory groups and item counts.</CardDescription></CardHeader>
           <div className="space-y-3 p-5 pt-0">
             {(categories ?? []).length ? categories?.map((category) => (
-              <article key={category.id} className="flex items-start justify-between gap-4 rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900/60">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: category.color }} /><h3 className="font-semibold">{category.name}</h3></div>
-                  {category.description ? <p className="mt-1 text-sm text-muted-foreground">{category.description}</p> : null}
+              <article key={category.id} className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900/60">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: category.color }} /><h3 className="font-semibold">{category.name}</h3></div>
+                    {category.description ? <p className="mt-1 text-sm text-muted-foreground">{category.description}</p> : null}
+                  </div>
+                  <Badge>{itemCounts.get(category.id) ?? 0} items</Badge>
                 </div>
-                <Badge>{itemCounts.get(category.id) ?? 0} items</Badge>
+                <form action={updateInventoryCategoryAction} className="mt-4 grid gap-3 border-t pt-4 md:grid-cols-[1fr_1fr_6rem_auto]">
+                  <input type="hidden" name="categoryId" value={category.id} />
+                  <Input name="name" defaultValue={category.name} aria-label="Category name" />
+                  <Input name="description" defaultValue={category.description ?? ""} aria-label="Category description" />
+                  <input type="color" name="color" defaultValue={category.color} aria-label="Category color" className="h-11 w-full rounded-xl border bg-white p-1 dark:bg-zinc-950" />
+                  <button type="submit" className="h-11 rounded-xl border bg-white px-4 text-sm font-medium shadow-sm transition hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800">
+                    Save
+                  </button>
+                </form>
               </article>
             )) : <div className="rounded-xl border border-dashed p-8 text-center"><p className="font-medium">No categories yet</p><p className="mt-1 text-sm text-muted-foreground">Create a category to organize inventory items.</p></div>}
           </div>
