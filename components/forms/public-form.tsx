@@ -40,7 +40,7 @@ export function PublicForm({ slug, fields, design }: { slug: string; fields: Fie
         style={{ backgroundColor: design.buttonColor, color: design.buttonTextColor }}
         disabled={pending}
       >
-        {pending ? "Submitting" : "Submit form"}
+        {pending ? "Submitting" : design.submitButtonText || "Submit"}
         <Send className="h-4 w-4" />
       </Button>
     </form>

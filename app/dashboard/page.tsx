@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Building2, CheckCircle2, ClipboardList, Inbox, Layers3, MailPlus, Plus, QrCode, ScanLine, UserRoundCheck, UsersRound } from "lucide-react";
+import { AlertTriangle, Building2, CheckCircle2, Inbox, Layers3, MailPlus, Package, Plus, QrCode, ScanLine, UserRoundCheck, UsersRound } from "lucide-react";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -30,10 +30,11 @@ export default async function DashboardPage() {
     { count: totalMembers },
     { count: activeMembers },
     { data: recentMembers },
-    { count: totalForms },
     { data: recentSubmissions },
-    { count: newSubmissionsCount },
     { data: latestNewSubmissions },
+    { count: totalInventoryItems },
+    { count: inventoryNeedsAttention },
+    { data: latestInventoryEvents },
     { data: activityEvents },
   ] = await Promise.all([
     supabase
@@ -65,10 +66,6 @@ export default async function DashboardPage() {
       .order("created_at", { ascending: false })
       .limit(4),
     supabase
-      .from("forms")
-      .select("*", { count: "exact", head: true })
-      .eq("organization_id", organizationContext.activeOrganization.id),
-    supabase
       .from("form_submissions")
       .select("id, form_id, submitter_email, read_status, handling_status, created_at")
       .eq("organization_id", organizationContext.activeOrganization.id)
@@ -76,16 +73,26 @@ export default async function DashboardPage() {
       .limit(4),
     supabase
       .from("form_submissions")
-      .select("*", { count: "exact", head: true })
-      .eq("organization_id", organizationContext.activeOrganization.id)
-      .eq("read_status", "new"),
-    supabase
-      .from("form_submissions")
       .select("id, form_id, submitter_email, read_status, handling_status, created_at")
       .eq("organization_id", organizationContext.activeOrganization.id)
       .eq("read_status", "new")
       .order("created_at", { ascending: false })
       .limit(5),
+    supabase
+      .from("inventory_items")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", organizationContext.activeOrganization.id),
+    supabase
+      .from("inventory_items")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", organizationContext.activeOrganization.id)
+      .in("status", ["maintenance", "lost"]),
+    supabase
+      .from("inventory_events")
+      .select("id, event_type, note, created_at, inventory_items(name)")
+      .eq("organization_id", organizationContext.activeOrganization.id)
+      .order("created_at", { ascending: false })
+      .limit(4),
     supabase
       .from("activity_events")
       .select("id, type, title, description, created_at")
@@ -121,7 +128,7 @@ export default async function DashboardPage() {
                 <Badge className="capitalize">{organizationContext.activeMembership.role}</Badge>
               </div>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                Organization-scoped workspace for QR operations, member access, modules, and activity visibility.
+                Organization-scoped workspace for access, attendance, members, inventory, forms, and activity visibility.
               </p>
               <div className="mt-4 h-2 max-w-md rounded-full" style={{ backgroundColor: accentColor }} />
             </div>
@@ -148,16 +155,42 @@ export default async function DashboardPage() {
       </section>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="QR items" value={`${totalQrItems ?? 0}`} detail="Active QR inventory" icon={QrCode} />
+        <StatCard label="Access points" value={`${totalQrItems ?? 0}`} detail="Reusable QR scan targets" icon={QrCode} />
         <StatCard label="Check-ins today" value={`${todayCheckins ?? 0}`} detail="Since local midnight" icon={CheckCircle2} />
         <StatCard label="Total members" value={`${totalMembers ?? 0}`} detail={`${activeMembers ?? 0} active records`} icon={UsersRound} />
-        <StatCard label="Forms" value={`${totalForms ?? 0}`} detail={`${newSubmissionsCount ?? 0} new submissions`} icon={ClipboardList} />
+        <StatCard label="Inventory" value={`${totalInventoryItems ?? 0}`} detail={`${inventoryNeedsAttention ?? 0} need attention`} icon={Package} />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         <ActivityFeed events={activityEvents ?? []} />
 
         <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Inventory alerts</CardTitle>
+              <CardDescription>Assets needing attention and recent inventory movement.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between rounded-xl border bg-amber-50 p-3 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                <span className="flex items-center gap-2 text-sm font-medium"><AlertTriangle className="h-4 w-4" />Needs attention</span>
+                <span className="text-sm font-semibold">{inventoryNeedsAttention ?? 0}</span>
+              </div>
+              {(latestInventoryEvents ?? []).length ? latestInventoryEvents?.map((event) => (
+                <ButtonLink key={event.id} href="/dashboard/inventory/activity" variant="ghost" className="h-auto w-full justify-start rounded-xl border bg-zinc-50 p-3 text-left dark:bg-zinc-900/60">
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium">{event.inventory_items?.name ?? "Inventory item"}</span>
+                    <span className="mt-1 block truncate text-xs text-muted-foreground">{event.event_type.replaceAll("_", " ")} - {new Date(event.created_at).toLocaleString()}</span>
+                  </span>
+                </ButtonLink>
+              )) : (
+                <div className="rounded-xl border border-dashed p-5 text-center">
+                  <p className="text-sm font-medium">No inventory activity yet</p>
+                  <ButtonLink href="/dashboard/inventory/create" variant="ghost" className="mt-2 h-8">Add item</ButtonLink>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>New submissions</CardTitle>
@@ -195,7 +228,7 @@ export default async function DashboardPage() {
               <CardDescription>Keep moving toward a useful first workspace.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <ChecklistItem done={(totalQrItems ?? 0) > 0} label="Create first QR item" href="/dashboard/qr/items#create-qr" />
+              <ChecklistItem done={(totalQrItems ?? 0) > 0} label="Create first access point" href="/dashboard/qr/items#create-qr" />
               <ChecklistItem done={(totalMembers ?? 0) > 0} label="Add first member" href="/dashboard/members/create#add-member" />
               <ChecklistItem done={(teamMembers ?? 0) > 1} label="Invite team member" href="/dashboard/team" />
               <ChecklistItem done={Boolean(organizationContext.activeOrganization.logoUrl || organizationContext.activeOrganization.accentColor)} label="Customize branding" href="/dashboard/settings" />
@@ -286,8 +319,9 @@ export default async function DashboardPage() {
               <CardDescription>Jump into the common workflows for today.</CardDescription>
             </CardHeader>
             <div className="grid gap-3 p-5 pt-0 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              <QuickAction href="/dashboard/qr/items#create-qr" icon={Plus} label="Create QR item" />
+              <QuickAction href="/dashboard/qr/items#create-qr" icon={Plus} label="Create access point" />
               <QuickAction href="/dashboard/qr/scanner" icon={ScanLine} label="Open scanner" />
+              <QuickAction href="/dashboard/inventory/create" icon={Package} label="Add inventory item" />
               <QuickAction href="/dashboard/team" icon={MailPlus} label="Invite member" />
               <QuickAction href="/dashboard/modules" icon={Layers3} label="Manage modules" />
             </div>

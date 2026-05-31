@@ -46,6 +46,7 @@ type DesignPayload = {
   logo_url: string | null;
   cover_image_url: string | null;
   custom_thank_you_message: string | null;
+  submit_button_text: string;
 };
 
 export async function createFormAction(
@@ -299,6 +300,7 @@ function parseDesign(formData: FormData): DesignPayload {
     logo_url: parseUrl(formData.get("logoUrl")),
     cover_image_url: parseUrl(formData.get("coverImageUrl")),
     custom_thank_you_message: String(formData.get("customThankYouMessage") || "").trim().slice(0, 240) || null,
+    submit_button_text: String(formData.get("submitButtonText") || "").trim().slice(0, 40) || "Submit",
   };
 }
 

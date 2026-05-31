@@ -57,6 +57,7 @@ type DesignState = {
   logoUrl: string;
   coverImageUrl: string;
   customThankYouMessage: string;
+  submitButtonText: string;
 };
 
 export function FormCreateForm() {
@@ -131,6 +132,7 @@ function FormBuilder({
     logoUrl: form?.logo_url ?? "",
     coverImageUrl: form?.cover_image_url ?? "",
     customThankYouMessage: form?.custom_thank_you_message ?? "",
+    submitButtonText: form?.submit_button_text ?? "Submit",
   });
   const [fields, setFields] = useState<BuilderField[]>(
     initialFields?.length
@@ -481,6 +483,10 @@ function DesignPanel({
         <span className="text-sm font-medium">Custom thank-you message</span>
         <Input value={design.customThankYouMessage} onChange={(event) => updateDesign({ customThankYouMessage: event.target.value })} placeholder="Thank you. Your response has been submitted." />
       </label>
+      <label className="block space-y-2 md:col-span-2">
+        <span className="text-sm font-medium">Submit button text</span>
+        <Input value={design.submitButtonText} maxLength={40} onChange={(event) => updateDesign({ submitButtonText: event.target.value })} placeholder="Submit" />
+      </label>
     </section>
   );
 }
@@ -542,7 +548,7 @@ function PreviewPanel({
           ))}
         </div>
         <button type="button" className={cn("h-11 w-full px-4 text-sm font-medium", radius)} style={{ backgroundColor: design.buttonColor, color: design.buttonTextColor }}>
-          Submit form
+          {design.submitButtonText || "Submit"}
         </button>
       </div>
     </section>

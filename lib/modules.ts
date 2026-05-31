@@ -3,8 +3,8 @@ import type { ModuleDefinition } from "@/types";
 export const modules: ModuleDefinition[] = [
   {
     id: "qr-checkins",
-    name: "QR + Check-ins",
-    description: "Generate QR access points, scan arrivals, and monitor check-in activity.",
+    name: "Access & Attendance",
+    description: "Reusable QR access points for attendance, visitors, forms, members, and assets.",
     category: "Operations",
     status: "enabled",
     icon: "qr",
@@ -22,10 +22,11 @@ export const modules: ModuleDefinition[] = [
   {
     id: "inventory",
     name: "Inventory",
-    description: "Track stock, assets, supplies, and resources across locations.",
-    category: "Commerce",
-    status: "disabled",
+    description: "Track assets, equipment, kits, tools, keys, and assigned inventory across locations.",
+    category: "Operations",
+    status: "enabled",
     icon: "inventory",
+    href: "/dashboard/inventory",
   },
   {
     id: "forms",

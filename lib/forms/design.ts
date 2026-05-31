@@ -12,6 +12,7 @@ export type PublicFormDesign = {
   logoUrl: string | null;
   coverImageUrl: string | null;
   customThankYouMessage: string | null;
+  submitButtonText: string;
 };
 
 export function getRadiusClass(radius: FormCornerRadius) {

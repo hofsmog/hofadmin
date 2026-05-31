@@ -10,6 +10,9 @@ export type FormLayout = "card" | "full-width" | "minimal";
 export type FormCornerRadius = "none" | "small" | "medium" | "large";
 export type FormSubmissionReadStatus = "new" | "read";
 export type FormSubmissionHandlingStatus = "unhandled" | "partially_handled" | "handled" | "archived";
+export type InventoryItemStatus = "available" | "in_use" | "maintenance" | "lost" | "retired";
+export type InventoryItemCondition = "new" | "good" | "fair" | "poor" | "broken";
+export type InventoryEventType = "created" | "updated" | "assigned" | "returned" | "status_changed" | "location_changed" | "maintenance" | "retired";
 export type ActivityEventType =
   | "qr_created"
   | "checkin_created"
@@ -406,6 +409,7 @@ export type Database = {
           logo_url: string | null;
           cover_image_url: string | null;
           custom_thank_you_message: string | null;
+          submit_button_text: string;
           created_by: string;
           created_at: string;
           updated_at: string;
@@ -428,6 +432,7 @@ export type Database = {
           logo_url?: string | null;
           cover_image_url?: string | null;
           custom_thank_you_message?: string | null;
+          submit_button_text?: string;
           created_by: string;
           created_at?: string;
           updated_at?: string;
@@ -450,6 +455,7 @@ export type Database = {
           logo_url?: string | null;
           cover_image_url?: string | null;
           custom_thank_you_message?: string | null;
+          submit_button_text?: string;
           created_by?: string;
           created_at?: string;
           updated_at?: string;
@@ -627,6 +633,164 @@ export type Database = {
           },
         ];
       };
+      inventory_categories: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          description: string | null;
+          color: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          description?: string | null;
+          color?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          name?: string;
+          description?: string | null;
+          color?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inventory_categories_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      inventory_items: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          description: string | null;
+          category_id: string | null;
+          asset_tag: string | null;
+          serial_number: string | null;
+          status: InventoryItemStatus;
+          condition: InventoryItemCondition;
+          location: string | null;
+          assigned_to_member_id: string | null;
+          qr_value: string | null;
+          purchase_date: string | null;
+          purchase_price: number | null;
+          notes: string | null;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          description?: string | null;
+          category_id?: string | null;
+          asset_tag?: string | null;
+          serial_number?: string | null;
+          status?: InventoryItemStatus;
+          condition?: InventoryItemCondition;
+          location?: string | null;
+          assigned_to_member_id?: string | null;
+          qr_value?: string | null;
+          purchase_date?: string | null;
+          purchase_price?: number | null;
+          notes?: string | null;
+          created_by: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          name?: string;
+          description?: string | null;
+          category_id?: string | null;
+          asset_tag?: string | null;
+          serial_number?: string | null;
+          status?: InventoryItemStatus;
+          condition?: InventoryItemCondition;
+          location?: string | null;
+          assigned_to_member_id?: string | null;
+          qr_value?: string | null;
+          purchase_date?: string | null;
+          purchase_price?: number | null;
+          notes?: string | null;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inventory_items_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "inventory_categories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      inventory_events: {
+        Row: {
+          id: string;
+          organization_id: string;
+          inventory_item_id: string;
+          event_type: InventoryEventType;
+          note: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          inventory_item_id: string;
+          event_type: InventoryEventType;
+          note?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          inventory_item_id?: string;
+          event_type?: InventoryEventType;
+          note?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inventory_events_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inventory_events_inventory_item_id_fkey";
+            columns: ["inventory_item_id"];
+            isOneToOne: false;
+            referencedRelation: "inventory_items";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -649,6 +813,9 @@ export type Database = {
       member_type: MemberType;
       form_status: FormStatus;
       form_field_type: FormFieldType;
+      inventory_item_status: InventoryItemStatus;
+      inventory_item_condition: InventoryItemCondition;
+      inventory_event_type: InventoryEventType;
     };
     CompositeTypes: Record<string, never>;
   };

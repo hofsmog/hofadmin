@@ -36,14 +36,14 @@ export default async function QrOverviewPage() {
   return (
     <>
       <ModuleHeader
-        title="QR + Check-ins"
-        description="Create QR access points, scan arrivals, and review check-in activity."
+        title="Access & Attendance"
+        description="Reusable QR and check-in workflows for attendance, access points, visitors, forms, members, and assets."
         items={qrNavItems}
         action={{ href: "/dashboard/qr/items#create-qr", label: "Create QR" }}
       />
 
       <div className="grid gap-4 md:grid-cols-2">
-        <StatCard label="QR items" value={`${totalQrItems ?? 0}`} detail="Reusable scan targets" icon={QrCode} />
+        <StatCard label="Access points" value={`${totalQrItems ?? 0}`} detail="Reusable scan targets" icon={QrCode} />
         <StatCard label="Check-ins today" value={`${todayCheckins ?? 0}`} detail="Since local midnight" icon={CheckCircle2} />
       </div>
 

@@ -6,6 +6,14 @@ export const qrNavItems = [
   { title: "Activity", href: "/dashboard/qr/activity" },
 ];
 
+export const inventoryNavItems = [
+  { title: "Overview", href: "/dashboard/inventory" },
+  { title: "Items", href: "/dashboard/inventory/items" },
+  { title: "Create", href: "/dashboard/inventory/create" },
+  { title: "Categories", href: "/dashboard/inventory/categories" },
+  { title: "Activity", href: "/dashboard/inventory/activity" },
+];
+
 export const formsNavItems = [
   { title: "Overview", href: "/dashboard/forms" },
   { title: "Forms", href: "/dashboard/forms/list" },

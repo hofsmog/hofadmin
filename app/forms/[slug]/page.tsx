@@ -73,6 +73,7 @@ export default async function PublicFormPage({ params }: { params: Promise<{ slu
                 logoUrl: form.logo_url,
                 coverImageUrl: form.cover_image_url,
                 customThankYouMessage: form.custom_thank_you_message,
+                submitButtonText: form.submit_button_text,
               }}
             />
           </div>
