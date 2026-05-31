@@ -11,7 +11,20 @@ export default async function FormsSubmissionsPage() {
     supabase.from("forms").select("id, title").eq("organization_id", organizationId),
     supabase.from("form_submissions").select("*").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(100),
   ]);
+  const submissionIds = (submissions ?? []).map((submission) => submission.id);
+  const { data: submissionValues } = submissionIds.length
+    ? await supabase
+        .from("form_submission_values")
+        .select("*")
+        .eq("organization_id", organizationId)
+        .in("submission_id", submissionIds)
+    : { data: [] };
   const formsById = new Map((forms ?? []).map((form) => [form.id, form]));
+  const valuesBySubmissionId = new Map<string, typeof submissionValues>();
+
+  for (const value of submissionValues ?? []) {
+    valuesBySubmissionId.set(value.submission_id, [...(valuesBySubmissionId.get(value.submission_id) ?? []), value]);
+  }
 
   return (
     <>
@@ -27,15 +40,29 @@ export default async function FormsSubmissionsPage() {
           </div>
         </CardHeader>
         <div className="divide-y px-5 pb-5">
-          {(submissions ?? []).length ? submissions?.map((submission) => (
-            <div key={submission.id} className="py-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-medium">{formsById.get(submission.form_id)?.title ?? "Unknown form"}</p>
-                <span className="text-xs text-muted-foreground">{new Date(submission.created_at).toLocaleString()}</span>
+          {(submissions ?? []).length ? submissions?.map((submission) => {
+            const values = valuesBySubmissionId.get(submission.id) ?? [];
+
+            return (
+              <div key={submission.id} className="py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium">{formsById.get(submission.form_id)?.title ?? "Unknown form"}</p>
+                  <span className="text-xs text-muted-foreground">{new Date(submission.created_at).toLocaleString()}</span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">{submission.submitter_email ?? "Internal submission"} · {submission.id.slice(0, 8)}</p>
+                {values.length ? (
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    {values.map((value) => (
+                      <div key={value.id} className="rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900/60">
+                        <p className="text-xs font-medium text-muted-foreground">{value.field_label}</p>
+                        <p className="mt-1 break-words text-sm">{value.value || "No value"}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">{submission.submitter_email ?? "Internal submission"} · {submission.id.slice(0, 8)}</p>
-            </div>
-          )) : (
+            );
+          }) : (
             <div className="py-8 text-center">
               <Inbox className="mx-auto h-8 w-8 text-muted-foreground" />
               <p className="mt-3 text-sm font-medium">No submissions yet</p>

@@ -1,6 +1,7 @@
 import { ClipboardList, ExternalLink } from "lucide-react";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { Badge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { formsNavItems } from "@/lib/module-nav";
@@ -50,9 +51,16 @@ export default async function FormsListPage() {
                     <Badge key={field.id} className="capitalize">{field.label} · {field.field_type}</Badge>
                   )) : <Badge>No fields</Badge>}
                 </div>
-                <div className="mt-4 rounded-xl border border-dashed bg-white p-3 text-sm text-muted-foreground dark:bg-zinc-950">
-                  <div className="flex items-center gap-2"><ExternalLink className="h-4 w-4" />Public share link placeholder</div>
-                  <code className="mt-2 block overflow-x-auto text-xs">/forms/{form.slug}</code>
+                <div className="mt-4 rounded-xl border bg-white p-3 text-sm text-muted-foreground dark:bg-zinc-950">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="flex items-center gap-2"><ExternalLink className="h-4 w-4" />Public share link</div>
+                      <code className="mt-2 block overflow-x-auto text-xs">/forms/{form.slug}</code>
+                    </div>
+                    <ButtonLink href={`/forms/${form.slug}`} variant="secondary" className="h-9 px-3">
+                      Open
+                    </ButtonLink>
+                  </div>
                 </div>
               </article>
             );
