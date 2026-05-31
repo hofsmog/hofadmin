@@ -75,13 +75,26 @@ export default async function SubmissionDetailPage({
     }
   }
 
-  const { data: values } = await supabase
-    .from("form_submission_values")
-    .select("*")
-    .eq("organization_id", organizationId)
-    .eq("submission_id", submission.id)
-    .order("created_at", { ascending: true });
-  const respondentName = getRespondentName(values ?? []);
+  const [{ data: values }, { data: formFields }] = await Promise.all([
+    supabase
+      .from("form_submission_values")
+      .select("*")
+      .eq("organization_id", organizationId)
+      .eq("submission_id", submission.id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("form_fields")
+      .select("id, sort_order")
+      .eq("organization_id", organizationId)
+      .eq("form_id", submission.form_id),
+  ]);
+  const fieldOrder = new Map((formFields ?? []).map((field) => [field.id, field.sort_order]));
+  const orderedValues = [...(values ?? [])].sort((a, b) => {
+    const aOrder = a.field_id ? fieldOrder.get(a.field_id) ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER;
+    const bOrder = b.field_id ? fieldOrder.get(b.field_id) ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER;
+    return aOrder - bOrder;
+  });
+  const respondentName = getRespondentName(orderedValues);
   const submittedAt = new Date(submission.created_at);
 
   return (
@@ -116,9 +129,9 @@ export default async function SubmissionDetailPage({
             </div>
           </CardHeader>
           <CardContent>
-            {(values ?? []).length ? (
+            {orderedValues.length ? (
               <div className="grid gap-3">
-                {values?.map((value) => (
+                {orderedValues.map((value) => (
                   <div key={value.id} className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900/60">
                     <p className="text-xs font-medium uppercase text-muted-foreground">{value.field_label}</p>
                     <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6">{value.value || "No value"}</p>

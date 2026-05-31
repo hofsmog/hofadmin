@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { PublicForm } from "@/components/forms/public-form";
 import { BrandLockup } from "@/components/ui/brand";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getFontClass, getRadiusClass } from "@/lib/forms/design";
 import { createClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -32,21 +34,49 @@ export default async function PublicFormPage({ params }: { params: Promise<{ slu
     .eq("form_id", form.id)
     .order("sort_order", { ascending: true });
 
+  const radiusClass = getRadiusClass(form.corner_radius);
+  const shellClass = form.form_layout === "full-width" ? "max-w-5xl" : form.form_layout === "minimal" ? "max-w-xl" : "max-w-2xl";
+
   return (
-    <main className="min-h-screen bg-zinc-50 px-4 py-8 dark:bg-zinc-950 sm:px-6">
-      <div className="mx-auto max-w-2xl">
-        <div className="mb-8">
+    <main className={cn("min-h-screen px-4 py-8 sm:px-6", getFontClass(form.font_style))} style={{ backgroundColor: form.background_color, color: form.text_color }}>
+      <div className={cn("mx-auto", shellClass)}>
+        <div className="mb-8 flex items-center justify-between gap-4">
           <BrandLockup size="sm" />
+          {form.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={form.logo_url} alt="" className="h-12 max-w-40 object-contain" />
+          ) : null}
         </div>
-        <Card className="overflow-hidden">
-          <CardHeader className="border-b bg-white dark:bg-zinc-950">
-            <CardTitle className="text-2xl">{form.title}</CardTitle>
+        <section className={cn("overflow-hidden border bg-white/92 shadow-sm dark:bg-zinc-950/90", radiusClass, form.form_layout === "minimal" && "border-transparent bg-transparent shadow-none dark:bg-transparent")}>
+          {form.cover_image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={form.cover_image_url} alt="" className="h-44 w-full object-cover sm:h-56" />
+          ) : null}
+          <CardHeader className={cn("border-b bg-transparent", form.form_layout === "minimal" && "border-b-0 px-0")}>
+            <div className="mb-2 h-1.5 w-20 rounded-full" style={{ backgroundColor: form.accent_color }} />
+            <CardTitle className="text-2xl" style={{ color: form.text_color }}>{form.title}</CardTitle>
             {form.description ? <CardDescription>{form.description}</CardDescription> : null}
           </CardHeader>
-          <div className="p-5 sm:p-6">
-            <PublicForm slug={form.slug} fields={fields ?? []} />
+          <div className={cn("p-5 sm:p-6", form.form_layout === "minimal" && "px-0")}>
+            <PublicForm
+              slug={form.slug}
+              fields={fields ?? []}
+              design={{
+                accentColor: form.accent_color,
+                backgroundColor: form.background_color,
+                textColor: form.text_color,
+                buttonColor: form.button_color,
+                buttonTextColor: form.button_text_color,
+                fontStyle: form.font_style,
+                formLayout: form.form_layout,
+                cornerRadius: form.corner_radius,
+                logoUrl: form.logo_url,
+                coverImageUrl: form.cover_image_url,
+                customThankYouMessage: form.custom_thank_you_message,
+              }}
+            />
           </div>
-        </Card>
+        </section>
       </div>
     </main>
   );

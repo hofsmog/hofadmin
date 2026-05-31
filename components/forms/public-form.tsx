@@ -5,13 +5,20 @@ import { AlertCircle, Send } from "lucide-react";
 import { submitPublicFormAction, type PublicFormState } from "@/app/forms/[slug]/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getRadiusClass, type PublicFormDesign } from "@/lib/forms/design";
+import { cn } from "@/lib/utils";
 import type { Database } from "@/types/database";
 
 type Field = Database["public"]["Tables"]["form_fields"]["Row"];
 const initialState: PublicFormState = { status: "idle", message: "" };
 
-export function PublicForm({ slug, fields }: { slug: string; fields: Field[] }) {
+export function PublicForm({ slug, fields, design }: { slug: string; fields: Field[]; design: PublicFormDesign }) {
   const [state, action, pending] = useActionState(submitPublicFormAction, initialState);
+  const radiusClass = getRadiusClass(design.cornerRadius);
+  const controlClass = cn(
+    "w-full border bg-white px-3 text-sm text-zinc-950 shadow-sm outline-none transition placeholder:text-zinc-400 focus:ring-4",
+    radiusClass,
+  );
 
   return (
     <form action={action} className="space-y-5">
@@ -24,10 +31,15 @@ export function PublicForm({ slug, fields }: { slug: string; fields: Field[] }) 
       ) : null}
 
       {fields.map((field) => (
-        <FieldControl key={field.id} field={field} />
+        <FieldControl key={field.id} field={field} accentColor={design.accentColor} controlClass={controlClass} radiusClass={radiusClass} />
       ))}
 
-      <Button type="submit" className="h-12 w-full" disabled={pending}>
+      <Button
+        type="submit"
+        className={cn("h-12 w-full", radiusClass)}
+        style={{ backgroundColor: design.buttonColor, color: design.buttonTextColor }}
+        disabled={pending}
+      >
         {pending ? "Submitting" : "Submit form"}
         <Send className="h-4 w-4" />
       </Button>
@@ -35,12 +47,22 @@ export function PublicForm({ slug, fields }: { slug: string; fields: Field[] }) 
   );
 }
 
-function FieldControl({ field }: { field: Field }) {
+function FieldControl({
+  field,
+  accentColor,
+  controlClass,
+  radiusClass,
+}: {
+  field: Field;
+  accentColor: string;
+  controlClass: string;
+  radiusClass: string;
+}) {
   const name = `field_${field.id}`;
   const label = (
     <span className="text-sm font-medium">
       {field.label}
-      {field.is_required ? <span className="text-red-600"> *</span> : null}
+      {field.is_required ? <span style={{ color: accentColor }}> *</span> : null}
     </span>
   );
 
@@ -52,7 +74,7 @@ function FieldControl({ field }: { field: Field }) {
           name={name}
           required={field.is_required}
           rows={4}
-          className="w-full rounded-xl border bg-white px-3 py-3 text-sm text-zinc-950 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70"
+          className={cn(controlClass, "py-3")}
         />
       </label>
     );
@@ -66,7 +88,7 @@ function FieldControl({ field }: { field: Field }) {
         <select
           name={name}
           required={field.is_required}
-          className="h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70"
+          className={cn(controlClass, "h-11")}
         >
           <option value="">Select</option>
           {options.map((option) => (
@@ -81,7 +103,7 @@ function FieldControl({ field }: { field: Field }) {
 
   if (field.field_type === "checkbox") {
     return (
-      <label className="flex items-start gap-3 rounded-xl border bg-zinc-50 p-4">
+      <label className={cn("flex items-start gap-3 border bg-white/70 p-4", radiusClass)}>
         <input name={name} value="yes" type="checkbox" required={field.is_required} className="mt-1 h-4 w-4 rounded border-zinc-300" />
         <span>
           {label}
@@ -103,7 +125,7 @@ function FieldControl({ field }: { field: Field }) {
   return (
     <label className="block space-y-2">
       {label}
-      <Input name={name} type={inputType} required={field.is_required} />
+      <Input name={name} type={inputType} required={field.is_required} className={cn(radiusClass)} />
     </label>
   );
 }

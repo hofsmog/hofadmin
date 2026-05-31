@@ -1,4 +1,4 @@
-import { ClipboardList, ExternalLink } from "lucide-react";
+import { ClipboardList, ExternalLink, Pencil } from "lucide-react";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
@@ -52,7 +52,7 @@ export default async function FormsListPage() {
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {formFields.length ? formFields.map((field) => (
-                    <Badge key={field.id} className="capitalize">{field.label} · {field.field_type}</Badge>
+                    <Badge key={field.id} className="capitalize">{field.label} - {field.field_type}</Badge>
                   )) : <Badge>No fields</Badge>}
                 </div>
                 <div className="mt-4 rounded-xl border bg-white p-3 text-sm text-muted-foreground dark:bg-zinc-950">
@@ -61,9 +61,15 @@ export default async function FormsListPage() {
                       <div className="flex items-center gap-2"><ExternalLink className="h-4 w-4" />Public share link</div>
                       <code className="mt-2 block overflow-x-auto text-xs">{publicUrl}</code>
                     </div>
-                    <ButtonLink href={publicUrl} variant="secondary" className="h-9 px-3" target="_blank">
-                      Open
-                    </ButtonLink>
+                    <div className="flex gap-2">
+                      <ButtonLink href={`/dashboard/forms/${form.id}/edit`} variant="secondary" className="h-9 px-3">
+                        <Pencil className="h-4 w-4" />
+                        Edit
+                      </ButtonLink>
+                      <ButtonLink href={publicUrl} variant="secondary" className="h-9 px-3" target="_blank">
+                        Open
+                      </ButtonLink>
+                    </div>
                   </div>
                 </div>
               </article>
