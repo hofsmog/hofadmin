@@ -119,7 +119,9 @@ function FormBuilder({
   const [activeTab, setActiveTab] = useState<TabId>("fields");
   const [title, setTitle] = useState(form?.title ?? "Volunteer signup");
   const [description, setDescription] = useState(form?.description ?? "Collect information with a clean public form.");
-  const [status, setStatus] = useState<FormStatus>(form?.status ?? "draft");
+  const [status, setStatus] = useState<FormStatus>(form?.status === "active" ? "published" : form?.status ?? "draft");
+  const [enableEmailNotifications, setEnableEmailNotifications] = useState(form?.enable_email_notifications ?? false);
+  const [notificationEmails, setNotificationEmails] = useState((form?.notification_emails ?? []).join(", "));
   const [design, setDesign] = useState<DesignState>({
     accentColor: form?.accent_color ?? "#2563eb",
     backgroundColor: form?.background_color ?? "#f8fafc",
@@ -243,6 +245,11 @@ function FormBuilder({
       </CardHeader>
       <form action={action as never} className="grid gap-5 p-5 pt-0 xl:grid-cols-[1fr_24rem]">
         <input type="hidden" name="fields" value={fieldsPayload} />
+        <input type="hidden" name="title" value={title} />
+        <input type="hidden" name="description" value={description} />
+        <input type="hidden" name="status" value={status} />
+        <input type="hidden" name="notificationEmails" value={notificationEmails} />
+        {enableEmailNotifications ? <input type="hidden" name="enableEmailNotifications" value="on" /> : null}
         {form ? <input type="hidden" name="formId" value={form.id} /> : null}
         <HiddenDesignInputs design={design} />
 
@@ -267,6 +274,10 @@ function FormBuilder({
               setTitle={setTitle}
               setDescription={setDescription}
               setStatus={setStatus}
+              enableEmailNotifications={enableEmailNotifications}
+              notificationEmails={notificationEmails}
+              setEnableEmailNotifications={setEnableEmailNotifications}
+              setNotificationEmails={setNotificationEmails}
             />
           ) : null}
 
@@ -306,6 +317,10 @@ function SettingsPanel({
   setTitle,
   setDescription,
   setStatus,
+  enableEmailNotifications,
+  notificationEmails,
+  setEnableEmailNotifications,
+  setNotificationEmails,
 }: {
   title: string;
   description: string;
@@ -313,25 +328,40 @@ function SettingsPanel({
   setTitle: (value: string) => void;
   setDescription: (value: string) => void;
   setStatus: (value: FormStatus) => void;
+  enableEmailNotifications: boolean;
+  notificationEmails: string;
+  setEnableEmailNotifications: (value: boolean) => void;
+  setNotificationEmails: (value: string) => void;
 }) {
   return (
     <section className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900/60">
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block space-y-2 md:col-span-2">
           <span className="text-sm font-medium">Title</span>
-          <Input name="title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Volunteer signup" required />
+          <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Volunteer signup" required />
         </label>
         <label className="block space-y-2">
           <span className="text-sm font-medium">Status</span>
-          <select value={status} onChange={(event) => setStatus(event.target.value as FormStatus)} name="status" className="h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800">
+          <select value={status} onChange={(event) => setStatus(event.target.value as FormStatus)} className="h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800">
             <option value="draft">Draft</option>
-            <option value="active">Active</option>
+            <option value="published">Published</option>
             <option value="archived">Archived</option>
           </select>
         </label>
         <label className="block space-y-2">
           <span className="text-sm font-medium">Description</span>
-          <Input name="description" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Collect event volunteer details" />
+          <Input value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Collect event volunteer details" />
+        </label>
+        <label className="flex items-start gap-3 rounded-xl border bg-white p-4 dark:bg-zinc-950 md:col-span-2">
+          <input type="checkbox" checked={enableEmailNotifications} onChange={(event) => setEnableEmailNotifications(event.target.checked)} className="mt-1 h-4 w-4 rounded border-zinc-300" />
+          <span>
+            <span className="block text-sm font-medium">Email notifications</span>
+            <span className="mt-1 block text-sm text-muted-foreground">Send an email when this form receives a new submission.</span>
+          </span>
+        </label>
+        <label className="block space-y-2 md:col-span-2">
+          <span className="text-sm font-medium">Notification emails</span>
+          <Input value={notificationEmails} onChange={(event) => setNotificationEmails(event.target.value)} placeholder="owner@example.com, admin@example.com" />
         </label>
       </div>
     </section>

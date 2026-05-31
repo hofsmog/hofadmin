@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock3, Inbox, Search } from "lucide-react";
+import { Clock3, Download, Inbox, Search } from "lucide-react";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { HandlingStatusBadge, ReadStatusBadge } from "@/components/dashboard/submission-status-badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +27,8 @@ export default async function FormsSubmissionsPage({
     q?: string;
     readStatus?: string;
     handlingStatus?: string;
+    dateFrom?: string;
+    dateTo?: string;
   }>;
 }) {
   const { supabase, organizationContext } = await requireOrganizationContext();
@@ -36,9 +38,11 @@ export default async function FormsSubmissionsPage({
   const query = String(params.q ?? "").trim();
   const readStatus = sanitizeReadStatus(params.readStatus);
   const handlingStatus = sanitizeHandlingStatus(params.handlingStatus);
+  const dateFrom = String(params.dateFrom ?? "");
+  const dateTo = String(params.dateTo ?? "");
   const [{ data: forms }, submissionsResult] = await Promise.all([
     supabase.from("forms").select("id, title").eq("organization_id", organizationId).order("title", { ascending: true }),
-    buildSubmissionsQuery(supabase, organizationId, { formId, readStatus, handlingStatus }),
+    buildSubmissionsQuery(supabase, organizationId, { formId, readStatus, handlingStatus, dateFrom, dateTo }),
   ]);
   const submissions = submissionsResult.data ?? [];
   const submissionIds = submissions.map((submission) => submission.id);
@@ -84,7 +88,7 @@ export default async function FormsSubmissionsPage({
           </div>
         </CardHeader>
 
-        <form className="grid gap-3 border-t p-5 md:grid-cols-[1fr_13rem_10rem_13rem_auto]">
+        <form className="grid gap-3 border-t p-5 md:grid-cols-[1fr_13rem_10rem_13rem_10rem_10rem_auto]">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
             <Input name="q" defaultValue={query} placeholder="Search name, email, form, values" className="pl-9" />
@@ -111,10 +115,21 @@ export default async function FormsSubmissionsPage({
               </option>
             ))}
           </select>
+          <Input name="dateFrom" type="date" defaultValue={dateFrom} />
+          <Input name="dateTo" type="date" defaultValue={dateTo} />
           <button className="h-11 rounded-xl bg-zinc-950 px-4 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950" type="submit">
             Filter
           </button>
         </form>
+        <div className="flex justify-end border-t px-5 py-3">
+          <Link
+            href={`/api/forms/submissions/export?${new URLSearchParams({ formId, readStatus, handlingStatus, dateFrom, dateTo }).toString()}`}
+            className="inline-flex h-9 items-center gap-2 rounded-xl border bg-white px-3 text-sm font-medium shadow-sm transition hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Link>
+        </div>
 
         <div className="divide-y border-t">
           {filteredSubmissions.length ? (
@@ -185,6 +200,8 @@ function buildSubmissionsQuery(
     formId: string;
     readStatus: "all" | FormSubmissionReadStatus;
     handlingStatus: "all" | FormSubmissionHandlingStatus;
+    dateFrom: string;
+    dateTo: string;
   },
 ) {
   let query = supabase
@@ -204,6 +221,14 @@ function buildSubmissionsQuery(
 
   if (filters.handlingStatus !== "all") {
     query = query.eq("handling_status", filters.handlingStatus);
+  }
+
+  if (filters.dateFrom) {
+    query = query.gte("created_at", new Date(filters.dateFrom).toISOString());
+  }
+
+  if (filters.dateTo) {
+    query = query.lte("created_at", new Date(`${filters.dateTo}T23:59:59.999Z`).toISOString());
   }
 
   return query;

@@ -20,7 +20,7 @@ export default async function PublicFormPage({ params }: { params: Promise<{ slu
     .from("forms")
     .select("*")
     .eq("slug", slug)
-    .eq("status", "active")
+    .eq("status", "published")
     .single();
 
   if (!form) {

@@ -1,6 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { sendFormSubmissionNotification } from "@/lib/email/sendFormSubmissionNotification";
+import { getRespondentName } from "@/lib/forms/submissions";
 import { createClient } from "@/lib/supabase/server";
 
 export type PublicFormState = {
@@ -23,7 +25,7 @@ export async function submitPublicFormAction(
     .from("forms")
     .select("*")
     .eq("slug", slug)
-    .eq("status", "active")
+    .eq("status", "published")
     .single();
 
   if (formError || !form) {
@@ -83,6 +85,25 @@ export async function submitPublicFormAction(
 
   if (valuesError) {
     return { status: "error", message: valuesError.message };
+  }
+
+  if (form.enable_email_notifications) {
+    const submissionUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://hofadmin.vercel.app"}/dashboard/forms/submissions/${submission.id}`;
+    const notificationValues = values.map(({ field, value }) => ({
+      field_label: field.label,
+      value,
+    }));
+
+    await sendFormSubmissionNotification({
+      to: form.notification_emails ?? [],
+      formTitle: form.title,
+      respondentName: getRespondentName(notificationValues),
+      submittedAt: new Date().toISOString(),
+      submissionUrl,
+      values: notificationValues,
+    }).catch((error) => {
+      console.error("Form submission notification failed", error);
+    });
   }
 
   redirect(`/forms/${form.slug}/success`);

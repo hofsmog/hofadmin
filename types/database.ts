@@ -4,7 +4,7 @@ export type QrItemType = "general" | "event" | "member" | "asset" | "location";
 export type OrganizationType = "school" | "club" | "business" | "restaurant" | "cafe" | "event" | "other";
 export type MemberStatus = "active" | "inactive";
 export type MemberType = "student" | "staff" | "player" | "volunteer" | "employee" | "customer" | "guest" | "other";
-export type FormStatus = "draft" | "active" | "archived";
+export type FormStatus = "draft" | "active" | "published" | "archived";
 export type FormFieldType = "text" | "textarea" | "email" | "phone" | "number" | "date" | "select" | "checkbox";
 export type FormFontStyle = "default" | "modern" | "classic" | "playful";
 export type FormLayout = "card" | "full-width" | "minimal";
@@ -432,6 +432,8 @@ export type Database = {
           cover_image_url: string | null;
           custom_thank_you_message: string | null;
           submit_button_text: string;
+          enable_email_notifications: boolean;
+          notification_emails: string[];
           created_by: string;
           created_at: string;
           updated_at: string;
@@ -455,6 +457,8 @@ export type Database = {
           cover_image_url?: string | null;
           custom_thank_you_message?: string | null;
           submit_button_text?: string;
+          enable_email_notifications?: boolean;
+          notification_emails?: string[];
           created_by: string;
           created_at?: string;
           updated_at?: string;
@@ -478,6 +482,8 @@ export type Database = {
           cover_image_url?: string | null;
           custom_thank_you_message?: string | null;
           submit_button_text?: string;
+          enable_email_notifications?: boolean;
+          notification_emails?: string[];
           created_by?: string;
           created_at?: string;
           updated_at?: string;

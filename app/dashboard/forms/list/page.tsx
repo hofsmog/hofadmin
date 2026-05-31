@@ -1,18 +1,26 @@
 import { ClipboardList, ExternalLink, Pencil } from "lucide-react";
+import { FormLifecycleActions } from "@/components/dashboard/forms/form-lifecycle-actions";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { formsNavItems } from "@/lib/module-nav";
+import type { FormStatus } from "@/types/database";
 
 const publicFormsBaseUrl = "https://hofadmin.vercel.app/forms";
 
-export default async function FormsListPage() {
+export default async function FormsListPage({ searchParams }: { searchParams?: Promise<{ status?: string }> }) {
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
+  const params = (await searchParams) ?? {};
+  const statusFilter: "all" | FormStatus = params.status === "draft" || params.status === "published" || params.status === "archived" ? params.status : "all";
+  let formsQuery = supabase.from("forms").select("*").eq("organization_id", organizationId).order("created_at", { ascending: false });
+  if (statusFilter !== "all") {
+    formsQuery = formsQuery.eq("status", statusFilter);
+  }
   const [{ data: forms }, { data: fields }] = await Promise.all([
-    supabase.from("forms").select("*").eq("organization_id", organizationId).order("created_at", { ascending: false }),
+    formsQuery,
     supabase.from("form_fields").select("*").eq("organization_id", organizationId).order("sort_order", { ascending: true }),
   ]);
   const fieldsByFormId = new Map<string, typeof fields>();
@@ -22,7 +30,7 @@ export default async function FormsListPage() {
 
   return (
     <>
-      <ModuleHeader title="Forms Library" description="Browse active, draft, and archived forms." items={formsNavItems} action={{ href: "/dashboard/forms/create", label: "Create form" }} />
+      <ModuleHeader title="Forms Library" description="Browse draft, published, and archived forms." items={formsNavItems} action={{ href: "/dashboard/forms/create", label: "Create form" }} />
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
@@ -33,6 +41,15 @@ export default async function FormsListPage() {
             <ClipboardList className="h-5 w-5 text-muted-foreground" />
           </div>
         </CardHeader>
+        <form className="flex flex-col gap-3 p-5 pt-0 sm:flex-row sm:items-center">
+          <select name="status" defaultValue={statusFilter} className="h-11 rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800">
+            <option value="all">All statuses</option>
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+            <option value="archived">Archived</option>
+          </select>
+          <button className="h-11 rounded-xl bg-zinc-950 px-4 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950" type="submit">Filter</button>
+        </form>
         <div className="space-y-3 p-5 pt-0">
           {(forms ?? []).length ? forms?.map((form) => {
             const formFields = fieldsByFormId.get(form.id) ?? [];
@@ -44,7 +61,7 @@ export default async function FormsListPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-semibold">{form.title}</h3>
-                      <Badge className="capitalize">{form.status}</Badge>
+                      <Badge className="capitalize">{form.status === "active" ? "published" : form.status}</Badge>
                     </div>
                     {form.description ? <p className="mt-2 text-sm leading-6 text-muted-foreground">{form.description}</p> : null}
                   </div>
@@ -61,16 +78,19 @@ export default async function FormsListPage() {
                       <div className="flex items-center gap-2"><ExternalLink className="h-4 w-4" />Public share link</div>
                       <code className="mt-2 block overflow-x-auto text-xs">{publicUrl}</code>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <ButtonLink href={`/dashboard/forms/${form.id}/edit`} variant="secondary" className="h-9 px-3">
                         <Pencil className="h-4 w-4" />
                         Edit
                       </ButtonLink>
-                      <ButtonLink href={publicUrl} variant="secondary" className="h-9 px-3" target="_blank">
+                      <ButtonLink href={publicUrl} variant="secondary" className="h-9 px-3" target="_blank" aria-disabled={form.status !== "published"}>
                         Open
                       </ButtonLink>
                     </div>
                   </div>
+                </div>
+                <div className="mt-4">
+                  <FormLifecycleActions formId={form.id} status={form.status} />
                 </div>
               </article>
             );

@@ -6,7 +6,7 @@ import { recordActivityEvent } from "@/lib/activity";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import type { FormCornerRadius, FormFieldType, FormFontStyle, FormLayout, FormStatus } from "@/types/database";
 
-const validStatuses = new Set<FormStatus>(["draft", "active", "archived"]);
+const validStatuses = new Set<FormStatus>(["draft", "published", "archived"]);
 const validFontStyles = new Set<FormFontStyle>(["default", "modern", "classic", "playful"]);
 const validLayouts = new Set<FormLayout>(["card", "full-width", "minimal"]);
 const validCornerRadii = new Set<FormCornerRadius>(["none", "small", "medium", "large"]);
@@ -47,6 +47,8 @@ type DesignPayload = {
   cover_image_url: string | null;
   custom_thank_you_message: string | null;
   submit_button_text: string;
+  enable_email_notifications: boolean;
+  notification_emails: string[];
 };
 
 export async function createFormAction(
@@ -235,6 +237,129 @@ export async function updateFormAction(formData: FormData) {
   redirect(`/dashboard/forms/${formId}/edit?updated=1`);
 }
 
+export async function updateFormStatusAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const formId = String(formData.get("formId") || "").trim();
+  const status = String(formData.get("status") || "draft") as FormStatus;
+
+  if (!formId || !validStatuses.has(status)) {
+    redirect("/dashboard/forms/list?error=invalid");
+  }
+
+  const { data: form, error } = await supabase
+    .from("forms")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", formId)
+    .eq("organization_id", organizationId)
+    .select("id, title, slug")
+    .single();
+
+  if (error || !form) {
+    redirect("/dashboard/forms/list?error=status");
+  }
+
+  await recordActivityEvent({
+    supabase,
+    organizationId,
+    type: "form_created",
+    title: "Form status updated",
+    description: `${form.title} is now ${status}.`,
+    actorId: user.id,
+    metadata: { formId: form.id, slug: form.slug, status },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/forms");
+  revalidatePath("/dashboard/forms/list");
+  revalidatePath(`/forms/${form.slug}`);
+  redirect("/dashboard/forms/list?updated=1");
+}
+
+export async function duplicateFormAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const formId = String(formData.get("formId") || "").trim();
+
+  if (!formId) {
+    redirect("/dashboard/forms/list?error=invalid");
+  }
+
+  const [{ data: form }, { data: fields }] = await Promise.all([
+    supabase.from("forms").select("*").eq("id", formId).eq("organization_id", organizationId).single(),
+    supabase.from("form_fields").select("*").eq("form_id", formId).eq("organization_id", organizationId).order("sort_order", { ascending: true }),
+  ]);
+
+  if (!form) {
+    redirect("/dashboard/forms/list?error=not-found");
+  }
+
+  const title = `Copy of ${form.title}`.slice(0, 140);
+  const slug = `${createSlug(title)}-${crypto.randomUUID().slice(0, 8)}`;
+  const { data: copy, error: copyError } = await supabase
+    .from("forms")
+    .insert({
+      organization_id: organizationId,
+      title,
+      description: form.description,
+      status: "draft",
+      slug,
+      accent_color: form.accent_color,
+      background_color: form.background_color,
+      text_color: form.text_color,
+      button_color: form.button_color,
+      button_text_color: form.button_text_color,
+      font_style: form.font_style,
+      form_layout: form.form_layout,
+      corner_radius: form.corner_radius,
+      logo_url: form.logo_url,
+      cover_image_url: form.cover_image_url,
+      custom_thank_you_message: form.custom_thank_you_message,
+      submit_button_text: form.submit_button_text,
+      enable_email_notifications: form.enable_email_notifications,
+      notification_emails: form.notification_emails,
+      created_by: user.id,
+    })
+    .select("id, title, slug")
+    .single();
+
+  if (copyError || !copy) {
+    redirect("/dashboard/forms/list?error=duplicate");
+  }
+
+  if (fields?.length) {
+    const { error: fieldsError } = await supabase.from("form_fields").insert(
+      fields.map((field) => ({
+        organization_id: organizationId,
+        form_id: copy.id,
+        label: field.label,
+        field_type: field.field_type,
+        is_required: field.is_required,
+        options: field.options,
+        sort_order: field.sort_order,
+      })),
+    );
+
+    if (fieldsError) {
+      redirect("/dashboard/forms/list?error=duplicate-fields");
+    }
+  }
+
+  await recordActivityEvent({
+    supabase,
+    organizationId,
+    type: "form_created",
+    title: "Form duplicated",
+    description: `${form.title} was duplicated as a draft.`,
+    actorId: user.id,
+    metadata: { sourceFormId: form.id, formId: copy.id, slug: copy.slug },
+  });
+
+  revalidatePath("/dashboard/forms");
+  revalidatePath("/dashboard/forms/list");
+  redirect(`/dashboard/forms/${copy.id}/edit?duplicated=1`);
+}
+
 function parseFields(value: string): FieldPayload[] {
   let parsed: unknown;
 
@@ -301,7 +426,17 @@ function parseDesign(formData: FormData): DesignPayload {
     cover_image_url: parseUrl(formData.get("coverImageUrl")),
     custom_thank_you_message: String(formData.get("customThankYouMessage") || "").trim().slice(0, 240) || null,
     submit_button_text: String(formData.get("submitButtonText") || "").trim().slice(0, 40) || "Submit",
+    enable_email_notifications: formData.get("enableEmailNotifications") === "on",
+    notification_emails: parseEmails(String(formData.get("notificationEmails") || "")),
   };
+}
+
+function parseEmails(value: string) {
+  return value
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter((email) => email.includes("@"))
+    .slice(0, 20);
 }
 
 function parseColor(value: FormDataEntryValue | null, fallback: string) {

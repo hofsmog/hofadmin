@@ -26,6 +26,7 @@ export default async function DashboardPage() {
     { count: totalForms },
     { count: totalInventoryItems },
     { count: newSubmissionsCount },
+    { count: submissionsNeedingHandling },
     { data: latestNewSubmissions },
     { count: inventoryNeedsAttention },
     { count: pendingInvitations },
@@ -53,6 +54,11 @@ export default async function DashboardPage() {
       .select("*", { count: "exact", head: true })
       .eq("organization_id", organizationId)
       .eq("read_status", "new"),
+    supabase
+      .from("form_submissions")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", organizationId)
+      .in("handling_status", ["unhandled", "partially_handled"]),
     supabase
       .from("form_submissions")
       .select("id, form_id, submitter_email, read_status, handling_status, created_at")
@@ -116,6 +122,11 @@ export default async function DashboardPage() {
       href: "/dashboard/forms/submissions?readStatus=new",
     },
     {
+      label: "Submissions needing handling",
+      value: submissionsNeedingHandling ?? 0,
+      href: "/dashboard/forms/submissions?handlingStatus=unhandled",
+    },
+    {
       label: "Inventory alerts",
       value: inventoryNeedsAttention ?? 0,
       href: "/dashboard/inventory/items?status=maintenance",
@@ -152,7 +163,7 @@ export default async function DashboardPage() {
       </section>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="New submissions" value={`${newSubmissionsCount ?? 0}`} detail="Unread form responses" icon={Inbox} />
+        <StatCard label="New submissions" value={`${newSubmissionsCount ?? 0}`} detail={`${submissionsNeedingHandling ?? 0} need handling`} icon={Inbox} />
         <StatCard label="Check-ins today" value={`${todayCheckins ?? 0}`} detail="Attendance and access scans" icon={CheckCircle2} />
         <StatCard label="Members" value={`${totalMembers ?? 0}`} detail="People in this organization" icon={UsersRound} />
         <StatCard label="Inventory alerts" value={`${inventoryNeedsAttention ?? 0}`} detail="Maintenance or lost items" icon={AlertTriangle} />
