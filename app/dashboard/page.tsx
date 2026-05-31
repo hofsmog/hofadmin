@@ -1,8 +1,6 @@
 import type { ComponentType } from "react";
-import { AlertTriangle, Building2, CheckCircle2, Inbox, Layers3, MailPlus, Package, Plus, QrCode, ScanLine, UserRoundCheck, UsersRound } from "lucide-react";
-import { ActivityFeed } from "@/components/dashboard/activity-feed";
+import { AlertTriangle, CheckCircle2, ClipboardList, Inbox, Package, Plus, ScanLine, UserPlus, UsersRound } from "lucide-react";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
-import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
@@ -13,350 +11,288 @@ import { getRespondentName, groupSubmissionValues } from "@/lib/forms/submission
 
 export default async function DashboardPage() {
   const { supabase, organizationContext } = await requireOrganizationContext();
-  const activeModules = modules.filter((module) => module.status === "enabled");
-  const enabledModules = activeModules.length;
+  const organizationId = organizationContext.activeOrganization.id;
   const organizationName =
     organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name;
   const organizationLogo =
     organizationContext.activeOrganization.logoUrl ?? organizationContext.activeOrganization.avatarUrl;
-  const accentColor = organizationContext.activeOrganization.accentColor ?? "#111827";
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
   const [
-    { count: totalQrItems },
     { count: todayCheckins },
-    { count: teamMembers },
     { count: totalMembers },
-    { count: activeMembers },
-    { data: recentMembers },
-    { data: recentSubmissions },
-    { data: latestNewSubmissions },
+    { count: totalForms },
     { count: totalInventoryItems },
+    { count: newSubmissionsCount },
+    { data: latestNewSubmissions },
     { count: inventoryNeedsAttention },
-    { data: latestInventoryEvents },
+    { count: pendingInvitations },
     { data: activityEvents },
   ] = await Promise.all([
     supabase
-      .from("qr_items")
-      .select("*", { count: "exact", head: true })
-      .eq("organization_id", organizationContext.activeOrganization.id),
-    supabase
       .from("checkins")
       .select("*", { count: "exact", head: true })
-      .eq("organization_id", organizationContext.activeOrganization.id)
+      .eq("organization_id", organizationId)
       .gte("created_at", todayStart.toISOString()),
     supabase
-      .from("organization_members")
-      .select("*", { count: "exact", head: true })
-      .eq("organization_id", organizationContext.activeOrganization.id),
-    supabase
       .from("members")
       .select("*", { count: "exact", head: true })
-      .eq("organization_id", organizationContext.activeOrganization.id),
+      .eq("organization_id", organizationId),
     supabase
-      .from("members")
+      .from("forms")
       .select("*", { count: "exact", head: true })
-      .eq("organization_id", organizationContext.activeOrganization.id)
-      .eq("status", "active"),
+      .eq("organization_id", organizationId),
     supabase
-      .from("members")
-      .select("id, name, type, status, created_at")
-      .eq("organization_id", organizationContext.activeOrganization.id)
-      .order("created_at", { ascending: false })
-      .limit(4),
+      .from("inventory_items")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", organizationId),
+    supabase
+      .from("form_submissions")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", organizationId)
+      .eq("read_status", "new"),
     supabase
       .from("form_submissions")
       .select("id, form_id, submitter_email, read_status, handling_status, created_at")
-      .eq("organization_id", organizationContext.activeOrganization.id)
-      .order("created_at", { ascending: false })
-      .limit(4),
-    supabase
-      .from("form_submissions")
-      .select("id, form_id, submitter_email, read_status, handling_status, created_at")
-      .eq("organization_id", organizationContext.activeOrganization.id)
+      .eq("organization_id", organizationId)
       .eq("read_status", "new")
       .order("created_at", { ascending: false })
-      .limit(5),
+      .limit(3),
     supabase
       .from("inventory_items")
       .select("*", { count: "exact", head: true })
-      .eq("organization_id", organizationContext.activeOrganization.id),
-    supabase
-      .from("inventory_items")
-      .select("*", { count: "exact", head: true })
-      .eq("organization_id", organizationContext.activeOrganization.id)
+      .eq("organization_id", organizationId)
       .in("status", ["maintenance", "lost"]),
     supabase
-      .from("inventory_events")
-      .select("id, event_type, note, created_at, inventory_items(name)")
-      .eq("organization_id", organizationContext.activeOrganization.id)
-      .order("created_at", { ascending: false })
-      .limit(4),
+      .from("organization_invitations")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", organizationId)
+      .eq("status", "pending"),
     supabase
       .from("activity_events")
       .select("id, type, title, description, created_at")
-      .eq("organization_id", organizationContext.activeOrganization.id)
+      .eq("organization_id", organizationId)
       .order("created_at", { ascending: false })
-      .limit(6),
+      .limit(5),
   ]);
-  const latestNewSubmissionIds = (latestNewSubmissions ?? []).map((submission) => submission.id);
-  const { data: latestNewSubmissionValues } = latestNewSubmissionIds.length
-    ? await supabase
-        .from("form_submission_values")
-        .select("id, submission_id, field_label, value")
-        .eq("organization_id", organizationContext.activeOrganization.id)
-        .in("submission_id", latestNewSubmissionIds)
-    : { data: [] };
-  const valuesBySubmissionId = groupSubmissionValues(latestNewSubmissionValues ?? []);
+
+  const latestSubmissionIds = (latestNewSubmissions ?? []).map((submission) => submission.id);
+  const formIds = [...new Set((latestNewSubmissions ?? []).map((submission) => submission.form_id))];
+  const [{ data: latestSubmissionValues }, { data: submissionForms }] = await Promise.all([
+    latestSubmissionIds.length
+      ? supabase
+          .from("form_submission_values")
+          .select("id, submission_id, field_label, value")
+          .eq("organization_id", organizationId)
+          .in("submission_id", latestSubmissionIds)
+      : Promise.resolve({ data: [] }),
+    formIds.length
+      ? supabase
+          .from("forms")
+          .select("id, title")
+          .eq("organization_id", organizationId)
+          .in("id", formIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+  const valuesBySubmissionId = groupSubmissionValues(latestSubmissionValues ?? []);
+  const formsById = new Map((submissionForms ?? []).map((form) => [form.id, form.title]));
+  const checklistItems = [
+    { done: (totalForms ?? 0) > 0, label: "Create your first form", href: "/dashboard/forms/create" },
+    { done: (totalMembers ?? 0) > 0, label: "Add your first member", href: "/dashboard/members/create#add-member" },
+    { done: (totalInventoryItems ?? 0) > 0, label: "Add your first inventory item", href: "/dashboard/inventory/create" },
+    {
+      done: Boolean(organizationContext.activeOrganization.logoUrl || organizationContext.activeOrganization.accentColor),
+      label: "Customize branding",
+      href: "/dashboard/settings",
+    },
+  ];
+  const incompleteChecklist = checklistItems.filter((item) => !item.done);
+  const attentionItems = [
+    {
+      label: "New form submissions",
+      value: newSubmissionsCount ?? 0,
+      href: "/dashboard/forms/submissions?readStatus=new",
+    },
+    {
+      label: "Inventory alerts",
+      value: inventoryNeedsAttention ?? 0,
+      href: "/dashboard/inventory/items?status=maintenance",
+    },
+    {
+      label: "Pending invitations",
+      value: pendingInvitations ?? 0,
+      href: "/dashboard/team",
+    },
+  ].filter((item) => item.value > 0);
+  const coreModules = modules.filter((module) => ["qr-checkins", "forms", "members", "inventory"].includes(module.id));
 
   return (
     <>
-      <PageHeader
-        title="Dashboard"
-        description={`A command center for ${organizationName}, tenant operations, and enabled modules.`}
-        actions={<ButtonLink href="/dashboard/modules">Manage modules</ButtonLink>}
-      />
-
-      <section className="mb-6 overflow-hidden rounded-2xl border bg-white shadow-sm dark:bg-zinc-950">
-        <div className="grid gap-5 p-5 lg:grid-cols-[1fr_18rem] lg:p-6">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <OrganizationAvatar name={organizationName} avatarUrl={organizationLogo} className="h-16 w-16" />
+      <section className="mb-5 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 dark:bg-zinc-950 dark:ring-white/10">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 gap-4">
+            <OrganizationAvatar name={organizationName} avatarUrl={organizationLogo} className="h-14 w-14" />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="truncate text-2xl font-semibold tracking-tight">{organizationName}</h2>
+                <h1 className="truncate text-2xl font-semibold tracking-tight">{organizationName}</h1>
                 <Badge className="capitalize">{organizationContext.activeMembership.role}</Badge>
               </div>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                Organization-scoped workspace for access, attendance, members, inventory, forms, and activity visibility.
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+                A simple place to see what needs attention and jump into today&apos;s work.
               </p>
-              <div className="mt-4 h-2 max-w-md rounded-full" style={{ backgroundColor: accentColor }} />
             </div>
           </div>
-          <div className="grid gap-3 rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900/60">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Workspace slug</span>
-              <span className="max-w-36 truncate text-sm font-medium">{organizationContext.activeOrganization.slug}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Team users</span>
-              <span className="text-sm font-medium">{teamMembers ?? 0}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Active modules</span>
-              <span className="text-sm font-medium">{enabledModules}</span>
-            </div>
-            <ButtonLink href="/dashboard/settings" variant="secondary" className="h-10 w-full">
-              <Building2 className="h-4 w-4" />
-              Edit branding
-            </ButtonLink>
-          </div>
+          <ButtonLink href="/dashboard/forms/create" className="shrink-0">
+            <Plus className="h-4 w-4" />
+            Create form
+          </ButtonLink>
         </div>
       </section>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Access points" value={`${totalQrItems ?? 0}`} detail="Reusable QR scan targets" icon={QrCode} />
-        <StatCard label="Check-ins today" value={`${todayCheckins ?? 0}`} detail="Since local midnight" icon={CheckCircle2} />
-        <StatCard label="Total members" value={`${totalMembers ?? 0}`} detail={`${activeMembers ?? 0} active records`} icon={UsersRound} />
-        <StatCard label="Inventory" value={`${totalInventoryItems ?? 0}`} detail={`${inventoryNeedsAttention ?? 0} need attention`} icon={Package} />
+        <StatCard label="New submissions" value={`${newSubmissionsCount ?? 0}`} detail="Unread form responses" icon={Inbox} />
+        <StatCard label="Check-ins today" value={`${todayCheckins ?? 0}`} detail="Attendance and access scans" icon={CheckCircle2} />
+        <StatCard label="Members" value={`${totalMembers ?? 0}`} detail="People in this organization" icon={UsersRound} />
+        <StatCard label="Inventory alerts" value={`${inventoryNeedsAttention ?? 0}`} detail="Maintenance or lost items" icon={AlertTriangle} />
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <ActivityFeed events={activityEvents ?? []} />
-
-        <div className="space-y-4">
+      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="space-y-5">
           <Card>
-            <CardHeader>
-              <CardTitle>Inventory alerts</CardTitle>
-              <CardDescription>Assets needing attention and recent inventory movement.</CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle>Needs attention</CardTitle>
+              <CardDescription>Only items that may need a decision or follow-up.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between rounded-xl border bg-amber-50 p-3 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-                <span className="flex items-center gap-2 text-sm font-medium"><AlertTriangle className="h-4 w-4" />Needs attention</span>
-                <span className="text-sm font-semibold">{inventoryNeedsAttention ?? 0}</span>
-              </div>
-              {(latestInventoryEvents ?? []).length ? latestInventoryEvents?.map((event) => (
-                <ButtonLink key={event.id} href="/dashboard/inventory/activity" variant="ghost" className="h-auto w-full justify-start rounded-xl border bg-zinc-50 p-3 text-left dark:bg-zinc-900/60">
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium">{event.inventory_items?.name ?? "Inventory item"}</span>
-                    <span className="mt-1 block truncate text-xs text-muted-foreground">{event.event_type.replaceAll("_", " ")} - {new Date(event.created_at).toLocaleString()}</span>
-                  </span>
-                </ButtonLink>
-              )) : (
-                <div className="rounded-xl border border-dashed p-5 text-center">
-                  <p className="text-sm font-medium">No inventory activity yet</p>
-                  <ButtonLink href="/dashboard/inventory/create" variant="ghost" className="mt-2 h-8">Add item</ButtonLink>
+            <CardContent className="space-y-2">
+              {attentionItems.length ? (
+                attentionItems.map((item) => (
+                  <ButtonLink key={item.label} href={item.href} variant="ghost" className="h-auto w-full justify-between rounded-xl bg-zinc-50 p-3 text-left dark:bg-zinc-900/60">
+                    <span className="text-sm font-medium">{item.label}</span>
+                    <Badge>{item.value}</Badge>
+                  </ButtonLink>
+                ))
+              ) : (
+                <div className="rounded-xl bg-emerald-50 p-4 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100">
+                  <p className="text-sm font-semibold">Everything looks good.</p>
+                  <p className="mt-1 text-sm opacity-80">No new submissions, inventory alerts, or pending invitations right now.</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>New submissions</CardTitle>
-              <CardDescription>Unread form responses that need visibility.</CardDescription>
+            <CardHeader className="flex flex-row items-start justify-between gap-4 pb-3">
+              <div>
+                <CardTitle>Recent activity</CardTitle>
+                <CardDescription>Latest organization updates.</CardDescription>
+              </div>
+              <ButtonLink href="/dashboard/audit-logs" variant="ghost" className="h-8 px-2">
+                View all
+              </ButtonLink>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2">
+              {(activityEvents ?? []).length ? (
+                activityEvents?.map((event) => (
+                  <div key={event.id} className="rounded-xl bg-zinc-50 p-3 dark:bg-zinc-900/60">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-sm font-medium">{event.title}</p>
+                      <span className="shrink-0 text-xs text-muted-foreground">{new Date(event.created_at).toLocaleDateString()}</span>
+                    </div>
+                    {event.description ? <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{event.description}</p> : null}
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-xl border border-dashed p-6 text-center">
+                  <p className="text-sm font-medium">No activity yet</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Create a form, add a member, or add inventory to get started.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>New submissions</CardTitle>
+              <CardDescription>Latest unread form responses.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
               {(latestNewSubmissions ?? []).length ? (
                 latestNewSubmissions?.map((submission) => {
                   const values = valuesBySubmissionId.get(submission.id) ?? [];
 
                   return (
-                    <ButtonLink key={submission.id} href={`/dashboard/forms/submissions/${submission.id}`} variant="ghost" className="h-auto w-full justify-between rounded-xl border bg-emerald-50/70 p-3 text-left dark:bg-emerald-950/20">
+                    <ButtonLink key={submission.id} href={`/dashboard/forms/submissions/${submission.id}`} variant="ghost" className="h-auto w-full justify-between rounded-xl bg-emerald-50/80 p-3 text-left dark:bg-emerald-950/20">
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-semibold">{getRespondentName(values)}</span>
-                        <span className="mt-1 block truncate text-xs text-muted-foreground">{submission.submitter_email ?? "No email captured"}</span>
+                        <span className="mt-1 block truncate text-xs text-muted-foreground">
+                          {formsById.get(submission.form_id) ?? "Unknown form"} - {new Date(submission.created_at).toLocaleString()}
+                        </span>
                       </span>
-                      <span className="ml-3 shrink-0 rounded-full bg-emerald-600 px-2 py-1 text-xs font-medium text-white">New</span>
+                      <Badge className="ml-3 border-emerald-200 bg-white text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+                        New
+                      </Badge>
                     </ButtonLink>
                   );
                 })
               ) : (
-                <div className="rounded-xl border border-dashed p-5 text-center">
+                <div className="rounded-xl border border-dashed p-6 text-center">
                   <p className="text-sm font-medium">No new submissions</p>
-                  <ButtonLink href="/dashboard/forms/submissions" variant="ghost" className="mt-2 h-8">
-                    Open inbox
-                  </ButtonLink>
+                  <p className="mt-1 text-sm text-muted-foreground">Unread responses will appear here.</p>
                 </div>
               )}
             </CardContent>
           </Card>
+        </div>
 
+        <div className="space-y-5">
           <Card>
-            <CardHeader>
-              <CardTitle>Setup checklist</CardTitle>
-              <CardDescription>Keep moving toward a useful first workspace.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <ChecklistItem done={(totalQrItems ?? 0) > 0} label="Create first access point" href="/dashboard/qr/items#create-qr" />
-              <ChecklistItem done={(totalMembers ?? 0) > 0} label="Add first member" href="/dashboard/members/create#add-member" />
-              <ChecklistItem done={(teamMembers ?? 0) > 1} label="Invite team member" href="/dashboard/team" />
-              <ChecklistItem done={Boolean(organizationContext.activeOrganization.logoUrl || organizationContext.activeOrganization.accentColor)} label="Customize branding" href="/dashboard/settings" />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Active modules</CardTitle>
-              <CardDescription>Available surfaces for this workspace.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {activeModules.map((module) => (
-                <div key={module.id} className="flex items-center justify-between rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900/60">
-                  <div>
-                    <p className="text-sm font-medium">{module.name}</p>
-                    <p className="text-xs text-muted-foreground">{module.category}</p>
-                  </div>
-                  {module.href ? (
-                    <ButtonLink href={module.href} variant="ghost" className="h-8 px-2">
-                      Open
-                    </ButtonLink>
-                  ) : (
-                    <Badge>Active</Badge>
-                  )}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent members</CardTitle>
-              <CardDescription>Newest member records in this organization.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {(recentMembers ?? []).length ? (
-                recentMembers?.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between gap-3 rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900/60">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{member.name}</p>
-                      <p className="text-xs capitalize text-muted-foreground">{member.type} - {member.status}</p>
-                    </div>
-                    <UserRoundCheck className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-xl border border-dashed p-5 text-center">
-                  <p className="text-sm font-medium">No members yet</p>
-                  <ButtonLink href="/dashboard/members/create#add-member" variant="ghost" className="mt-2 h-8">
-                    Add first member
-                  </ButtonLink>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent submissions</CardTitle>
-              <CardDescription>Latest form responses across active forms.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {(recentSubmissions ?? []).length ? (
-                recentSubmissions?.map((submission) => (
-                  <ButtonLink key={submission.id} href={`/dashboard/forms/submissions/${submission.id}`} variant="ghost" className="h-auto w-full justify-between rounded-xl border bg-zinc-50 p-3 text-left dark:bg-zinc-900/60">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{submission.submitter_email ?? "Internal submission"}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(submission.created_at).toLocaleString()}</p>
-                    </div>
-                    <Inbox className="h-4 w-4 text-muted-foreground" />
-                  </ButtonLink>
-                ))
-              ) : (
-                <div className="rounded-xl border border-dashed p-5 text-center">
-                  <p className="text-sm font-medium">No form submissions yet</p>
-                  <ButtonLink href="/dashboard/forms/create#create-form" variant="ghost" className="mt-2 h-8">
-                    Create first form
-                  </ButtonLink>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
+            <CardHeader className="pb-3">
               <CardTitle>Quick actions</CardTitle>
-              <CardDescription>Jump into the common workflows for today.</CardDescription>
+              <CardDescription>Common things to do next.</CardDescription>
             </CardHeader>
-            <div className="grid gap-3 p-5 pt-0 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              <QuickAction href="/dashboard/qr/items#create-qr" icon={Plus} label="Create access point" />
-              <QuickAction href="/dashboard/qr/scanner" icon={ScanLine} label="Open scanner" />
+            <CardContent className="grid gap-2">
+              <QuickAction href="/dashboard/forms/create" icon={ClipboardList} label="Create form" />
+              <QuickAction href="/dashboard/members/create#add-member" icon={UserPlus} label="Add member" />
               <QuickAction href="/dashboard/inventory/create" icon={Package} label="Add inventory item" />
-              <QuickAction href="/dashboard/team" icon={MailPlus} label="Invite member" />
-              <QuickAction href="/dashboard/modules" icon={Layers3} label="Manage modules" />
-            </div>
+              <QuickAction href="/dashboard/qr/scanner" icon={ScanLine} label="Open scanner" />
+            </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Operational posture</CardTitle>
-              <CardDescription>
-                Tenant-scoped metrics, check-ins, and activity are live for the active organization.
-              </CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle>Active modules</CardTitle>
+              <CardDescription>Your main work areas.</CardDescription>
             </CardHeader>
-            <div className="space-y-3 p-5 pt-0">
-              {["Supabase auth", "Organization membership", "Role policies", "QR scanner"].map((item) => (
-                <div key={item} className="flex items-center justify-between rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900">
-                  <span className="text-sm font-medium">{item}</span>
-                  <span className="text-xs text-muted-foreground">Ready</span>
+            <CardContent className="space-y-2">
+              {coreModules.map((module) => (
+                <div key={module.id} className="flex items-center justify-between rounded-xl bg-zinc-50 p-3 dark:bg-zinc-900/60">
+                  <p className="text-sm font-medium">{module.name}</p>
+                  {module.href ? <ButtonLink href={module.href} variant="ghost" className="h-8 px-2">Open</ButtonLink> : null}
                 </div>
               ))}
-            </div>
+            </CardContent>
           </Card>
+
+          {incompleteChecklist.length ? (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle>Setup checklist</CardTitle>
+                <CardDescription>Finish the basics, then this gets out of your way.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {incompleteChecklist.map((item) => (
+                  <ButtonLink key={item.label} href={item.href} variant="ghost" className="h-auto w-full justify-start rounded-xl bg-zinc-50 p-3 dark:bg-zinc-900/60">
+                    <CheckCircle2 className="h-4 w-4 text-zinc-400" />
+                    {item.label}
+                  </ButtonLink>
+                ))}
+              </CardContent>
+            </Card>
+          ) : null}
         </div>
       </div>
     </>
-  );
-}
-
-function ChecklistItem({ done, label, href }: { done: boolean; label: string; href: string }) {
-  return (
-    <ButtonLink href={href} variant="ghost" className="h-11 w-full justify-start px-2">
-      <span className={done ? "grid h-7 w-7 place-items-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" : "grid h-7 w-7 place-items-center rounded-lg bg-zinc-100 text-zinc-500 dark:bg-zinc-900"}>
-        <CheckCircle2 className="h-4 w-4" />
-      </span>
-      <span className={done ? "text-muted-foreground line-through" : ""}>{label}</span>
-    </ButtonLink>
   );
 }
 
@@ -370,8 +306,8 @@ function QuickAction({
   label: string;
 }) {
   return (
-    <ButtonLink href={href} variant="secondary" className="h-12 justify-start px-3">
-      <span className="grid h-8 w-8 place-items-center rounded-lg bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+    <ButtonLink href={href} variant="secondary" className="h-11 justify-start px-3">
+      <span className="grid h-7 w-7 place-items-center rounded-lg bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
         <Icon className="h-4 w-4" />
       </span>
       {label}

@@ -196,15 +196,6 @@ function Sidebar({
           );
         })}
       </nav>
-
-      <div className="border-t p-4">
-        <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
-          <p className="text-sm font-medium">Security ready</p>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            Roles, permissions, and organization scope are typed for future backend wiring.
-          </p>
-        </div>
-      </div>
     </div>
   );
 }
