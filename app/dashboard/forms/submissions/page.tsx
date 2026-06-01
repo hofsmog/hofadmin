@@ -41,10 +41,16 @@ export default async function FormsSubmissionsPage({
   const handlingStatus = sanitizeHandlingStatus(params.handlingStatus);
   const dateFrom = String(params.dateFrom ?? "");
   const dateTo = String(params.dateTo ?? "");
-  const [{ data: forms }, submissionsResult] = await Promise.all([
-    supabase.from("forms").select("id, title").eq("organization_id", organizationId).order("title", { ascending: true }),
-    buildSubmissionsQuery(supabase, organizationId, { formId, readStatus, handlingStatus, dateFrom, dateTo }),
-  ]);
+  const { data: forms } = await supabase
+    .from("forms")
+    .select("id, title")
+    .eq("organization_id", organizationId)
+    .eq("form_type", "form")
+    .order("title", { ascending: true });
+  const formIds = (forms ?? []).map((form) => form.id);
+  const submissionsResult = formIds.length
+    ? await buildSubmissionsQuery(supabase, organizationId, { formId, formIds, readStatus, handlingStatus, dateFrom, dateTo })
+    : { data: [] };
   const submissions = submissionsResult.data ?? [];
   const submissionIds = submissions.map((submission) => submission.id);
   const { data: submissionValues } = submissionIds.length
@@ -212,6 +218,7 @@ function buildSubmissionsQuery(
   organizationId: string,
   filters: {
     formId: string;
+    formIds: string[];
     readStatus: "all" | FormSubmissionReadStatus;
     handlingStatus: "all" | FormSubmissionHandlingStatus;
     dateFrom: string;
@@ -225,8 +232,10 @@ function buildSubmissionsQuery(
     .order("created_at", { ascending: false })
     .limit(25);
 
-  if (filters.formId !== "all") {
+  if (filters.formId !== "all" && filters.formIds.includes(filters.formId)) {
     query = query.eq("form_id", filters.formId);
+  } else {
+    query = query.in("form_id", filters.formIds);
   }
 
   if (filters.readStatus !== "all") {

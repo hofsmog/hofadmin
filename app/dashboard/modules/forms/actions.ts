@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { recordActivityEvent } from "@/lib/activity";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
-import type { FormCornerRadius, FormFieldType, FormFontStyle, FormLayout, FormStatus } from "@/types/database";
+import type { FormCornerRadius, FormFieldType, FormFontStyle, FormLayout, FormStatus, FormType } from "@/types/database";
 
 const validStatuses = new Set<FormStatus>(["draft", "published", "archived"]);
+const validFormTypes = new Set<FormType>(["form", "survey"]);
 const validFontStyles = new Set<FormFontStyle>(["default", "modern", "classic", "playful"]);
 const validLayouts = new Set<FormLayout>(["card", "full-width", "minimal"]);
 const validCornerRadii = new Set<FormCornerRadius>(["none", "small", "medium", "large"]);
@@ -20,6 +21,9 @@ const validFieldTypes = new Set<FormFieldType>([
   "select",
   "checkbox",
   "radio",
+  "scale_1_5",
+  "scale_1_10",
+  "yes_no",
 ]);
 
 export type FormBuilderState = {
@@ -59,7 +63,9 @@ export async function createFormAction(
   const { user, supabase, organizationContext } = await requireOrganizationContext();
   const title = String(formData.get("title") || "").trim();
   const description = String(formData.get("description") || "").trim() || null;
+  const formType = String(formData.get("formType") || "form") as FormType;
   const status = String(formData.get("status") || "draft") as FormStatus;
+  const anonymousResponses = formData.get("anonymousResponses") === "on";
   const fields = parseFields(String(formData.get("fields") || "[]"));
   const design = parseDesign(formData);
 
@@ -67,7 +73,7 @@ export async function createFormAction(
     return { status: "error", message: "Form title must be between 2 and 140 characters." };
   }
 
-  if (!validStatuses.has(status)) {
+  if (!validStatuses.has(status) || !validFormTypes.has(formType)) {
     return { status: "error", message: "Choose a valid form status." };
   }
 
@@ -82,7 +88,9 @@ export async function createFormAction(
       organization_id: organizationContext.activeOrganization.id,
       title,
       description,
+      form_type: formType,
       status,
+      anonymous_responses: formType === "survey" ? anonymousResponses : false,
       slug,
       ...design,
       created_by: user.id,
@@ -134,11 +142,13 @@ export async function updateFormAction(formData: FormData) {
   const formId = String(formData.get("formId") || "").trim();
   const title = String(formData.get("title") || "").trim();
   const description = String(formData.get("description") || "").trim() || null;
+  const formType = String(formData.get("formType") || "form") as FormType;
   const status = String(formData.get("status") || "draft") as FormStatus;
+  const anonymousResponses = formData.get("anonymousResponses") === "on";
   const fields = parseFields(String(formData.get("fields") || "[]"));
   const design = parseDesign(formData);
 
-  if (!formId || title.length < 2 || title.length > 140 || !validStatuses.has(status) || !fields.length) {
+  if (!formId || title.length < 2 || title.length > 140 || !validStatuses.has(status) || !validFormTypes.has(formType) || !fields.length) {
     redirect(`/dashboard/forms/${formId || ""}/edit?error=invalid`);
   }
 
@@ -158,7 +168,9 @@ export async function updateFormAction(formData: FormData) {
     .update({
       title,
       description,
+      form_type: formType,
       status,
+      anonymous_responses: formType === "survey" ? anonymousResponses : false,
       ...design,
       updated_at: new Date().toISOString(),
     })
@@ -303,7 +315,9 @@ export async function duplicateFormAction(formData: FormData) {
       organization_id: organizationId,
       title,
       description: form.description,
+      form_type: form.form_type,
       status: "draft",
+      anonymous_responses: form.anonymous_responses,
       slug,
       accent_color: form.accent_color,
       background_color: form.background_color,

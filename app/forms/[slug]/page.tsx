@@ -67,6 +67,11 @@ export default async function PublicFormPage({ params }: { params: Promise<{ slu
             <div className="mb-2 h-1.5 w-20 rounded-full" style={{ backgroundColor: accentColor }} />
             <CardTitle className="text-2xl" style={{ color: form.text_color }}>{form.title}</CardTitle>
             {form.description ? <CardDescription>{form.description}</CardDescription> : null}
+            {form.form_type === "survey" && form.anonymous_responses ? (
+              <div className="mt-3 rounded-xl border bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                Den här undersökningen är anonym.
+              </div>
+            ) : null}
             {welcomeMessage ? <p className="mt-3 text-sm leading-6 text-muted-foreground">{welcomeMessage}</p> : null}
           </CardHeader>
           <div className={cn("p-5 sm:p-6", form.form_layout === "minimal" && "px-0")}>

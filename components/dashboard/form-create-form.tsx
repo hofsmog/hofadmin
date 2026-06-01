@@ -10,7 +10,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
-import type { Database, FormCornerRadius, FormFieldType, FormFontStyle, FormLayout, FormStatus } from "@/types/database";
+import type { Database, FormCornerRadius, FormFieldType, FormFontStyle, FormLayout, FormStatus, FormType } from "@/types/database";
 
 const initialState: FormBuilderState = { status: "idle", message: "" };
 
@@ -24,6 +24,9 @@ const fieldTypes: Array<{ label: string; value: FormFieldType }> = [
   { label: "Dropdown", value: "select" },
   { label: "Kryssrutor", value: "checkbox" },
   { label: "Flerval", value: "radio" },
+  { label: "Skala 1-5", value: "scale_1_5" },
+  { label: "Skala 1-10", value: "scale_1_10" },
+  { label: "Ja/Nej", value: "yes_no" },
 ];
 
 const tabs = [
@@ -61,12 +64,13 @@ type DesignState = {
   submitButtonText: string;
 };
 
-export function FormCreateForm() {
+export function FormCreateForm({ formType = "form" }: { formType?: FormType }) {
   const [state, action] = useActionState(createFormAction, initialState);
 
   return (
     <FormBuilder
       mode="create"
+      initialFormType={formType}
       state={state}
       action={action}
       toastTitle={state.status === "error" ? "Form not created" : "Form created"}
@@ -100,6 +104,7 @@ export function FormEditForm({
 
 function FormBuilder({
   mode,
+  initialFormType = "form",
   form,
   fields: initialFields,
   state,
@@ -109,6 +114,7 @@ function FormBuilder({
   toastTitle,
 }: {
   mode: "create" | "edit";
+  initialFormType?: FormType;
   form?: FormRow;
   fields?: FieldRow[];
   state?: FormBuilderState;
@@ -120,7 +126,9 @@ function FormBuilder({
   const [activeTab, setActiveTab] = useState<TabId>("fields");
   const [title, setTitle] = useState(form?.title ?? "Volunteer signup");
   const [description, setDescription] = useState(form?.description ?? "Collect information with a clean public form.");
+  const [formType, setFormType] = useState<FormType>(form?.form_type ?? initialFormType);
   const [status, setStatus] = useState<FormStatus>(form?.status === "active" ? "published" : form?.status ?? "draft");
+  const [anonymousResponses, setAnonymousResponses] = useState(form?.anonymous_responses ?? initialFormType === "survey");
   const [enableEmailNotifications, setEnableEmailNotifications] = useState(form?.enable_email_notifications ?? false);
   const [notificationEmails, setNotificationEmails] = useState((form?.notification_emails ?? []).join(", "));
   const [design, setDesign] = useState<DesignState>({
@@ -248,7 +256,9 @@ function FormBuilder({
         <input type="hidden" name="fields" value={fieldsPayload} />
         <input type="hidden" name="title" value={title} />
         <input type="hidden" name="description" value={description} />
+        <input type="hidden" name="formType" value={formType} />
         <input type="hidden" name="status" value={status} />
+        {anonymousResponses ? <input type="hidden" name="anonymousResponses" value="on" /> : null}
         <input type="hidden" name="notificationEmails" value={notificationEmails} />
         {enableEmailNotifications ? <input type="hidden" name="enableEmailNotifications" value="on" /> : null}
         {form ? <input type="hidden" name="formId" value={form.id} /> : null}
@@ -272,9 +282,13 @@ function FormBuilder({
               title={title}
               description={description}
               status={status}
+              formType={formType}
+              anonymousResponses={anonymousResponses}
               setTitle={setTitle}
               setDescription={setDescription}
+              setFormType={setFormType}
               setStatus={setStatus}
+              setAnonymousResponses={setAnonymousResponses}
               enableEmailNotifications={enableEmailNotifications}
               notificationEmails={notificationEmails}
               setEnableEmailNotifications={setEnableEmailNotifications}
@@ -315,9 +329,13 @@ function SettingsPanel({
   title,
   description,
   status,
+  formType,
+  anonymousResponses,
   setTitle,
   setDescription,
+  setFormType,
   setStatus,
+  setAnonymousResponses,
   enableEmailNotifications,
   notificationEmails,
   setEnableEmailNotifications,
@@ -326,9 +344,13 @@ function SettingsPanel({
   title: string;
   description: string;
   status: FormStatus;
+  formType: FormType;
+  anonymousResponses: boolean;
   setTitle: (value: string) => void;
   setDescription: (value: string) => void;
+  setFormType: (value: FormType) => void;
   setStatus: (value: FormStatus) => void;
+  setAnonymousResponses: (value: boolean) => void;
   enableEmailNotifications: boolean;
   notificationEmails: string;
   setEnableEmailNotifications: (value: boolean) => void;
@@ -342,6 +364,13 @@ function SettingsPanel({
           <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Volunteer signup" required />
         </label>
         <label className="block space-y-2">
+          <span className="text-sm font-medium">Type</span>
+          <select value={formType} onChange={(event) => setFormType(event.target.value as FormType)} className="h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800">
+            <option value="form">Formulär</option>
+            <option value="survey">Undersökning</option>
+          </select>
+        </label>
+        <label className="block space-y-2">
           <span className="text-sm font-medium">Status</span>
           <select value={status} onChange={(event) => setStatus(event.target.value as FormStatus)} className="h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800">
             <option value="draft">Draft</option>
@@ -349,6 +378,15 @@ function SettingsPanel({
             <option value="archived">Archived</option>
           </select>
         </label>
+        {formType === "survey" ? (
+          <label className="flex items-start gap-3 rounded-xl border bg-white p-4 dark:bg-zinc-950 md:col-span-2">
+            <input type="checkbox" checked={anonymousResponses} onChange={(event) => setAnonymousResponses(event.target.checked)} className="mt-1 h-4 w-4 rounded border-zinc-300" />
+            <span>
+              <span className="block text-sm font-medium">Anonyma svar</span>
+              <span className="mt-1 block text-sm text-muted-foreground">Respondenten ser tydligt att undersökningen är anonym. E-post sparas inte som kontakt på svaret.</span>
+            </span>
+          </label>
+        ) : null}
         <label className="block space-y-2">
           <span className="text-sm font-medium">Description</span>
           <Input value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Collect event volunteer details" />

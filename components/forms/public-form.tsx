@@ -154,6 +154,39 @@ function FieldControl({
     );
   }
 
+  if (field.field_type === "yes_no") {
+    return (
+      <fieldset className={cn("space-y-3 border bg-white/70 p-4", radiusClass)}>
+        <legend className="text-sm font-medium">{field.label}{field.is_required ? <span style={{ color: accentColor }}> *</span> : null}</legend>
+        <div className="grid grid-cols-2 gap-2">
+          {["Ja", "Nej"].map((option) => (
+            <label key={option} className={cn("flex items-center justify-center gap-2 border p-3 text-sm", radiusClass)}>
+              <input name={name} value={option} type="radio" required={field.is_required} />
+              {option}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    );
+  }
+
+  if (field.field_type === "scale_1_5" || field.field_type === "scale_1_10") {
+    const max = field.field_type === "scale_1_5" ? 5 : 10;
+    return (
+      <fieldset className={cn("space-y-3 border bg-white/70 p-4", radiusClass)}>
+        <legend className="text-sm font-medium">{field.label}{field.is_required ? <span style={{ color: accentColor }}> *</span> : null}</legend>
+        <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${max}, minmax(0, 1fr))` }}>
+          {Array.from({ length: max }, (_, index) => String(index + 1)).map((option) => (
+            <label key={option} className={cn("flex min-h-10 items-center justify-center border text-sm font-medium", radiusClass)}>
+              <input className="sr-only" name={name} value={option} type="radio" required={field.is_required} />
+              {option}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    );
+  }
+
   const inputType =
     field.field_type === "phone"
       ? "tel"

@@ -43,21 +43,26 @@ export async function submitPublicFormAction(
     return { status: "error", message: "This form has no fields available." };
   }
 
+  const isAnonymousSurvey = form.form_type === "survey" && form.anonymous_responses;
   const values = fields.map((field) => {
     const fieldName = `field_${field.id}`;
     const rawValues = formData.getAll(fieldName).map((value) => String(value).trim()).filter(Boolean);
     const rawValue = field.field_type === "checkbox" && rawValues.length > 1 ? rawValues.join(", ") : formData.get(fieldName);
-    const value = rawValues.length > 1 ? rawValues.join(", ") : rawValue === null ? "" : String(rawValue).trim();
+    const value = isAnonymousSurvey && isPersonalField(field.field_type, field.label)
+      ? ""
+      : rawValues.length > 1 ? rawValues.join(", ") : rawValue === null ? "" : String(rawValue).trim();
     return { field, value };
   });
 
-  const missingRequired = values.find(({ field, value }) => field.is_required && !value);
+  const missingRequired = values.find(({ field, value }) => field.is_required && !value && !(isAnonymousSurvey && isPersonalField(field.field_type, field.label)));
   if (missingRequired) {
     return { status: "error", message: `${missingRequired.field.label} is required.` };
   }
 
   const submitterEmail =
-    values.find(({ field, value }) => field.field_type === "email" && value)?.value || null;
+    isAnonymousSurvey
+      ? null
+      : values.find(({ field, value }) => field.field_type === "email" && value)?.value || null;
 
   const { data: submission, error: submissionError } = await supabase
     .from("form_submissions")
@@ -66,7 +71,7 @@ export async function submitPublicFormAction(
       form_id: form.id,
       submitted_by: null,
       submitter_email: submitterEmail,
-      metadata: { source: "public" },
+      metadata: { source: "public", anonymous: isAnonymousSurvey },
     })
     .select("id")
     .single();
@@ -109,4 +114,13 @@ export async function submitPublicFormAction(
   }
 
   redirect(`/forms/${form.slug}/success`);
+}
+
+function isPersonalField(fieldType: string, label: string) {
+  const normalized = label.trim().toLowerCase();
+  return (
+    fieldType === "email" ||
+    fieldType === "phone" ||
+    ["name", "full name", "namn", "förnamn", "fornamn", "efternamn", "telefon", "phone", "e-post", "email"].some((token) => normalized.includes(token))
+  );
 }
