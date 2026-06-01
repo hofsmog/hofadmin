@@ -9,8 +9,8 @@ export default async function FormsAnalyticsPage() {
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
   const [{ count: totalForms }, { count: totalSubmissions }] = await Promise.all([
-    supabase.from("forms").select("*", { count: "exact", head: true }).eq("organization_id", organizationId),
-    supabase.from("form_submissions").select("*", { count: "exact", head: true }).eq("organization_id", organizationId),
+    supabase.from("forms").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    supabase.from("form_submissions").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
   ]);
 
   return (

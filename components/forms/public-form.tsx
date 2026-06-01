@@ -102,6 +102,27 @@ function FieldControl({
   }
 
   if (field.field_type === "checkbox") {
+    const options = parseOptions(field.options);
+
+    if (options.length) {
+      return (
+        <fieldset className={cn("space-y-3 border bg-white/70 p-4", radiusClass)}>
+          <legend className="text-sm font-medium">
+            {field.label}
+            {field.is_required ? <span style={{ color: accentColor }}> *</span> : null}
+          </legend>
+          <div className="grid gap-2">
+            {options.map((option) => (
+              <label key={option} className="flex items-center gap-3 text-sm">
+                <input name={name} value={option} type="checkbox" className="h-4 w-4 rounded border-zinc-300" />
+                {option}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      );
+    }
+
     return (
       <label className={cn("flex items-start gap-3 border bg-white/70 p-4", radiusClass)}>
         <input name={name} value="yes" type="checkbox" required={field.is_required} className="mt-1 h-4 w-4 rounded border-zinc-300" />
@@ -110,6 +131,26 @@ function FieldControl({
           <span className="mt-1 block text-sm text-zinc-500">Check to confirm.</span>
         </span>
       </label>
+    );
+  }
+
+  if (field.field_type === "radio") {
+    const options = parseOptions(field.options);
+    return (
+      <fieldset className={cn("space-y-3 border bg-white/70 p-4", radiusClass)}>
+        <legend className="text-sm font-medium">
+          {field.label}
+          {field.is_required ? <span style={{ color: accentColor }}> *</span> : null}
+        </legend>
+        <div className="grid gap-2">
+          {options.map((option) => (
+            <label key={option} className="flex items-center gap-3 text-sm">
+              <input name={name} value={option} type="radio" required={field.is_required} className="h-4 w-4 border-zinc-300" />
+              {option}
+            </label>
+          ))}
+        </div>
+      </fieldset>
     );
   }
 

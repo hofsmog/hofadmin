@@ -8,7 +8,7 @@ import { recordActivityEvent } from "@/lib/activity";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { getRespondentName, handlingStatusLabels } from "@/lib/forms/submissions";
 import { formsNavItems } from "@/lib/module-nav";
-import { updateSubmissionHandlingAction } from "../actions";
+import { addSubmissionNoteAction, updateSubmissionHandlingAction } from "../actions";
 import type { FormSubmissionHandlingStatus } from "@/types/database";
 
 const handlingStatuses: FormSubmissionHandlingStatus[] = [
@@ -75,7 +75,7 @@ export default async function SubmissionDetailPage({
     }
   }
 
-  const [{ data: values }, { data: formFields }] = await Promise.all([
+  const [{ data: values }, { data: formFields }, { data: notes }] = await Promise.all([
     supabase
       .from("form_submission_values")
       .select("id, field_id, field_label, value, created_at")
@@ -87,6 +87,12 @@ export default async function SubmissionDetailPage({
       .select("id, sort_order")
       .eq("organization_id", organizationId)
       .eq("form_id", submission.form_id),
+    supabase
+      .from("submission_notes")
+      .select("id, note, created_at")
+      .eq("organization_id", organizationId)
+      .eq("submission_id", submission.id)
+      .order("created_at", { ascending: false }),
   ]);
   const fieldOrder = new Map((formFields ?? []).map((field) => [field.id, field.sort_order]));
   const orderedValues = [...(values ?? [])].sort((a, b) => {
@@ -100,8 +106,8 @@ export default async function SubmissionDetailPage({
   return (
     <>
       <ModuleHeader
-        title="Submission detail"
-        description="Review the full response and update handling status."
+        title="Detaljpanel"
+        description="Alla svar, kontaktuppgifter, status och interna anteckningar."
         items={formsNavItems}
       />
       <Toast show={query.updated === "1"} title="Submission updated" message="Handling status and notes were saved." />
@@ -171,6 +177,19 @@ export default async function SubmissionDetailPage({
             <CardContent>
               <form action={updateSubmissionHandlingAction} className="space-y-4">
                 <input type="hidden" name="submissionId" value={submission.id} />
+                <input type="hidden" name="returnTo" value={`/dashboard/forms/submissions/${submission.id}?updated=1`} />
+                <div>
+                  <label className="text-sm font-medium" htmlFor="readStatus">Read status</label>
+                  <select
+                    id="readStatus"
+                    name="readStatus"
+                    defaultValue={submission.read_status}
+                    className="mt-2 h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
+                  >
+                    <option value="new">Ny</option>
+                    <option value="read">Läst</option>
+                  </select>
+                </div>
                 <div>
                   <label className="text-sm font-medium" htmlFor="handlingStatus">Status</label>
                   <select
@@ -204,6 +223,35 @@ export default async function SubmissionDetailPage({
                   Save handling update
                 </button>
               </form>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Internal notes</CardTitle>
+              <CardDescription>Notes are only visible to your organization.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form action={addSubmissionNoteAction} className="space-y-3">
+                <input type="hidden" name="submissionId" value={submission.id} />
+                <textarea
+                  name="note"
+                  rows={3}
+                  placeholder="Add an internal note..."
+                  className="w-full rounded-xl border bg-white px-3 py-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950"
+                />
+                <button type="submit" className="h-10 w-full rounded-xl border bg-white px-4 text-sm font-medium shadow-sm transition hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800">
+                  Add note
+                </button>
+              </form>
+              <div className="space-y-2">
+                {(notes ?? []).length ? notes?.map((note) => (
+                  <div key={note.id} className="rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900/60">
+                    <p className="whitespace-pre-wrap text-sm leading-6">{note.note}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">{new Date(note.created_at).toLocaleString()}</p>
+                  </div>
+                )) : <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">No internal notes yet.</p>}
+              </div>
             </CardContent>
           </Card>
         </div>

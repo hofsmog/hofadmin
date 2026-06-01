@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, Check, Eye, Palette, Plus, Settings, SlidersHorizontal, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Eye, GripVertical, Palette, Plus, Settings, SlidersHorizontal, Trash2 } from "lucide-react";
 import { createFormAction, updateFormAction, type FormBuilderState } from "@/app/dashboard/modules/forms/actions";
 import { ActionSubmitButton } from "@/components/dashboard/action-submit-button";
 import { Badge } from "@/components/ui/badge";
@@ -15,14 +15,15 @@ import type { Database, FormCornerRadius, FormFieldType, FormFontStyle, FormLayo
 const initialState: FormBuilderState = { status: "idle", message: "" };
 
 const fieldTypes: Array<{ label: string; value: FormFieldType }> = [
-  { label: "Text", value: "text" },
-  { label: "Textarea", value: "textarea" },
-  { label: "Email", value: "email" },
-  { label: "Phone", value: "phone" },
-  { label: "Number", value: "number" },
-  { label: "Date", value: "date" },
-  { label: "Select", value: "select" },
-  { label: "Checkbox", value: "checkbox" },
+  { label: "Kort text", value: "text" },
+  { label: "Lång text", value: "textarea" },
+  { label: "E-post", value: "email" },
+  { label: "Telefonnummer", value: "phone" },
+  { label: "Nummer", value: "number" },
+  { label: "Datum", value: "date" },
+  { label: "Dropdown", value: "select" },
+  { label: "Kryssrutor", value: "checkbox" },
+  { label: "Flerval", value: "radio" },
 ];
 
 const tabs = [
@@ -381,6 +382,23 @@ function FieldsPanel({
   removeField: (clientId: string) => void;
   moveField: (index: number, direction: -1 | 1) => void;
 }) {
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  function moveDraggedField(targetClientId: string) {
+    if (!draggingId || draggingId === targetClientId) {
+      return;
+    }
+
+    const fromIndex = fields.findIndex((field) => field.clientId === draggingId);
+    const toIndex = fields.findIndex((field) => field.clientId === targetClientId);
+
+    if (fromIndex === -1 || toIndex === -1) {
+      return;
+    }
+
+    moveField(fromIndex, toIndex > fromIndex ? 1 : -1);
+  }
+
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-3">
@@ -395,8 +413,21 @@ function FieldsPanel({
       </div>
 
       {fields.map((field, index) => (
-        <div key={field.clientId} className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900/60">
-          <div className="grid gap-3 md:grid-cols-[auto_1fr_10rem_auto]">
+        <div
+          key={field.clientId}
+          draggable
+          onDragStart={() => setDraggingId(field.clientId)}
+          onDragOver={(event) => {
+            event.preventDefault();
+            moveDraggedField(field.clientId);
+          }}
+          onDragEnd={() => setDraggingId(null)}
+          className={cn("rounded-xl border bg-zinc-50 p-4 transition dark:bg-zinc-900/60", draggingId === field.clientId && "opacity-60")}
+        >
+          <div className="grid gap-3 md:grid-cols-[auto_auto_1fr_10rem_auto]">
+            <div className="flex h-11 items-center justify-center text-muted-foreground">
+              <GripVertical className="h-4 w-4" />
+            </div>
             <div className="flex gap-1">
               <Button type="button" variant="ghost" className="h-11 w-10 px-0" onClick={() => moveField(index, -1)} disabled={index === 0}>
                 <ArrowUp className="h-4 w-4" />
@@ -445,11 +476,11 @@ function FieldsPanel({
               <Check className={cn("h-4 w-4", field.isRequired ? "opacity-100" : "opacity-30")} />
               Required
             </button>
-            {field.fieldType === "select" || field.fieldType === "checkbox" ? (
+            {field.fieldType === "select" || field.fieldType === "checkbox" || field.fieldType === "radio" ? (
               <Input
                 value={field.options}
                 onChange={(event) => updateField(field.clientId, { options: event.target.value })}
-                placeholder="Options: Morning, Afternoon, Evening"
+                placeholder="Alternativ: Ja, Nej, Kanske"
               />
             ) : (
               <Badge>{field.fieldType}</Badge>

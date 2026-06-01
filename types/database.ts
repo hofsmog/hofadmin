@@ -5,7 +5,7 @@ export type OrganizationType = "school" | "club" | "business" | "restaurant" | "
 export type MemberStatus = "active" | "inactive";
 export type MemberType = "student" | "staff" | "player" | "volunteer" | "employee" | "customer" | "guest" | "other";
 export type FormStatus = "draft" | "active" | "published" | "archived";
-export type FormFieldType = "text" | "textarea" | "email" | "phone" | "number" | "date" | "select" | "checkbox";
+export type FormFieldType = "text" | "textarea" | "email" | "phone" | "number" | "date" | "select" | "checkbox" | "radio";
 export type FormFontStyle = "default" | "modern" | "classic" | "playful";
 export type FormLayout = "card" | "full-width" | "minimal";
 export type FormCornerRadius = "none" | "small" | "medium" | "large";
@@ -665,6 +665,48 @@ export type Database = {
           },
         ];
       };
+      submission_notes: {
+        Row: {
+          id: string;
+          organization_id: string;
+          submission_id: string;
+          note: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          submission_id: string;
+          note: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          submission_id?: string;
+          note?: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "submission_notes_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "submission_notes_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: false;
+            referencedRelation: "form_submissions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       inventory_categories: {
         Row: {
           id: string;
@@ -942,8 +984,8 @@ export type Database = {
       member_status: MemberStatus;
       member_type: MemberType;
       form_status: FormStatus;
-      form_field_type: FormFieldType;
-      inventory_item_status: InventoryItemStatus;
+        form_field_type: FormFieldType;
+        inventory_item_status: InventoryItemStatus;
         inventory_item_condition: InventoryItemCondition;
         inventory_event_type: InventoryEventType;
         inventory_loan_status: InventoryLoanStatus;

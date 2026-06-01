@@ -9,6 +9,7 @@ import { getRespondentName, groupSubmissionValues, handlingStatusLabels } from "
 import { formsNavItems } from "@/lib/module-nav";
 import { cn } from "@/lib/utils";
 import type { FormSubmissionHandlingStatus, FormSubmissionReadStatus } from "@/types/database";
+import { updateSubmissionStatusAction } from "./actions";
 
 const readStatusOptions: Array<"all" | FormSubmissionReadStatus> = ["all", "new", "read"];
 const handlingStatusOptions: Array<"all" | FormSubmissionHandlingStatus> = [
@@ -140,34 +141,47 @@ export default async function FormsSubmissionsPage({
               const isNew = submission.read_status === "new";
 
               return (
-                <Link
+                <article
                   key={submission.id}
-                  href={`/dashboard/forms/submissions/${submission.id}`}
                   className={cn(
                     "grid gap-3 px-5 py-4 transition hover:bg-zinc-50 dark:hover:bg-zinc-900/60 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)_11rem_20rem]",
                     isNew && "bg-emerald-50/70 dark:bg-emerald-950/20",
                   )}
                 >
-                  <div className="min-w-0">
+                  <Link href={`/dashboard/forms/submissions/${submission.id}`} className="min-w-0">
                     <div className="flex items-center gap-2">
                       {isNew ? <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> : null}
                       <p className={cn("truncate text-sm", isNew ? "font-semibold text-zinc-950 dark:text-zinc-50" : "font-medium")}>{respondentName}</p>
                     </div>
                     <p className="mt-1 truncate text-xs text-muted-foreground">{submission.submitter_email ?? "No email captured"}</p>
-                  </div>
-                  <div className="min-w-0">
+                  </Link>
+                  <Link href={`/dashboard/forms/submissions/${submission.id}`} className="min-w-0">
                     <p className={cn("truncate text-sm", isNew ? "font-semibold" : "font-medium")}>{formsById.get(submission.form_id)?.title ?? "Unknown form"}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{submission.id.slice(0, 8)}</p>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  </Link>
+                  <Link href={`/dashboard/forms/submissions/${submission.id}`} className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Clock3 className="h-4 w-4" />
                     <span>{submittedAt.toLocaleDateString()} {submittedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                  </Link>
+                  <div className="flex flex-wrap items-center gap-2 lg:justify-end" onClick={(event) => event.stopPropagation()}>
                     <ReadStatusBadge status={submission.read_status} />
                     <HandlingStatusBadge status={submission.handling_status} />
+                    <form action={updateSubmissionStatusAction} className="flex flex-wrap gap-2">
+                      <input type="hidden" name="submissionId" value={submission.id} />
+                      <input type="hidden" name="returnTo" value="/dashboard/forms/submissions" />
+                      <select name="readStatus" defaultValue={submission.read_status} className="h-8 rounded-lg border bg-white px-2 text-xs dark:bg-zinc-950">
+                        <option value="new">Ny</option>
+                        <option value="read">Läst</option>
+                      </select>
+                      <select name="handlingStatus" defaultValue={submission.handling_status} className="h-8 rounded-lg border bg-white px-2 text-xs dark:bg-zinc-950">
+                        <option value="unhandled">Ohanterad</option>
+                        <option value="partially_handled">Delhanterad</option>
+                        <option value="handled">Hanterad</option>
+                      </select>
+                      <button type="submit" className="h-8 rounded-lg border bg-white px-2 text-xs font-medium shadow-sm dark:bg-zinc-950">Spara</button>
+                    </form>
                   </div>
-                </Link>
+                </article>
               );
             })
           ) : (

@@ -19,6 +19,7 @@ const validFieldTypes = new Set<FormFieldType>([
   "date",
   "select",
   "checkbox",
+  "radio",
 ]);
 
 export type FormBuilderState = {

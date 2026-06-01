@@ -44,8 +44,10 @@ export async function submitPublicFormAction(
   }
 
   const values = fields.map((field) => {
-    const rawValue = formData.get(`field_${field.id}`);
-    const value = rawValue === null ? "" : String(rawValue).trim();
+    const fieldName = `field_${field.id}`;
+    const rawValues = formData.getAll(fieldName).map((value) => String(value).trim()).filter(Boolean);
+    const rawValue = field.field_type === "checkbox" && rawValues.length > 1 ? rawValues.join(", ") : formData.get(fieldName);
+    const value = rawValues.length > 1 ? rawValues.join(", ") : rawValue === null ? "" : String(rawValue).trim();
     return { field, value };
   });
 

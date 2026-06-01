@@ -34,14 +34,31 @@ export default async function FormsListPage({ searchParams }: { searchParams?: P
       .in("form_id", formIds)
       .order("sort_order", { ascending: true })
     : { data: [] };
+  const { data: submissions } = formIds.length
+    ? await supabase
+      .from("form_submissions")
+      .select("id, form_id, created_at")
+      .eq("organization_id", organizationId)
+      .in("form_id", formIds)
+      .order("created_at", { ascending: false })
+      .limit(500)
+    : { data: [] };
   const fieldsByFormId = new Map<string, typeof fields>();
+  const submissionStats = new Map<string, { count: number; latest: string | null }>();
   for (const field of fields ?? []) {
     fieldsByFormId.set(field.form_id, [...(fieldsByFormId.get(field.form_id) ?? []), field]);
+  }
+  for (const submission of submissions ?? []) {
+    const current = submissionStats.get(submission.form_id) ?? { count: 0, latest: null };
+    submissionStats.set(submission.form_id, {
+      count: current.count + 1,
+      latest: current.latest ?? submission.created_at,
+    });
   }
 
   return (
     <>
-      <ModuleHeader title="Forms Library" description="Browse draft, published, and archived forms." items={formsNavItems} action={{ href: "/dashboard/forms/create", label: "Create form" }} />
+      <ModuleHeader title="Formulär" description="Publicerade formulär, utkast, svar och senaste aktivitet." items={formsNavItems} action={{ href: "/dashboard/forms/create", label: "Skapa formulär" }} />
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
@@ -72,11 +89,14 @@ export default async function FormsListPage({ searchParams }: { searchParams?: P
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-semibold">{form.title}</h3>
-                      <Badge className="capitalize">{form.status === "active" ? "published" : form.status}</Badge>
+                      <Badge>{form.status === "published" || form.status === "active" ? "Publicerad" : form.status === "draft" ? "Utkast" : "Arkiverad"}</Badge>
                     </div>
                     {form.description ? <p className="mt-2 text-sm leading-6 text-muted-foreground">{form.description}</p> : null}
                   </div>
-                  <p className="text-xs text-muted-foreground">Created {new Date(form.created_at).toLocaleDateString()}</p>
+                  <div className="text-right text-xs text-muted-foreground">
+                    <p>{submissionStats.get(form.id)?.count ?? 0} svar</p>
+                    <p>{submissionStats.get(form.id)?.latest ? `Senast ${new Date(submissionStats.get(form.id)!.latest!).toLocaleString()}` : "Ingen aktivitet ännu"}</p>
+                  </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {formFields.length ? formFields.map((field) => (
