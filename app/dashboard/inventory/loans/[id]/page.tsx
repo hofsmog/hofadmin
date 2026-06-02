@@ -11,6 +11,7 @@ export default async function InventoryLoanDetailPage({ params }: { params: Prom
   const { id } = await params;
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
+  const organizationName = organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name;
 
   const { data: loan } = await supabase
     .from("inventory_loans")
@@ -23,7 +24,7 @@ export default async function InventoryLoanDetailPage({ params }: { params: Prom
 
   return (
     <>
-      <ModuleHeader title="Loan agreement" description="Signed inventory loan record." items={inventoryNavItems} />
+      <ModuleHeader title="Loan Agreement" description="Signed inventory loan record." items={inventoryNavItems} />
       <div className="mb-4">
         <ButtonLink href={`/dashboard/inventory/items/${loan.inventory_item_id}`} variant="ghost" className="h-9 px-2">
           <ArrowLeft className="h-4 w-4" />
@@ -43,9 +44,10 @@ export default async function InventoryLoanDetailPage({ params }: { params: Prom
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            <Info icon={FileSignature} label="Organization" value={organizationName} />
             <Info icon={UserRound} label="Borrower" value={loan.borrower_name} />
-            <Info icon={Calendar} label="Loaned" value={new Date(loan.loaned_at).toLocaleString()} />
-            <Info icon={Calendar} label="Due date" value={loan.due_date ?? "No due date"} />
+            <Info icon={Calendar} label="Loan Date" value={new Date(loan.loaned_at).toLocaleString()} />
+            <Info icon={Calendar} label="Due Date" value={loan.due_date ?? "No due date"} />
             <Info icon={Calendar} label="Returned" value={loan.returned_at ? new Date(loan.returned_at).toLocaleString() : "Not returned"} />
             {loan.loan_note ? (
               <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900/60">
@@ -59,11 +61,15 @@ export default async function InventoryLoanDetailPage({ params }: { params: Prom
         <Card>
           <CardHeader>
             <CardTitle>Signature</CardTitle>
-            <CardDescription>Signed {new Date(loan.signed_at).toLocaleString()}</CardDescription>
+            <CardDescription>{loan.signed_at ? `Signed ${new Date(loan.signed_at).toLocaleString()}` : "No signature captured"}</CardDescription>
           </CardHeader>
           <CardContent>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={loan.signature_data_url} alt={`${loan.borrower_name} signature`} className="w-full rounded-xl border bg-white p-3" />
+            {loan.signature_data_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={loan.signature_data_url} alt={`${loan.borrower_name} signature`} className="w-full rounded-xl border bg-white p-3" />
+            ) : (
+              <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">No signature preview available.</div>
+            )}
             <div className="mt-4 rounded-xl border bg-zinc-50 p-3 text-sm text-muted-foreground dark:bg-zinc-900/60">
               {[loan.borrower_email, loan.borrower_phone].filter(Boolean).join(" - ") || "No contact details captured"}
             </div>

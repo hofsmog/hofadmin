@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { AlertTriangle, Calendar, MapPin, QrCode, UserRound } from "lucide-react";
 import { updateInventoryItemStatusAction } from "@/app/dashboard/modules/inventory/actions";
 import { InventoryLoanAgreementForm } from "@/components/dashboard/inventory/inventory-loan-agreement-form";
+import { InventoryReturnAction } from "@/components/dashboard/inventory/inventory-return-action";
 import { InventoryConditionBadge, InventoryStatusBadge, inventoryConditionLabels, inventoryStatusLabels } from "@/components/dashboard/inventory/inventory-badges";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { QrCodeCard } from "@/components/dashboard/qr-code-card";
@@ -16,7 +17,7 @@ import type { InventoryItemCondition, InventoryItemStatus } from "@/types/databa
 const statuses: InventoryItemStatus[] = ["available", "in_use", "maintenance", "lost", "retired"];
 const conditions: InventoryItemCondition[] = ["new", "good", "fair", "poor", "broken"];
 
-export default async function InventoryDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams?: Promise<{ updated?: string; loaned?: string; error?: string }> }) {
+export default async function InventoryDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams?: Promise<{ updated?: string; loaned?: string; returned?: string; error?: string }> }) {
   const { id } = await params;
   const query = (await searchParams) ?? {};
   const { supabase, organizationContext } = await requireOrganizationContext();
@@ -46,9 +47,10 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
 
   return (
     <>
-      <ModuleHeader title={item.name} description="Inventory item detail, QR readiness, assignment, status, and event history." items={inventoryNavItems} />
+      <ModuleHeader title={item.name} description="Item status, borrower, QR code, and loan history." items={inventoryNavItems} />
       <Toast show={query.updated === "1"} title="Inventory item updated" message="Status, assignment, and notes were saved." />
       <Toast show={query.loaned === "1"} title="Loan completed" message="The agreement was signed and the item is now loaned out." />
+      <Toast show={query.returned === "1"} title="Item returned" message="The active loan was closed and the item is available." />
       <Toast show={Boolean(query.error)} tone="error" title="Could not update item" message="Please review the details and try again." />
       <div className="grid gap-4 xl:grid-cols-[1fr_24rem]">
         <div className="space-y-4">
@@ -63,7 +65,8 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
                   <InventoryStatusBadge status={item.status} />
                   <InventoryConditionBadge condition={item.condition} />
                   {loanState === "overdue" ? <Badge className="border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">Overdue</Badge> : null}
-                  {loanState === "due_soon" ? <Badge className="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">Due soon</Badge> : null}
+                  {loanState === "due_today" ? <Badge className="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">Due Today</Badge> : null}
+                  {loanState === "due_soon" ? <Badge className="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">Due Soon</Badge> : null}
                 </div>
               </div>
             </CardHeader>
@@ -72,14 +75,27 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
               <Info icon={QrCode} label="Serial number" value={item.serial_number ?? "No serial number"} />
               <Info icon={QrCode} label="Category" value={item.inventory_categories?.name ?? "Uncategorized"} />
               <Info icon={MapPin} label="Location" value={item.location ?? "No location"} />
-              <Info icon={UserRound} label="Assigned to" value={assignedMemberName} />
-              <Info icon={Calendar} label="Due date" value={item.loan_due_date ?? "No due date"} />
-              <Info icon={Calendar} label="Assigned" value={item.last_assigned_at ? new Date(item.last_assigned_at).toLocaleString() : "Not assigned yet"} />
+              <Info icon={UserRound} label="Current borrower" value={activeLoan?.borrower_name ?? assignedMemberName} />
+              <Info icon={Calendar} label="Due Date" value={item.loan_due_date ?? "No due date"} />
+              <Info icon={Calendar} label="Loan Date" value={activeLoan?.loaned_at ? new Date(activeLoan.loaned_at).toLocaleString() : item.last_assigned_at ? new Date(item.last_assigned_at).toLocaleString() : "Not loaned yet"} />
               <Info icon={Calendar} label="Last returned" value={item.last_returned_at ? new Date(item.last_returned_at).toLocaleString() : "Not returned yet"} />
               <Info icon={Calendar} label="Purchase date" value={item.purchase_date ?? "Not recorded"} />
               <Info icon={Calendar} label="Purchase price" value={item.purchase_price ? `${item.purchase_price}` : "Not recorded"} />
             </CardContent>
           </Card>
+
+          {(item.description || item.notes) ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Notes</CardTitle>
+                <CardDescription>Description and internal item notes.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {item.description ? <p className="rounded-xl border bg-zinc-50 p-4 text-sm leading-6 dark:bg-zinc-900/60">{item.description}</p> : null}
+                {item.notes ? <p className="rounded-xl border bg-zinc-50 p-4 text-sm leading-6 dark:bg-zinc-900/60">{item.notes}</p> : null}
+              </CardContent>
+            </Card>
+          ) : null}
 
           <div className="rounded-2xl border bg-white p-5 shadow-sm dark:bg-zinc-950">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -94,16 +110,19 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
                   <p className="mt-1 text-xl font-semibold">Available</p>
                 )}
               </div>
-              <ButtonLink href="#loan-item" className="h-12 px-6 text-base">
-                Loan Item
-              </ButtonLink>
+              {activeLoan ? (
+                <InventoryReturnAction itemId={item.id} label="Return" className="h-12 px-6 text-base" />
+              ) : (
+                <ButtonLink href="#borrow-item" className="h-12 px-6 text-base">
+                  Borrow
+                </ButtonLink>
+              )}
             </div>
             {activeLoan ? (
               <div className="mt-4 flex flex-wrap gap-2">
                 <ButtonLink href={`/dashboard/inventory/loans/${activeLoan.id}`} variant="secondary" className="h-10 px-3">
                   View Loan Agreement
                 </ButtonLink>
-                <QuickInventoryAction item={item} status="available" assignedToMemberId="" label="Return Item" note="Item was returned and is available." />
               </div>
             ) : null}
           </div>
@@ -166,15 +185,16 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <CardTitle>Actions</CardTitle>
-                  <CardDescription>Common inventory updates for assignment and lifecycle tracking.</CardDescription>
+                  <CardDescription>Borrow, return, or update the item status.</CardDescription>
                 </div>
-                <ButtonLink href="#loan-item" variant="secondary" className="h-9 px-3">
-                  Loan Item
-                </ButtonLink>
+                {activeLoan ? (
+                  <InventoryReturnAction itemId={item.id} label="Return" className="h-9 px-3" />
+                ) : (
+                  <ButtonLink href="#borrow-item" variant="secondary" className="h-9 px-3">Borrow</ButtonLink>
+                )}
               </div>
             </CardHeader>
             <CardContent className="grid gap-2 sm:grid-cols-2">
-              <QuickInventoryAction item={item} status="available" assignedToMemberId="" label="Mark as returned" note="Item was returned and is available." />
               <QuickInventoryAction item={item} status="maintenance" label="Send to maintenance" note="Item was sent to maintenance." />
               <QuickInventoryAction item={item} status="lost" label="Mark as lost" note="Item was marked as lost." />
               <QuickInventoryAction item={item} status="retired" label="Retire item" note="Item was retired from inventory." />
@@ -243,7 +263,7 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
                 <div key={loan.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-medium">{loan.borrower_name}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{loan.status} - loaned {new Date(loan.loaned_at).toLocaleDateString()}{loan.due_date ? ` - due ${loan.due_date}` : ""}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{formatLoanStatus(loan.status)} - loaned {new Date(loan.loaned_at).toLocaleDateString()}{loan.due_date ? ` - due ${loan.due_date}` : ""}{loan.returned_at ? ` - returned ${new Date(loan.returned_at).toLocaleDateString()}` : ""}</p>
                   </div>
                   <ButtonLink href={`/dashboard/inventory/loans/${loan.id}`} variant="ghost" className="h-8 px-2">View</ButtonLink>
                 </div>
@@ -253,23 +273,32 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
         </div>
 
         <div className="space-y-4">
-        <Card id="loan-item">
-          <CardHeader><CardTitle>Loan Item</CardTitle><CardDescription>One clear step at a time: borrower, return date, agreement, signature, complete.</CardDescription></CardHeader>
+        <Card id="borrow-item">
+          <CardHeader><CardTitle>Borrow Item</CardTitle><CardDescription>One clear step at a time: borrower, due date, agreement, signature, complete.</CardDescription></CardHeader>
           <CardContent>
-            <InventoryLoanAgreementForm
-              itemId={item.id}
-              itemName={item.name}
-              members={members ?? []}
-              agreementTemplate={organizationContext.activeOrganization.defaultLoanAgreementText}
-              defaultMemberId={item.assigned_to_member_id}
-              defaultDueDate={item.loan_due_date}
-              defaultNote={item.loan_note}
-            />
+            {activeLoan ? (
+              <div className="rounded-xl border border-dashed p-6 text-center">
+                <p className="text-sm font-medium">This item is already on loan.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Return it before starting a new loan.</p>
+                <InventoryReturnAction itemId={item.id} label="Return item" className="mt-4 h-10 px-4" />
+              </div>
+            ) : (
+              <InventoryLoanAgreementForm
+                itemId={item.id}
+                itemName={item.name}
+                organizationName={organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name}
+                members={members ?? []}
+                agreementTemplate={organizationContext.activeOrganization.defaultLoanAgreementText}
+                defaultMemberId={item.assigned_to_member_id}
+                defaultDueDate={item.loan_due_date}
+                defaultNote={item.loan_note}
+              />
+            )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Item controls</CardTitle><CardDescription>Change status, update location, and record internal notes. Use signed assignment above for loans.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Edit Item</CardTitle><CardDescription>Update status, condition, location, and internal notes.</CardDescription></CardHeader>
           <CardContent>
             <form action={updateInventoryItemStatusAction} className="space-y-4">
               <input type="hidden" name="itemId" value={item.id} />
@@ -353,9 +382,20 @@ function getLoanState(dueDate: string | null, status: InventoryItemStatus) {
     return "overdue";
   }
 
+  if (daysUntilDue === 0) {
+    return "due_today";
+  }
+
   if (daysUntilDue <= 7) {
     return "due_soon";
   }
 
   return "active";
+}
+
+function formatLoanStatus(status: string) {
+  return status
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }

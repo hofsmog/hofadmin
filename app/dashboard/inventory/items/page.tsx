@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Package, QrCode, ScanLine, Search } from "lucide-react";
+import { ArrowRight, Package, QrCode, ScanLine, Search } from "lucide-react";
 import { InventoryConditionBadge, InventoryStatusBadge } from "@/components/dashboard/inventory/inventory-badges";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { Badge } from "@/components/ui/badge";
@@ -68,7 +67,7 @@ export default async function InventoryItemsPage({
         </CardHeader>
         <form className="grid gap-3 p-5 pt-0 md:grid-cols-[1fr_10rem_10rem_12rem_12rem_auto]">
           <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input name="q" defaultValue={q} placeholder="Search name, tag, serial, location" className="pl-9" /></div>
-          <Select name="status" defaultValue={status}><option value="all">All status</option><option value="available">Available</option><option value="in_use">Loaned out</option><option value="overdue">Overdue</option><option value="due_soon">Due soon</option><option value="maintenance">Maintenance</option><option value="lost">Lost</option><option value="retired">Retired</option></Select>
+          <Select name="status" defaultValue={status}><option value="all">All status</option><option value="available">Available</option><option value="in_use">On Loan</option><option value="overdue">Overdue</option><option value="due_soon">Due soon</option><option value="maintenance">Maintenance</option><option value="lost">Lost</option><option value="retired">Retired</option></Select>
           <Select name="condition" defaultValue={condition}><option value="all">All condition</option><option value="new">New</option><option value="good">Good</option><option value="fair">Fair</option><option value="poor">Poor</option><option value="broken">Broken</option></Select>
           <Select name="category" defaultValue={category}><option value="all">All categories</option>{(categories ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select>
           <Select name="assignedMember" defaultValue={assignedMember}>
@@ -79,25 +78,40 @@ export default async function InventoryItemsPage({
           <button className="h-11 rounded-xl bg-zinc-950 px-4 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950" type="submit">Filter</button>
         </form>
         <div className="space-y-3 p-5 pt-0">
-          {(items ?? []).length ? items?.map((item) => (
-            <Link key={item.id} href={`/dashboard/inventory/items/${item.id}`} className="block rounded-xl border bg-zinc-50 p-4 transition hover:bg-white hover:shadow-sm dark:bg-zinc-900/60 dark:hover:bg-zinc-900">
+          {(items ?? []).length ? items?.map((item) => {
+            const loanState = getLoanState(item.loan_due_date, item.status);
+            const borrower = item.assigned_to_member_id ? membersById.get(item.assigned_to_member_id) ?? "Unknown member" : null;
+
+            return (
+            <article key={item.id} className="rounded-xl border bg-zinc-50 p-4 transition hover:bg-white hover:shadow-sm dark:bg-zinc-900/60 dark:hover:bg-zinc-900">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-semibold">{item.name}</h3>
                     <InventoryStatusBadge status={item.status} />
-                    <InventoryConditionBadge condition={item.condition} />
-                    {getLoanState(item.loan_due_date, item.status) === "overdue" ? <Badge className="border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">Overdue</Badge> : null}
-                    {getLoanState(item.loan_due_date, item.status) === "due_soon" ? <Badge className="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">Due soon</Badge> : null}
+                    {loanState === "overdue" ? <Badge className="border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">Overdue</Badge> : null}
+                    {loanState === "due_today" ? <Badge className="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">Due Today</Badge> : null}
+                    {loanState === "due_soon" ? <Badge className="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">Due Soon</Badge> : null}
                     {item.qr_value ? <Badge><QrCode className="mr-1 h-3 w-3" />QR ready</Badge> : null}
                   </div>
-                  <p className="mt-2 text-sm text-muted-foreground">{item.asset_tag ?? "No asset tag"} - {item.inventory_categories?.name ?? "Uncategorized"}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{item.location ?? "No location"} - {item.assigned_to_member_id ? membersById.get(item.assigned_to_member_id) ?? "Unknown member" : "Unassigned"}{item.loan_due_date ? ` - due ${item.loan_due_date}` : ""}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{item.inventory_categories?.name ?? "Uncategorized"} - {item.asset_tag ?? "No asset tag"}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {borrower ? `Borrower: ${borrower}` : "No current borrower"}
+                    {item.loan_due_date ? ` - Due ${item.loan_due_date}` : ""}
+                    {item.location ? ` - ${item.location}` : ""}
+                  </p>
                 </div>
-                <span className="text-xs text-muted-foreground">Updated {new Date(item.updated_at).toLocaleDateString()}</span>
+                <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
+                  <InventoryConditionBadge condition={item.condition} />
+                  <ButtonLink href={`/dashboard/inventory/items/${item.id}`} variant="secondary" className="h-9 px-3">
+                    Open
+                    <ArrowRight className="h-4 w-4" />
+                  </ButtonLink>
+                </div>
               </div>
-            </Link>
-          )) : (
+            </article>
+          );
+          }) : (
             <div className="rounded-xl border border-dashed p-8 text-center">
               <Package className="mx-auto h-9 w-9 text-muted-foreground" />
               <p className="mt-3 font-medium">No inventory items found</p>
@@ -127,6 +141,10 @@ function getLoanState(dueDate: string | null, status: InventoryItemStatus) {
 
   if (daysUntilDue < 0) {
     return "overdue";
+  }
+
+  if (daysUntilDue === 0) {
+    return "due_today";
   }
 
   if (daysUntilDue <= 7) {

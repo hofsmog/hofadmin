@@ -4,7 +4,7 @@ import type { InventoryItemCondition, InventoryItemStatus } from "@/types/databa
 
 export const inventoryStatusLabels: Record<InventoryItemStatus, string> = {
   available: "Available",
-  in_use: "In use",
+  in_use: "On Loan",
   maintenance: "Maintenance",
   lost: "Lost",
   retired: "Retired",

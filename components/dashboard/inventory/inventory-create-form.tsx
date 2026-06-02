@@ -62,7 +62,7 @@ export function InventoryCreateForm({ categories, members }: { categories: Categ
           <SectionHeading title="Status and assignment" description="Track availability, condition, and who has the item." />
           <Select name="status" label="Status" defaultValue="available">
             <option value="available">Available</option>
-            <option value="in_use">In use</option>
+            <option value="in_use">On Loan</option>
             <option value="maintenance">Maintenance</option>
             <option value="lost">Lost</option>
             <option value="retired">Retired</option>
@@ -74,7 +74,7 @@ export function InventoryCreateForm({ categories, members }: { categories: Categ
             <option value="poor">Poor</option>
             <option value="broken">Broken</option>
           </Select>
-          <Select name="assignedToMemberId" label="Assigned member" defaultValue="">
+          <Select name="assignedToMemberId" label="Borrower" defaultValue="">
             <option value="">Unassigned</option>
             {members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}
           </Select>

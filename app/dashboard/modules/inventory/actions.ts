@@ -295,6 +295,60 @@ export async function updateInventoryItemStatusAction(formData: FormData) {
   redirect(`/dashboard/inventory/items/${itemId}?updated=1`);
 }
 
+export async function returnInventoryItemAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const itemId = String(formData.get("itemId") || "").trim();
+  const now = new Date().toISOString();
+
+  if (!itemId) {
+    redirect("/dashboard/inventory/items?error=invalid");
+  }
+
+  const { data: item } = await supabase
+    .from("inventory_items")
+    .select("id, name, condition, location, notes, assigned_to_member_id")
+    .eq("id", itemId)
+    .eq("organization_id", organizationId)
+    .single();
+
+  if (!item) {
+    redirect("/dashboard/inventory/items?error=not-found");
+  }
+
+  const { error } = await supabase
+    .from("inventory_items")
+    .update({
+      status: "available",
+      assigned_to_member_id: null,
+      loan_due_date: null,
+      loan_note: null,
+      last_returned_at: now,
+      updated_at: now,
+    })
+    .eq("id", itemId)
+    .eq("organization_id", organizationId);
+
+  if (error) {
+    redirect(`/dashboard/inventory/items/${itemId}?error=return`);
+  }
+
+  await markActiveLoanReturned({ supabase, organizationId, itemId, returnedAt: now });
+  await recordInventoryEvent({
+    supabase,
+    organizationId,
+    itemId,
+    eventType: "returned",
+    note: `${item.name} was returned and is available.`,
+    userId: user.id,
+  });
+
+  revalidateInventory();
+  revalidatePath(`/dashboard/inventory/items/${itemId}`);
+  revalidatePath("/dashboard/inventory/loans");
+  redirect(`/dashboard/inventory/items/${itemId}?returned=1`);
+}
+
 export async function completeInventoryLoanAction(formData: FormData) {
   const { user, supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;

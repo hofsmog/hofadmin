@@ -22,6 +22,7 @@ const steps: Array<{ number: Step; label: string }> = [
 export function InventoryLoanAgreementForm({
   itemId,
   itemName,
+  organizationName,
   members,
   agreementTemplate,
   defaultMemberId,
@@ -30,6 +31,7 @@ export function InventoryLoanAgreementForm({
 }: {
   itemId: string;
   itemName: string;
+  organizationName: string;
   members: Member[];
   agreementTemplate: string;
   defaultMemberId?: string | null;
@@ -144,6 +146,13 @@ export function InventoryLoanAgreementForm({
       {step === 3 ? (
         <section className="space-y-4">
           <StepHeader title="Review loan agreement" description="This text is loaded from Inventory settings. Edit it only when this loan needs different wording." />
+          <div className="grid gap-2 rounded-xl border bg-zinc-50 p-4 text-sm dark:bg-zinc-900/60">
+            <SummaryLine label="Organization" value={organizationName} />
+            <SummaryLine label="Item" value={itemName} />
+            <SummaryLine label="Borrower" value={selectedMember?.name ?? "No borrower selected"} />
+            <SummaryLine label="Loan date" value={new Date().toLocaleDateString()} />
+            <SummaryLine label="Due date" value={dueDate || "No date selected"} />
+          </div>
           <textarea value={agreementText} onChange={(event) => setAgreementText(event.target.value)} rows={7} className="w-full rounded-xl border bg-white px-3 py-3 text-sm leading-6 shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950" />
           <StepButtons onBack={() => setStep(2)} nextDisabled={agreementText.trim().length < 20} onNext={() => setStep(4)} />
         </section>
@@ -181,6 +190,7 @@ export function InventoryLoanAgreementForm({
           <StepHeader title="Confirm loan" description="Check the details before completing the loan." />
           <div className="space-y-2 rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900/60">
             <SummaryLine label="Item" value={itemName} />
+            <SummaryLine label="Organization" value={organizationName} />
             <SummaryLine label="Borrower" value={selectedMember?.name ?? "No borrower selected"} />
             <SummaryLine label="Due date" value={dueDate || "No date selected"} />
             <SummaryLine label="Signature captured" value={hasSignature ? "Yes" : "No"} />
