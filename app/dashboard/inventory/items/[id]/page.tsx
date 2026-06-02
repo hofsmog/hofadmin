@@ -25,7 +25,7 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
   const [{ data: item }, { data: members }, { data: events }, { data: loans }] = await Promise.all([
     supabase
       .from("inventory_items")
-      .select("id, name, description, asset_tag, serial_number, status, condition, location, assigned_to_member_id, loan_due_date, loan_note, last_assigned_at, last_returned_at, qr_value, purchase_date, purchase_price, notes, created_at, inventory_categories(name, color)")
+      .select("id, name, description, asset_tag, serial_number, status, condition, location, assigned_to_member_id, loan_due_date, loan_note, last_assigned_at, last_returned_at, qr_value, purchase_date, purchase_price, notes, created_at, inventory_categories(id, name, color, agreement_enabled, agreement_title, agreement_text, agreement_file_path, agreement_file_name, require_acceptance_before_signature)")
       .eq("id", id)
       .eq("organization_id", organizationId)
       .single(),
@@ -33,7 +33,7 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
     supabase.from("inventory_events").select("id, event_type, note, created_at").eq("inventory_item_id", id).eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(10),
     supabase
       .from("inventory_loans")
-      .select("id, member_id, loaned_at, due_date, returned_at, status, loan_note, agreement_text, borrower_name, signature_data_url, signed_at, created_at")
+      .select("id, member_id, loaned_at, due_date, returned_at, status, loan_note, agreement_text, agreement_title_snapshot, agreement_accepted_at, borrower_name, signature_data_url, signed_at, created_at")
       .eq("inventory_item_id", id)
       .eq("organization_id", organizationId)
       .order("created_at", { ascending: false })
@@ -44,6 +44,10 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
   const assignedMemberName = item.assigned_to_member_id ? members?.find((member) => member.id === item.assigned_to_member_id)?.name ?? "Unknown member" : "Unassigned";
   const loanState = getLoanState(item.loan_due_date, item.status);
   const activeLoan = (loans ?? []).find((loan) => loan.status === "active");
+  const categoryAgreement = item.inventory_categories?.agreement_enabled ? item.inventory_categories : null;
+  const { data: categoryAgreementUrl } = categoryAgreement?.agreement_file_path
+    ? await supabase.storage.from("inventory-agreements").createSignedUrl(categoryAgreement.agreement_file_path, 60 * 10)
+    : { data: null };
 
   return (
     <>
@@ -264,8 +268,11 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
                   <div>
                     <p className="text-sm font-medium">{loan.borrower_name}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{formatLoanStatus(loan.status)} - loaned {new Date(loan.loaned_at).toLocaleDateString()}{loan.due_date ? ` - due ${loan.due_date}` : ""}{loan.returned_at ? ` - returned ${new Date(loan.returned_at).toLocaleDateString()}` : ""}</p>
+                    {loan.agreement_accepted_at ? (
+                      <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-300">Agreement Accepted - {loan.agreement_title_snapshot ?? "Loan Agreement"}</p>
+                    ) : null}
                   </div>
-                  <ButtonLink href={`/dashboard/inventory/loans/${loan.id}`} variant="ghost" className="h-8 px-2">View</ButtonLink>
+                  <ButtonLink href={`/dashboard/inventory/loans/${loan.id}`} variant="ghost" className="h-8 px-2">View Agreement</ButtonLink>
                 </div>
               )) : <p className="py-6 text-sm text-muted-foreground">No loan history yet.</p>}
             </div>
@@ -289,6 +296,15 @@ export default async function InventoryDetailPage({ params, searchParams }: { pa
                 organizationName={organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name}
                 members={members ?? []}
                 agreementTemplate={organizationContext.activeOrganization.defaultLoanAgreementText}
+                categoryAgreement={categoryAgreement ? {
+                  categoryId: categoryAgreement.id,
+                  title: categoryAgreement.agreement_title,
+                  text: categoryAgreement.agreement_text,
+                  filePath: categoryAgreement.agreement_file_path,
+                  fileName: categoryAgreement.agreement_file_name,
+                  fileUrl: categoryAgreementUrl?.signedUrl,
+                  requireAcceptance: categoryAgreement.require_acceptance_before_signature,
+                } : null}
                 defaultMemberId={item.assigned_to_member_id}
                 defaultDueDate={item.loan_due_date}
                 defaultNote={item.loan_note}

@@ -14,7 +14,19 @@ export type FormSubmissionReadStatus = "new" | "read";
 export type FormSubmissionHandlingStatus = "unhandled" | "partially_handled" | "handled" | "archived";
 export type InventoryItemStatus = "available" | "in_use" | "maintenance" | "lost" | "retired";
 export type InventoryItemCondition = "new" | "good" | "fair" | "poor" | "broken";
-export type InventoryEventType = "created" | "updated" | "assigned" | "returned" | "status_changed" | "location_changed" | "maintenance" | "retired" | "due_date_changed";
+export type InventoryEventType =
+  | "created"
+  | "updated"
+  | "assigned"
+  | "returned"
+  | "status_changed"
+  | "location_changed"
+  | "maintenance"
+  | "retired"
+  | "due_date_changed"
+  | "agreement_added"
+  | "agreement_updated"
+  | "agreement_accepted";
 export type InventoryLoanStatus = "active" | "returned" | "overdue" | "cancelled";
 export type ActivityEventType =
   | "qr_created"
@@ -721,6 +733,15 @@ export type Database = {
           name: string;
           description: string | null;
           color: string;
+          agreement_enabled: boolean;
+          agreement_title: string | null;
+          agreement_text: string | null;
+          agreement_file_path: string | null;
+          agreement_file_name: string | null;
+          agreement_file_type: string | null;
+          agreement_uploaded_at: string | null;
+          agreement_uploaded_by: string | null;
+          require_acceptance_before_signature: boolean;
           created_at: string;
         };
         Insert: {
@@ -729,6 +750,15 @@ export type Database = {
           name: string;
           description?: string | null;
           color?: string;
+          agreement_enabled?: boolean;
+          agreement_title?: string | null;
+          agreement_text?: string | null;
+          agreement_file_path?: string | null;
+          agreement_file_name?: string | null;
+          agreement_file_type?: string | null;
+          agreement_uploaded_at?: string | null;
+          agreement_uploaded_by?: string | null;
+          require_acceptance_before_signature?: boolean;
           created_at?: string;
         };
         Update: {
@@ -737,6 +767,15 @@ export type Database = {
           name?: string;
           description?: string | null;
           color?: string;
+          agreement_enabled?: boolean;
+          agreement_title?: string | null;
+          agreement_text?: string | null;
+          agreement_file_path?: string | null;
+          agreement_file_name?: string | null;
+          agreement_file_type?: string | null;
+          agreement_uploaded_at?: string | null;
+          agreement_uploaded_by?: string | null;
+          require_acceptance_before_signature?: boolean;
           created_at?: string;
         };
         Relationships: [
@@ -843,7 +882,8 @@ export type Database = {
         Row: {
           id: string;
           organization_id: string;
-          inventory_item_id: string;
+          inventory_item_id: string | null;
+          inventory_category_id: string | null;
           event_type: InventoryEventType;
           note: string | null;
           created_by: string | null;
@@ -852,7 +892,8 @@ export type Database = {
         Insert: {
           id?: string;
           organization_id: string;
-          inventory_item_id: string;
+          inventory_item_id?: string | null;
+          inventory_category_id?: string | null;
           event_type: InventoryEventType;
           note?: string | null;
           created_by?: string | null;
@@ -861,7 +902,8 @@ export type Database = {
         Update: {
           id?: string;
           organization_id?: string;
-          inventory_item_id?: string;
+          inventory_item_id?: string | null;
+          inventory_category_id?: string | null;
           event_type?: InventoryEventType;
           note?: string | null;
           created_by?: string | null;
@@ -882,6 +924,13 @@ export type Database = {
             referencedRelation: "inventory_items";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "inventory_events_inventory_category_id_fkey";
+            columns: ["inventory_category_id"];
+            isOneToOne: false;
+            referencedRelation: "inventory_categories";
+            referencedColumns: ["id"];
+          },
         ];
         };
       inventory_loans: {
@@ -897,6 +946,13 @@ export type Database = {
             status: InventoryLoanStatus;
             loan_note: string | null;
             agreement_text: string;
+            agreement_category_id: string | null;
+            agreement_title_snapshot: string | null;
+            agreement_text_snapshot: string | null;
+            agreement_file_path_snapshot: string | null;
+            agreement_file_name_snapshot: string | null;
+            agreement_accepted_at: string | null;
+            agreement_accepted_by: string | null;
             borrower_name: string;
             borrower_email: string | null;
             borrower_phone: string | null;
@@ -917,6 +973,13 @@ export type Database = {
             status?: InventoryLoanStatus;
             loan_note?: string | null;
             agreement_text: string;
+            agreement_category_id?: string | null;
+            agreement_title_snapshot?: string | null;
+            agreement_text_snapshot?: string | null;
+            agreement_file_path_snapshot?: string | null;
+            agreement_file_name_snapshot?: string | null;
+            agreement_accepted_at?: string | null;
+            agreement_accepted_by?: string | null;
             borrower_name: string;
             borrower_email?: string | null;
             borrower_phone?: string | null;
@@ -937,6 +1000,13 @@ export type Database = {
             status?: InventoryLoanStatus;
             loan_note?: string | null;
             agreement_text?: string;
+            agreement_category_id?: string | null;
+            agreement_title_snapshot?: string | null;
+            agreement_text_snapshot?: string | null;
+            agreement_file_path_snapshot?: string | null;
+            agreement_file_name_snapshot?: string | null;
+            agreement_accepted_at?: string | null;
+            agreement_accepted_by?: string | null;
             borrower_name?: string;
             borrower_email?: string | null;
             borrower_phone?: string | null;

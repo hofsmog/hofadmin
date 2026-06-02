@@ -33,7 +33,12 @@ export default async function InventoryOverviewPage() {
       .eq("status", "active")
       .order("due_date", { ascending: true, nullsFirst: false })
       .limit(5),
-    supabase.from("inventory_events").select("id, event_type, note, created_at, inventory_items(name)").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(5),
+    supabase
+      .from("inventory_events")
+      .select("id, event_type, note, created_at, inventory_items(name), inventory_categories(name)")
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: false })
+      .limit(5),
   ]);
 
   return (
@@ -101,7 +106,7 @@ export default async function InventoryOverviewPage() {
         <div className="divide-y px-5 pb-5">
           {(events ?? []).length ? events?.map((event) => (
             <div key={event.id} className="py-3">
-              <p className="text-sm font-medium">{event.inventory_items?.name ?? "Inventory item"} - {event.event_type.replaceAll("_", " ")}</p>
+              <p className="text-sm font-medium">{event.inventory_items?.name ?? event.inventory_categories?.name ?? "Inventory"} - {event.event_type.replaceAll("_", " ")}</p>
               {event.note ? <p className="mt-1 text-sm text-muted-foreground">{event.note}</p> : null}
               <p className="mt-1 text-xs text-muted-foreground">{new Date(event.created_at).toLocaleString()}</p>
             </div>

@@ -9,6 +9,12 @@ const statuses = new Set<InventoryItemStatus>(["available", "in_use", "maintenan
 const conditions = new Set<InventoryItemCondition>(["new", "good", "fair", "poor", "broken"]);
 const defaultLoanAgreementText =
   "I confirm that I have received this item and that I am responsible for returning it in the same condition by the agreed return date.";
+const agreementBucket = "inventory-agreements";
+const allowedAgreementTypes = new Map([
+  ["application/pdf", "pdf"],
+  ["application/msword", "doc"],
+  ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx"],
+]);
 
 export type InventoryFormState = {
   status: "idle" | "success" | "error";
@@ -160,25 +166,63 @@ export async function resolveInventoryQrAction(
 }
 
 export async function createInventoryCategoryAction(formData: FormData) {
-  const { supabase, organizationContext } = await requireOrganizationContext();
+  const { supabase, organizationContext, user } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
   const name = String(formData.get("name") || "").trim();
   const description = clean(formData.get("description"));
   const color = /^#[0-9A-Fa-f]{6}$/.test(String(formData.get("color") || "")) ? String(formData.get("color")) : "#2563eb";
+  const agreementEnabled = formData.get("agreementEnabled") === "on";
+  const agreementTitle = clean(formData.get("agreementTitle"));
+  const agreementText = clean(formData.get("agreementText"));
+  const requireAcceptance = formData.get("requireAcceptanceBeforeSignature") === "on";
 
   if (name.length < 2 || name.length > 80) {
     redirect("/dashboard/inventory/categories?error=invalid");
   }
 
-  const { error } = await supabase.from("inventory_categories").insert({
+  const { data: category, error } = await supabase.from("inventory_categories").insert({
     organization_id: organizationId,
     name,
     description,
     color,
-  });
+    agreement_enabled: agreementEnabled,
+    agreement_title: agreementTitle,
+    agreement_text: agreementText,
+    require_acceptance_before_signature: requireAcceptance,
+  }).select("id, name").single();
 
-  if (error) {
+  if (error || !category) {
     redirect("/dashboard/inventory/categories?error=create");
+  }
+
+  const upload = await uploadCategoryAgreementDocument({ supabase, organizationId, categoryId: category.id, file: formData.get("agreementDocument") });
+  if (upload.error) {
+    redirect("/dashboard/inventory/categories?error=upload");
+  }
+
+  if (upload.metadata) {
+    await supabase
+      .from("inventory_categories")
+      .update({
+        agreement_file_path: upload.metadata.path,
+        agreement_file_name: upload.metadata.name,
+        agreement_file_type: upload.metadata.type,
+        agreement_uploaded_at: new Date().toISOString(),
+        agreement_uploaded_by: user.id,
+      })
+      .eq("id", category.id)
+      .eq("organization_id", organizationId);
+  }
+
+  if (agreementEnabled || upload.metadata) {
+    await recordInventoryCategoryEvent({
+      supabase,
+      organizationId,
+      categoryId: category.id,
+      eventType: "agreement_added",
+      note: `${category.name} loan agreement was added.`,
+      userId: user.id,
+    });
   }
 
   revalidateInventory();
@@ -186,25 +230,79 @@ export async function createInventoryCategoryAction(formData: FormData) {
 }
 
 export async function updateInventoryCategoryAction(formData: FormData) {
-  const { supabase, organizationContext } = await requireOrganizationContext();
+  const { supabase, organizationContext, user } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
   const categoryId = String(formData.get("categoryId") || "").trim();
   const name = String(formData.get("name") || "").trim();
   const description = clean(formData.get("description"));
   const color = /^#[0-9A-Fa-f]{6}$/.test(String(formData.get("color") || "")) ? String(formData.get("color")) : "#2563eb";
+  const agreementEnabled = formData.get("agreementEnabled") === "on";
+  const agreementTitle = clean(formData.get("agreementTitle"));
+  const agreementText = clean(formData.get("agreementText"));
+  const requireAcceptance = formData.get("requireAcceptanceBeforeSignature") === "on";
 
   if (!categoryId || name.length < 2 || name.length > 80) {
     redirect("/dashboard/inventory/categories?error=invalid");
   }
 
+  const { data: existing } = await supabase
+    .from("inventory_categories")
+    .select("id, name, agreement_enabled, agreement_title, agreement_text, agreement_file_path")
+    .eq("id", categoryId)
+    .eq("organization_id", organizationId)
+    .single();
+
+  if (!existing) {
+    redirect("/dashboard/inventory/categories?error=not-found");
+  }
+
+  const upload = await uploadCategoryAgreementDocument({ supabase, organizationId, categoryId, file: formData.get("agreementDocument") });
+  if (upload.error) {
+    redirect("/dashboard/inventory/categories?error=upload");
+  }
+
   const { error } = await supabase
     .from("inventory_categories")
-    .update({ name, description, color })
+    .update({
+      name,
+      description,
+      color,
+      agreement_enabled: agreementEnabled,
+      agreement_title: agreementTitle,
+      agreement_text: agreementText,
+      require_acceptance_before_signature: requireAcceptance,
+      ...(upload.metadata
+        ? {
+            agreement_file_path: upload.metadata.path,
+            agreement_file_name: upload.metadata.name,
+            agreement_file_type: upload.metadata.type,
+            agreement_uploaded_at: new Date().toISOString(),
+            agreement_uploaded_by: user.id,
+          }
+        : {}),
+    })
     .eq("id", categoryId)
     .eq("organization_id", organizationId);
 
   if (error) {
     redirect("/dashboard/inventory/categories?error=update");
+  }
+
+  const agreementChanged =
+    existing.agreement_enabled !== agreementEnabled ||
+    existing.agreement_title !== agreementTitle ||
+    existing.agreement_text !== agreementText ||
+    Boolean(upload.metadata);
+
+  if (agreementChanged) {
+    await recordInventoryCategoryEvent({
+      supabase,
+      organizationId,
+      categoryId,
+      eventType: existing.agreement_enabled || existing.agreement_file_path ? "agreement_updated" : "agreement_added",
+      note: `${name} loan agreement was ${existing.agreement_enabled || existing.agreement_file_path ? "updated" : "added"}.`,
+      userId: user.id,
+    });
   }
 
   revalidateInventory();
@@ -357,17 +455,18 @@ export async function completeInventoryLoanAction(formData: FormData) {
   const dueDate = clean(formData.get("dueDate"));
   const loanNote = clean(formData.get("loanNote"));
   const agreementText = String(formData.get("agreementText") || defaultLoanAgreementText).trim();
+  const agreementAccepted = formData.get("agreementAccepted") === "on";
   const signatureDataUrl = String(formData.get("signatureDataUrl") || "").trim();
   const now = new Date().toISOString();
 
-  if (!itemId || !memberId || agreementText.length < 20 || !signatureDataUrl.startsWith("data:image/png;base64,")) {
+  if (!itemId || !memberId || !signatureDataUrl.startsWith("data:image/png;base64,")) {
     redirect(`/dashboard/inventory/items/${itemId || ""}?error=loan`);
   }
 
   const [{ data: item }, { data: member }] = await Promise.all([
     supabase
       .from("inventory_items")
-      .select("id, name")
+      .select("id, name, category_id, inventory_categories(id, agreement_enabled, agreement_title, agreement_text, agreement_file_path, agreement_file_name, require_acceptance_before_signature)")
       .eq("id", itemId)
       .eq("organization_id", organizationId)
       .single(),
@@ -383,6 +482,18 @@ export async function completeInventoryLoanAction(formData: FormData) {
     redirect(`/dashboard/inventory/items/${itemId}?error=loan`);
   }
 
+  const categoryAgreement = normalizeCategoryAgreement(item.inventory_categories);
+  const usesCategoryAgreement = Boolean(categoryAgreement?.agreement_enabled);
+  const agreementSnapshotText = usesCategoryAgreement ? categoryAgreement?.agreement_text?.trim() ?? "" : agreementText;
+  const agreementSnapshotFilePath = usesCategoryAgreement ? categoryAgreement?.agreement_file_path ?? null : clean(formData.get("agreementFilePath"));
+  const agreementSnapshotFileName = usesCategoryAgreement ? categoryAgreement?.agreement_file_name ?? null : clean(formData.get("agreementFileName"));
+  const hasAgreementBody = agreementSnapshotText.length >= 20 || Boolean(agreementSnapshotFilePath);
+  const requireAcceptance = usesCategoryAgreement && categoryAgreement?.require_acceptance_before_signature !== false;
+
+  if (!hasAgreementBody || (requireAcceptance && !agreementAccepted)) {
+    redirect(`/dashboard/inventory/items/${itemId}?error=agreement`);
+  }
+
   await markActiveLoanReturned({ supabase, organizationId, itemId, returnedAt: now, status: "cancelled" });
 
   const { data: loan, error: loanError } = await supabase
@@ -396,7 +507,14 @@ export async function completeInventoryLoanAction(formData: FormData) {
       due_date: dueDate,
       status: "active",
       loan_note: loanNote,
-      agreement_text: agreementText,
+      agreement_text: agreementSnapshotText || "See uploaded agreement document.",
+      agreement_category_id: usesCategoryAgreement ? categoryAgreement?.id ?? item.category_id : null,
+      agreement_title_snapshot: usesCategoryAgreement ? categoryAgreement?.agreement_title ?? "Loan Agreement" : clean(formData.get("agreementTitle")),
+      agreement_text_snapshot: agreementSnapshotText || null,
+      agreement_file_path_snapshot: agreementSnapshotFilePath,
+      agreement_file_name_snapshot: agreementSnapshotFileName,
+      agreement_accepted_at: usesCategoryAgreement ? now : null,
+      agreement_accepted_by: usesCategoryAgreement ? memberId : null,
       borrower_name: member.name,
       borrower_email: member.email,
       borrower_phone: member.phone,
@@ -427,17 +545,53 @@ export async function completeInventoryLoanAction(formData: FormData) {
     redirect(`/dashboard/inventory/items/${itemId}?error=loan`);
   }
 
+  if (usesCategoryAgreement) {
+    await recordInventoryEvent({
+      supabase,
+      organizationId,
+      itemId,
+      eventType: "agreement_accepted",
+      note: `${member.name} accepted ${categoryAgreement?.agreement_title ?? "the loan agreement"} for ${item.name}.`,
+      userId: user.id,
+    });
+  }
+
   await recordInventoryEvent({
     supabase,
     organizationId,
     itemId,
     eventType: "assigned",
-    note: `${item.name} loaned to ${member.name}${dueDate ? ` until ${dueDate}` : ""}.`,
+    note: `${item.name} loaned to ${member.name}${dueDate ? ` until ${dueDate}` : ""}${usesCategoryAgreement ? " with agreement accepted" : ""}.`,
     userId: user.id,
   });
 
   revalidateInventory();
   redirect(`/dashboard/inventory/items/${itemId}?loaned=1`);
+}
+
+function normalizeCategoryAgreement(
+  category:
+    | {
+        id: string;
+        agreement_enabled: boolean | null;
+        agreement_title: string | null;
+        agreement_text: string | null;
+        agreement_file_path: string | null;
+        agreement_file_name: string | null;
+        require_acceptance_before_signature: boolean | null;
+      }
+    | {
+        id: string;
+        agreement_enabled: boolean | null;
+        agreement_title: string | null;
+        agreement_text: string | null;
+        agreement_file_path: string | null;
+        agreement_file_name: string | null;
+        require_acceptance_before_signature: boolean | null;
+      }[]
+    | null,
+) {
+  return Array.isArray(category) ? category[0] ?? null : category;
 }
 
 function clean(value: FormDataEntryValue | null) {
@@ -467,6 +621,83 @@ async function recordInventoryEvent({
     note,
     created_by: userId,
   });
+}
+
+async function recordInventoryCategoryEvent({
+  supabase,
+  organizationId,
+  categoryId,
+  eventType,
+  note,
+  userId,
+}: {
+  supabase: Awaited<ReturnType<typeof requireOrganizationContext>>["supabase"];
+  organizationId: string;
+  categoryId: string;
+  eventType: InventoryEventType;
+  note: string | null;
+  userId: string;
+}) {
+  await supabase.from("inventory_events").insert({
+    organization_id: organizationId,
+    inventory_category_id: categoryId,
+    event_type: eventType,
+    note,
+    created_by: userId,
+  });
+}
+
+async function uploadCategoryAgreementDocument({
+  supabase,
+  organizationId,
+  categoryId,
+  file,
+}: {
+  supabase: Awaited<ReturnType<typeof requireOrganizationContext>>["supabase"];
+  organizationId: string;
+  categoryId: string;
+  file: FormDataEntryValue | null;
+}): Promise<{ metadata?: { path: string; name: string; type: string }; error?: string }> {
+  if (!(file instanceof File) || !file.name || file.size === 0) {
+    return {};
+  }
+
+  const extension = allowedAgreementTypes.get(file.type);
+  const fallbackExtension = file.name.split(".").pop()?.toLowerCase();
+  const supportedExtension = extension ?? (fallbackExtension && ["pdf", "doc", "docx"].includes(fallbackExtension) ? fallbackExtension : null);
+
+  if (!supportedExtension) {
+    return { error: "unsupported-file" };
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    return { error: "file-too-large" };
+  }
+
+  const safeName = sanitizeFileName(file.name, supportedExtension);
+  const path = `organizations/${organizationId}/inventory/category-agreements/${categoryId}/${Date.now()}-${safeName}`;
+  const { error } = await supabase.storage.from(agreementBucket).upload(path, file, {
+    contentType: file.type || contentTypeForExtension(supportedExtension),
+    upsert: true,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { metadata: { path, name: file.name, type: file.type || contentTypeForExtension(supportedExtension) } };
+}
+
+function sanitizeFileName(fileName: string, extension: string) {
+  const withoutExtension = fileName.replace(/\.[^.]+$/, "");
+  const safeBase = withoutExtension.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "agreement";
+  return `${safeBase}.${extension}`;
+}
+
+function contentTypeForExtension(extension: string) {
+  if (extension === "pdf") return "application/pdf";
+  if (extension === "doc") return "application/msword";
+  return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 }
 
 function revalidateInventory() {

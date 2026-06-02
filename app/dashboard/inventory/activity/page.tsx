@@ -9,7 +9,7 @@ export default async function InventoryActivityPage() {
   const { supabase, organizationContext } = await requireOrganizationContext();
   const { data: events } = await supabase
     .from("inventory_events")
-    .select("id, event_type, note, created_at, inventory_items(name, asset_tag)")
+    .select("id, event_type, note, created_at, inventory_items(name, asset_tag), inventory_categories(name)")
     .eq("organization_id", organizationContext.activeOrganization.id)
     .order("created_at", { ascending: false })
     .limit(25);
@@ -28,11 +28,11 @@ export default async function InventoryActivityPage() {
           {(events ?? []).length ? events?.map((event) => (
             <div key={event.id} className="py-4">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="font-medium">{event.inventory_items?.name ?? "Inventory item"}</p>
+                <p className="font-medium">{event.inventory_items?.name ?? event.inventory_categories?.name ?? "Inventory"}</p>
                 <Badge className="capitalize">{event.event_type.replaceAll("_", " ")}</Badge>
               </div>
               {event.note ? <p className="mt-1 text-sm text-muted-foreground">{event.note}</p> : null}
-              <p className="mt-1 text-xs text-muted-foreground">{event.inventory_items?.asset_tag ?? "No asset tag"} - {new Date(event.created_at).toLocaleString()}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{event.inventory_items?.asset_tag ?? "Category event"} - {new Date(event.created_at).toLocaleString()}</p>
             </div>
           )) : (
             <div className="rounded-xl border border-dashed p-8 text-center">

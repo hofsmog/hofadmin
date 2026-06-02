@@ -25,6 +25,7 @@ export function InventoryLoanAgreementForm({
   organizationName,
   members,
   agreementTemplate,
+  categoryAgreement,
   defaultMemberId,
   defaultDueDate,
   defaultNote,
@@ -34,6 +35,15 @@ export function InventoryLoanAgreementForm({
   organizationName: string;
   members: Member[];
   agreementTemplate: string;
+  categoryAgreement?: {
+    categoryId: string;
+    title: string | null;
+    text: string | null;
+    filePath: string | null;
+    fileName: string | null;
+    fileUrl?: string;
+    requireAcceptance: boolean;
+  } | null;
   defaultMemberId?: string | null;
   defaultDueDate?: string | null;
   defaultNote?: string | null;
@@ -46,8 +56,11 @@ export function InventoryLoanAgreementForm({
   const [memberId, setMemberId] = useState(defaultMemberId ?? "");
   const [dueDate, setDueDate] = useState(defaultDueDate ?? "");
   const [loanNote, setLoanNote] = useState(defaultNote ?? "");
-  const [agreementText, setAgreementText] = useState(agreementTemplate);
+  const [agreementText, setAgreementText] = useState(categoryAgreement?.text || agreementTemplate);
+  const [agreementAccepted, setAgreementAccepted] = useState(!categoryAgreement?.requireAcceptance);
   const selectedMember = members.find((member) => member.id === memberId);
+  const agreementTitle = categoryAgreement?.title || "Loan Agreement";
+  const hasAgreementContent = agreementText.trim().length >= 20 || Boolean(categoryAgreement?.filePath);
 
   function getPoint(event: React.PointerEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current;
@@ -104,7 +117,12 @@ export function InventoryLoanAgreementForm({
       <input type="hidden" name="memberId" value={memberId} />
       <input type="hidden" name="dueDate" value={dueDate} />
       <input type="hidden" name="loanNote" value={loanNote} />
+      <input type="hidden" name="agreementCategoryId" value={categoryAgreement?.categoryId ?? ""} />
+      <input type="hidden" name="agreementTitle" value={agreementTitle} />
+      <input type="hidden" name="agreementFilePath" value={categoryAgreement?.filePath ?? ""} />
+      <input type="hidden" name="agreementFileName" value={categoryAgreement?.fileName ?? ""} />
       <input type="hidden" name="agreementText" value={agreementText} />
+      {agreementAccepted ? <input type="hidden" name="agreementAccepted" value="on" /> : null}
       <input type="hidden" name="signatureDataUrl" value={signatureDataUrl} />
 
       <Progress step={step} />
@@ -145,7 +163,10 @@ export function InventoryLoanAgreementForm({
 
       {step === 3 ? (
         <section className="space-y-4">
-          <StepHeader title="Review loan agreement" description="This text is loaded from Inventory settings. Edit it only when this loan needs different wording." />
+          <StepHeader
+            title="Review loan agreement"
+            description={categoryAgreement ? "This item requires a loan agreement before it can be borrowed." : "This text is loaded from Inventory settings. Edit it only when this loan needs different wording."}
+          />
           <div className="grid gap-2 rounded-xl border bg-zinc-50 p-4 text-sm dark:bg-zinc-900/60">
             <SummaryLine label="Organization" value={organizationName} />
             <SummaryLine label="Item" value={itemName} />
@@ -153,8 +174,31 @@ export function InventoryLoanAgreementForm({
             <SummaryLine label="Loan date" value={new Date().toLocaleDateString()} />
             <SummaryLine label="Due date" value={dueDate || "No date selected"} />
           </div>
-          <textarea value={agreementText} onChange={(event) => setAgreementText(event.target.value)} rows={7} className="w-full rounded-xl border bg-white px-3 py-3 text-sm leading-6 shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950" />
-          <StepButtons onBack={() => setStep(2)} nextDisabled={agreementText.trim().length < 20} onNext={() => setStep(4)} />
+          <div className="rounded-xl border bg-white p-4 dark:bg-zinc-950">
+            <p className="text-sm font-semibold">{agreementTitle}</p>
+            {categoryAgreement?.fileName ? (
+              <a href={categoryAgreement.fileUrl ?? "#"} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-sm font-medium underline-offset-4 hover:underline">
+                View document: {categoryAgreement.fileName}
+              </a>
+            ) : null}
+            {categoryAgreement ? (
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{agreementText || "No agreement text was added for this category."}</p>
+            ) : (
+              <textarea value={agreementText} onChange={(event) => setAgreementText(event.target.value)} rows={7} className="mt-3 w-full rounded-xl border bg-white px-3 py-3 text-sm leading-6 shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950" />
+            )}
+          </div>
+          {categoryAgreement?.requireAcceptance ? (
+            <label className="flex items-start gap-3 rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900/60">
+              <input type="checkbox" checked={agreementAccepted} onChange={(event) => setAgreementAccepted(event.target.checked)} className="mt-1 h-4 w-4 rounded border-zinc-300" />
+              <span className="text-sm font-medium">I have read and accept the loan agreement.</span>
+            </label>
+          ) : null}
+          <StepButtons
+            onBack={() => setStep(2)}
+            nextDisabled={!hasAgreementContent || (categoryAgreement?.requireAcceptance && !agreementAccepted)}
+            nextLabel="Continue to Signature"
+            onNext={() => setStep(4)}
+          />
         </section>
       ) : null}
 
@@ -239,14 +283,14 @@ function StepHeader({ title, description }: { title: string; description: string
   );
 }
 
-function StepButtons({ onBack, onNext, nextDisabled }: { onBack: () => void; onNext: () => void; nextDisabled?: boolean }) {
+function StepButtons({ onBack, onNext, nextDisabled, nextLabel = "Continue" }: { onBack: () => void; onNext: () => void; nextDisabled?: boolean; nextLabel?: string }) {
   return (
     <div className="grid gap-2 sm:grid-cols-2">
       <Button type="button" variant="secondary" className="h-12" onClick={onBack}>
         Back
       </Button>
       <Button type="button" className="h-12" disabled={nextDisabled} onClick={onNext}>
-        Continue
+        {nextLabel}
       </Button>
     </div>
   );

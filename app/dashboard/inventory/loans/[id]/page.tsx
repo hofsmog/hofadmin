@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, FileSignature, UserRound } from "lucide-react";
+import { ArrowLeft, Calendar, FileSignature, FileText, UserRound } from "lucide-react";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,12 +15,18 @@ export default async function InventoryLoanDetailPage({ params }: { params: Prom
 
   const { data: loan } = await supabase
     .from("inventory_loans")
-    .select("id, inventory_item_id, member_id, loaned_at, due_date, returned_at, status, loan_note, agreement_text, borrower_name, borrower_email, borrower_phone, signature_data_url, signed_at, inventory_items(name, asset_tag)")
+    .select("id, inventory_item_id, member_id, loaned_at, due_date, returned_at, status, loan_note, agreement_text, agreement_category_id, agreement_title_snapshot, agreement_text_snapshot, agreement_file_path_snapshot, agreement_file_name_snapshot, agreement_accepted_at, agreement_accepted_by, borrower_name, borrower_email, borrower_phone, signature_data_url, signed_at, inventory_items(name, asset_tag)")
     .eq("id", id)
     .eq("organization_id", organizationId)
     .single();
 
   if (!loan) notFound();
+
+  const agreementDocumentUrl = loan.agreement_file_path_snapshot
+    ? (await supabase.storage.from("inventory-agreements").createSignedUrl(loan.agreement_file_path_snapshot, 600)).data?.signedUrl ?? null
+    : null;
+  const agreementTitle = loan.agreement_title_snapshot ?? "Loan Agreement";
+  const agreementText = loan.agreement_text_snapshot ?? loan.agreement_text;
 
   return (
     <>
@@ -49,6 +55,11 @@ export default async function InventoryLoanDetailPage({ params }: { params: Prom
             <Info icon={Calendar} label="Loan Date" value={new Date(loan.loaned_at).toLocaleString()} />
             <Info icon={Calendar} label="Due Date" value={loan.due_date ?? "No due date"} />
             <Info icon={Calendar} label="Returned" value={loan.returned_at ? new Date(loan.returned_at).toLocaleString() : "Not returned"} />
+            <Info
+              icon={FileSignature}
+              label="Agreement Accepted"
+              value={loan.agreement_accepted_at ? new Date(loan.agreement_accepted_at).toLocaleString() : "No category agreement accepted"}
+            />
             {loan.loan_note ? (
               <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900/60">
                 <p className="text-xs font-medium uppercase text-muted-foreground">Loan note</p>
@@ -78,13 +89,19 @@ export default async function InventoryLoanDetailPage({ params }: { params: Prom
 
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Agreement text</CardTitle>
-            <CardDescription>The exact agreement saved at signing.</CardDescription>
+            <CardTitle>{agreementTitle}</CardTitle>
+            <CardDescription>The exact agreement snapshot saved at signing.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {agreementDocumentUrl && loan.agreement_file_name_snapshot ? (
+              <ButtonLink href={agreementDocumentUrl} variant="secondary" className="h-9 px-3">
+                <FileText className="h-4 w-4" />
+                View Agreement Document
+              </ButtonLink>
+            ) : null}
             <div className="rounded-xl border bg-zinc-50 p-5 text-sm leading-7 dark:bg-zinc-900/60">
               <FileSignature className="mb-3 h-5 w-5 text-muted-foreground" />
-              {loan.agreement_text}
+              {agreementText}
             </div>
           </CardContent>
         </Card>
