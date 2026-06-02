@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { BarChart3, ClipboardList, MessageSquareText } from "lucide-react";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { Badge } from "@/components/ui/badge";
@@ -134,10 +133,10 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
           </CardHeader>
           <div className="divide-y px-5 pb-5">
             {latestResponses.length ? latestResponses.map((submission) => (
-              <Link key={submission.id} href={`/dashboard/forms/submissions/${submission.id}`} className="block py-3 text-sm transition hover:text-zinc-950 dark:hover:text-zinc-50">
+              <div key={submission.id} className="py-3 text-sm">
                 <span className="font-medium">Response {submission.id.slice(0, 8)}</span>
                 <span className="mt-1 block text-xs text-muted-foreground">{new Date(submission.created_at).toLocaleString()}</span>
-              </Link>
+              </div>
             )) : (
               <div className="py-8 text-center text-sm text-muted-foreground">No responses yet.</div>
             )}

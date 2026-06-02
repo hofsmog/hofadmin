@@ -106,7 +106,7 @@ export default async function SubmissionDetailPage({
   return (
     <>
       <ModuleHeader
-        title="Detaljpanel"
+        title="Response detail"
         description="All answers, contact details, status, and internal notes."
         items={formsNavItems}
       />
@@ -186,8 +186,8 @@ export default async function SubmissionDetailPage({
                     defaultValue={submission.read_status}
                     className="mt-2 h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
                   >
-                    <option value="new">Ny</option>
-                    <option value="read">Läst</option>
+                    <option value="new">New</option>
+                    <option value="read">Read</option>
                   </select>
                 </div>
                 <div>

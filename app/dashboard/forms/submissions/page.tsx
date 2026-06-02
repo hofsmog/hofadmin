@@ -176,13 +176,13 @@ export default async function FormsSubmissionsPage({
                       <input type="hidden" name="submissionId" value={submission.id} />
                       <input type="hidden" name="returnTo" value="/dashboard/forms/submissions" />
                       <select name="readStatus" defaultValue={submission.read_status} className="h-8 rounded-lg border bg-white px-2 text-xs dark:bg-zinc-950">
-                        <option value="new">Ny</option>
-                        <option value="read">Läst</option>
+                        <option value="new">New</option>
+                        <option value="read">Read</option>
                       </select>
                       <select name="handlingStatus" defaultValue={submission.handling_status} className="h-8 rounded-lg border bg-white px-2 text-xs dark:bg-zinc-950">
-                        <option value="unhandled">Ohanterad</option>
-                        <option value="partially_handled">Delhanterad</option>
-                        <option value="handled">Hanterad</option>
+                        <option value="unhandled">Unhandled</option>
+                        <option value="partially_handled">Partially handled</option>
+                        <option value="handled">Handled</option>
                       </select>
                       <button type="submit" className="h-8 rounded-lg border bg-white px-2 text-xs font-medium shadow-sm dark:bg-zinc-950">Spara</button>
                     </form>

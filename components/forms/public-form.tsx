@@ -144,9 +144,11 @@ function FieldControl({
         </legend>
         <div className="grid gap-2">
           {options.map((option) => (
-            <label key={option} className="flex items-center gap-3 text-sm">
-              <input name={name} value={option} type="radio" required={field.is_required} className="h-4 w-4 border-zinc-300" />
-              {option}
+            <label key={option} className="cursor-pointer text-sm">
+              <input name={name} value={option} type="radio" required={field.is_required} className="peer sr-only" />
+              <span className={cn("flex min-h-11 items-center gap-3 border bg-white px-3 transition peer-checked:border-zinc-950 peer-checked:bg-zinc-950 peer-checked:text-white", radiusClass)}>
+                {option}
+              </span>
             </label>
           ))}
         </div>
@@ -160,9 +162,11 @@ function FieldControl({
         <legend className="text-sm font-medium">{field.label}{field.is_required ? <span style={{ color: accentColor }}> *</span> : null}</legend>
         <div className="grid grid-cols-2 gap-2">
           {["Yes", "No"].map((option) => (
-            <label key={option} className={cn("flex items-center justify-center gap-2 border p-3 text-sm", radiusClass)}>
-              <input name={name} value={option} type="radio" required={field.is_required} />
-              {option}
+            <label key={option} className="cursor-pointer text-sm">
+              <input name={name} value={option} type="radio" required={field.is_required} className="peer sr-only" />
+              <span className={cn("flex min-h-11 items-center justify-center border p-3 transition peer-checked:border-zinc-950 peer-checked:bg-zinc-950 peer-checked:text-white", radiusClass)}>
+                {option}
+              </span>
             </label>
           ))}
         </div>
@@ -177,9 +181,11 @@ function FieldControl({
         <legend className="text-sm font-medium">{field.label}{field.is_required ? <span style={{ color: accentColor }}> *</span> : null}</legend>
         <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${max}, minmax(0, 1fr))` }}>
           {Array.from({ length: max }, (_, index) => String(index + 1)).map((option) => (
-            <label key={option} className={cn("flex min-h-10 items-center justify-center border text-sm font-medium", radiusClass)}>
-              <input className="sr-only" name={name} value={option} type="radio" required={field.is_required} />
-              {option}
+            <label key={option} className="cursor-pointer">
+              <input className="peer sr-only" name={name} value={option} type="radio" required={field.is_required} />
+              <span className={cn("flex min-h-10 items-center justify-center border text-sm font-medium transition peer-checked:border-zinc-950 peer-checked:bg-zinc-950 peer-checked:text-white", radiusClass)}>
+                {option}
+              </span>
             </label>
           ))}
         </div>

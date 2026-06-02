@@ -12,11 +12,7 @@ export const readStatusLabels: Record<FormSubmissionReadStatus, string> = {
   read: "Read",
 };
 
-const respondentNameLabels = new Set([
-  "name",
-  "full name",
-  "namn",
-]);
+const respondentNameLabels = new Set(["name", "full name"]);
 
 export type SubmissionValueLike = {
   field_label: string;
@@ -24,8 +20,8 @@ export type SubmissionValueLike = {
 };
 
 export function getRespondentName(values: SubmissionValueLike[], fallback = "Unnamed response") {
-  const firstName = values.find((value) => ["förnamn", "fornamn", "first name"].includes(normalizeLabel(value.field_label)))?.value?.trim();
-  const lastName = values.find((value) => ["efternamn", "last name"].includes(normalizeLabel(value.field_label)))?.value?.trim();
+  const firstName = values.find((value) => ["first name", "first"].includes(normalizeLabel(value.field_label)))?.value?.trim();
+  const lastName = values.find((value) => ["last name", "last"].includes(normalizeLabel(value.field_label)))?.value?.trim();
   const fullName = [firstName, lastName].filter(Boolean).join(" ");
 
   if (fullName) {

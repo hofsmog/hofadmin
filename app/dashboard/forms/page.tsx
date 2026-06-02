@@ -11,23 +11,26 @@ export default async function FormsOverviewPage() {
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
   const [
-    { data: forms },
-    { data: submissions },
-    { data: newSubmissions },
+    { data: recentForms },
+    { data: inboxForms },
     { count: totalForms },
     { count: totalSurveys },
-    { count: unreadSubmissions },
-    { count: needsHandling },
   ] = await Promise.all([
     supabase.from("forms").select("id, title, status, form_type, created_at").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(5),
-    supabase.from("form_submissions").select("id, form_id, submitter_email, created_at").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(5),
-    supabase.from("form_submissions").select("id, form_id, submitter_email, created_at").eq("organization_id", organizationId).eq("read_status", "new").order("created_at", { ascending: false }).limit(5),
+    supabase.from("forms").select("id, title").eq("organization_id", organizationId).eq("form_type", "form").order("title", { ascending: true }).limit(500),
     supabase.from("forms").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("form_type", "form"),
     supabase.from("forms").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("form_type", "survey"),
-    supabase.from("form_submissions").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("read_status", "new"),
-    supabase.from("form_submissions").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).in("handling_status", ["unhandled", "partially_handled"]),
   ]);
-  const formsById = new Map((forms ?? []).map((form) => [form.id, form]));
+  const inboxFormIds = (inboxForms ?? []).map((form) => form.id);
+  const formsById = new Map((inboxForms ?? []).map((form) => [form.id, form]));
+  const [{ data: submissions }, { data: newSubmissions }, { count: unreadSubmissions }, { count: needsHandling }] = inboxFormIds.length
+    ? await Promise.all([
+        supabase.from("form_submissions").select("id, form_id, submitter_email, created_at").eq("organization_id", organizationId).in("form_id", inboxFormIds).order("created_at", { ascending: false }).limit(5),
+        supabase.from("form_submissions").select("id, form_id, submitter_email, created_at").eq("organization_id", organizationId).in("form_id", inboxFormIds).eq("read_status", "new").order("created_at", { ascending: false }).limit(5),
+        supabase.from("form_submissions").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).in("form_id", inboxFormIds).eq("read_status", "new"),
+        supabase.from("form_submissions").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).in("form_id", inboxFormIds).in("handling_status", ["unhandled", "partially_handled"]),
+      ])
+    : [{ data: [] }, { data: [] }, { count: 0 }, { count: 0 }];
   const newSubmissionIds = (newSubmissions ?? []).map((submission) => submission.id);
   const { data: newSubmissionValues } = newSubmissionIds.length
     ? await supabase
@@ -59,11 +62,11 @@ export default async function FormsOverviewPage() {
             <CardDescription>Newest forms and surveys in this workspace.</CardDescription>
           </CardHeader>
           <div className="divide-y px-5 pb-5">
-            {(forms ?? []).length ? forms?.map((form) => (
+            {(recentForms ?? []).length ? recentForms?.map((form) => (
               <div key={form.id} className="flex items-center justify-between gap-3 py-3">
                 <div>
                   <p className="text-sm font-medium">{form.title}</p>
-                  <p className="text-xs text-muted-foreground">{form.form_type === "survey" ? "Survey" : "Form"} · {form.status === "published" ? "Published" : form.status === "draft" ? "Draft" : "Archived"}</p>
+                  <p className="text-xs text-muted-foreground">{form.form_type === "survey" ? "Survey" : "Form"} - {form.status === "published" ? "Published" : form.status === "draft" ? "Draft" : "Archived"}</p>
                 </div>
                 <span className="text-xs text-muted-foreground">{new Date(form.created_at).toLocaleDateString()}</span>
               </div>
@@ -72,8 +75,8 @@ export default async function FormsOverviewPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Recent responses</CardTitle>
-            <CardDescription>Latest response activity.</CardDescription>
+            <CardTitle>Recent inbox responses</CardTitle>
+            <CardDescription>Latest responses from regular forms.</CardDescription>
           </CardHeader>
           <div className="divide-y px-5 pb-5">
             {(submissions ?? []).length ? submissions?.map((submission) => (
@@ -83,7 +86,7 @@ export default async function FormsOverviewPage() {
                   <span className="mt-1 block truncate text-xs text-muted-foreground">{submission.submitter_email ?? "No email captured"} - {new Date(submission.created_at).toLocaleString()}</span>
                 </span>
               </ButtonLink>
-            )) : <EmptyCopy title="No responses yet" description="Responses will appear here once public forms are used." />}
+            )) : <EmptyCopy title="No inbox responses yet" description="Regular form responses will appear here once public forms are used." />}
           </div>
         </Card>
       </div>
@@ -105,7 +108,7 @@ export default async function FormsOverviewPage() {
                 <span className="shrink-0 text-xs text-muted-foreground">{new Date(submission.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
               </ButtonLink>
             );
-          }) : <EmptyCopy title="No new responses" description="New responses will surface here as they arrive." />}
+          }) : <EmptyCopy title="No new responses" description="New form responses will surface here as they arrive." />}
         </div>
       </Card>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
