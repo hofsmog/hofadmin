@@ -159,7 +159,7 @@ function FieldControl({
       <fieldset className={cn("space-y-3 border bg-white/70 p-4", radiusClass)}>
         <legend className="text-sm font-medium">{field.label}{field.is_required ? <span style={{ color: accentColor }}> *</span> : null}</legend>
         <div className="grid grid-cols-2 gap-2">
-          {["Ja", "Nej"].map((option) => (
+          {["Yes", "No"].map((option) => (
             <label key={option} className={cn("flex items-center justify-center gap-2 border p-3 text-sm", radiusClass)}>
               <input name={name} value={option} type="radio" required={field.is_required} />
               {option}

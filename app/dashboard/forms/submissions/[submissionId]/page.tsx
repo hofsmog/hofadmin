@@ -107,7 +107,7 @@ export default async function SubmissionDetailPage({
     <>
       <ModuleHeader
         title="Detaljpanel"
-        description="Alla svar, kontaktuppgifter, status och interna anteckningar."
+        description="All answers, contact details, status, and internal notes."
         items={formsNavItems}
       />
       <Toast show={query.updated === "1"} title="Submission updated" message="Handling status and notes were saved." />

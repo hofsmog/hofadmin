@@ -69,7 +69,7 @@ export default async function PublicFormPage({ params }: { params: Promise<{ slu
             {form.description ? <CardDescription>{form.description}</CardDescription> : null}
             {form.form_type === "survey" && form.anonymous_responses ? (
               <div className="mt-3 rounded-xl border bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-                Den här undersökningen är anonym.
+                This survey is anonymous.
               </div>
             ) : null}
             {welcomeMessage ? <p className="mt-3 text-sm leading-6 text-muted-foreground">{welcomeMessage}</p> : null}

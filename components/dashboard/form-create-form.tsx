@@ -15,18 +15,18 @@ import type { Database, FormCornerRadius, FormFieldType, FormFontStyle, FormLayo
 const initialState: FormBuilderState = { status: "idle", message: "" };
 
 const fieldTypes: Array<{ label: string; value: FormFieldType }> = [
-  { label: "Kort text", value: "text" },
-  { label: "Lång text", value: "textarea" },
-  { label: "E-post", value: "email" },
-  { label: "Telefonnummer", value: "phone" },
-  { label: "Nummer", value: "number" },
-  { label: "Datum", value: "date" },
+  { label: "Short text", value: "text" },
+  { label: "Long text", value: "textarea" },
+  { label: "Email", value: "email" },
+  { label: "Phone number", value: "phone" },
+  { label: "Number", value: "number" },
+  { label: "Date", value: "date" },
   { label: "Dropdown", value: "select" },
-  { label: "Kryssrutor", value: "checkbox" },
-  { label: "Flerval", value: "radio" },
-  { label: "Skala 1-5", value: "scale_1_5" },
-  { label: "Skala 1-10", value: "scale_1_10" },
-  { label: "Ja/Nej", value: "yes_no" },
+  { label: "Checkboxes", value: "checkbox" },
+  { label: "Multiple choice", value: "radio" },
+  { label: "Scale 1-5", value: "scale_1_5" },
+  { label: "Scale 1-10", value: "scale_1_10" },
+  { label: "Yes/No", value: "yes_no" },
 ];
 
 const tabs = [
@@ -366,8 +366,8 @@ function SettingsPanel({
         <label className="block space-y-2">
           <span className="text-sm font-medium">Type</span>
           <select value={formType} onChange={(event) => setFormType(event.target.value as FormType)} className="h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800">
-            <option value="form">Formulär</option>
-            <option value="survey">Undersökning</option>
+            <option value="form">Form</option>
+            <option value="survey">Survey</option>
           </select>
         </label>
         <label className="block space-y-2">
@@ -382,8 +382,8 @@ function SettingsPanel({
           <label className="flex items-start gap-3 rounded-xl border bg-white p-4 dark:bg-zinc-950 md:col-span-2">
             <input type="checkbox" checked={anonymousResponses} onChange={(event) => setAnonymousResponses(event.target.checked)} className="mt-1 h-4 w-4 rounded border-zinc-300" />
             <span>
-              <span className="block text-sm font-medium">Anonyma svar</span>
-              <span className="mt-1 block text-sm text-muted-foreground">Respondenten ser tydligt att undersökningen är anonym. E-post sparas inte som kontakt på svaret.</span>
+              <span className="block text-sm font-medium">Anonymous responses</span>
+              <span className="mt-1 block text-sm text-muted-foreground">Respondents will clearly see that the survey is anonymous. Email is not saved as the response contact.</span>
             </span>
           </label>
         ) : null}
@@ -518,7 +518,7 @@ function FieldsPanel({
               <Input
                 value={field.options}
                 onChange={(event) => updateField(field.clientId, { options: event.target.value })}
-                placeholder="Alternativ: Ja, Nej, Kanske"
+                placeholder="Options: Yes, No, Maybe"
               />
             ) : (
               <Badge>{field.fieldType}</Badge>

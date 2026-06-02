@@ -45,10 +45,10 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
   if (!form) {
     return (
       <>
-        <ModuleHeader title="Undersökning saknas" description="Den här sidan finns inte i din organisation." items={formsNavItems} />
+        <ModuleHeader title="Survey not found" description="This page is not available in your organization." items={formsNavItems} />
         <Card>
           <CardContent className="pt-5">
-            <p className="text-sm text-muted-foreground">Kontrollera länken eller gå tillbaka till Forms.</p>
+            <p className="text-sm text-muted-foreground">Check the link or go back to Forms.</p>
           </CardContent>
         </Card>
       </>
@@ -58,11 +58,11 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
   if (form.form_type !== "survey") {
     return (
       <>
-        <ModuleHeader title={form.title} description="Det här är ett vanligt formulär med inkorgsflöde." items={formsNavItems} />
+        <ModuleHeader title={form.title} description="This is a regular form with an inbox workflow." items={formsNavItems} />
         <Card>
           <CardContent className="flex flex-col gap-3 pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">Öppna inkorgen för att hantera svar och anteckningar.</p>
-            <ButtonLink href={`/dashboard/forms/submissions?formId=${form.id}`}>Öppna inkorg</ButtonLink>
+            <p className="text-sm text-muted-foreground">Open the inbox to handle responses and internal notes.</p>
+            <ButtonLink href={`/dashboard/forms/submissions?formId=${form.id}`}>Open inbox</ButtonLink>
           </CardContent>
         </Card>
       </>
@@ -101,15 +101,15 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
     <>
       <ModuleHeader
         title={form.title}
-        description="Sammanställning för undersökning med svar per fråga."
+        description="Survey results summarized by question."
         items={formsNavItems}
-        action={{ href: `/forms/${form.slug}`, label: "Öppna publik länk" }}
+        action={{ href: `/forms/${form.slug}`, label: "Open public link" }}
       />
 
       <div className="grid gap-4 md:grid-cols-3">
-        <SummaryCard title="Svar" value={submissionRows.length.toString()} description="Inkomna svar i undersökningen" icon={ClipboardList} />
-        <SummaryCard title="Svarsfrekvens" value="Ej tillgänglig" description="Kräver mottagarlista i en senare version" icon={BarChart3} />
-        <SummaryCard title="Integritet" value={form.anonymous_responses ? "Anonym" : "Ej anonym"} description={form.anonymous_responses ? "Personuppgifter kopplas inte till svaret" : "Svar kan innehålla kontaktfält"} icon={MessageSquareText} />
+        <SummaryCard title="Responses" value={submissionRows.length.toString()} description="Received survey responses" icon={ClipboardList} />
+        <SummaryCard title="Response rate" value="Not available" description="Requires a recipient list in a later version" icon={BarChart3} />
+        <SummaryCard title="Privacy" value={form.anonymous_responses ? "Anonymous" : "Not anonymous"} description={form.anonymous_responses ? "Personal details are not linked to the response" : "Responses may include contact fields"} icon={MessageSquareText} />
       </div>
 
       <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
@@ -120,8 +120,8 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
             <Card>
               <CardContent className="py-10 text-center">
                 <ClipboardList className="mx-auto h-9 w-9 text-muted-foreground" />
-                <p className="mt-3 text-sm font-medium">Inga frågor ännu</p>
-                <p className="mt-1 text-sm text-muted-foreground">Lägg till frågor i formulärdesignern för att kunna sammanställa svar.</p>
+                <p className="mt-3 text-sm font-medium">No questions yet</p>
+                <p className="mt-1 text-sm text-muted-foreground">Add questions in the form builder to summarize responses.</p>
               </CardContent>
             </Card>
           )}
@@ -129,17 +129,17 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
 
         <Card>
           <CardHeader>
-            <CardTitle>Senaste svar</CardTitle>
-            <CardDescription>De senaste svaren i undersökningen.</CardDescription>
+            <CardTitle>Latest responses</CardTitle>
+            <CardDescription>The latest responses for this survey.</CardDescription>
           </CardHeader>
           <div className="divide-y px-5 pb-5">
             {latestResponses.length ? latestResponses.map((submission) => (
               <Link key={submission.id} href={`/dashboard/forms/submissions/${submission.id}`} className="block py-3 text-sm transition hover:text-zinc-950 dark:hover:text-zinc-50">
-                <span className="font-medium">Svar {submission.id.slice(0, 8)}</span>
+                <span className="font-medium">Response {submission.id.slice(0, 8)}</span>
                 <span className="mt-1 block text-xs text-muted-foreground">{new Date(submission.created_at).toLocaleString()}</span>
               </Link>
             )) : (
-              <div className="py-8 text-center text-sm text-muted-foreground">Inga svar ännu.</div>
+              <div className="py-8 text-center text-sm text-muted-foreground">No responses yet.</div>
             )}
           </div>
         </Card>
@@ -178,7 +178,7 @@ function QuestionSummary({ field, values, totalResponses }: { field: FieldRow; v
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <CardTitle>{field.label}</CardTitle>
-              <CardDescription>{nonEmptyValues.length} av {totalResponses} svar</CardDescription>
+              <CardDescription>{nonEmptyValues.length} of {totalResponses} responses</CardDescription>
             </div>
             <Badge>{fieldTypeLabel(field.field_type)}</Badge>
           </div>
@@ -194,7 +194,7 @@ function QuestionSummary({ field, values, totalResponses }: { field: FieldRow; v
                 <div className="h-2 rounded-full bg-zinc-950 dark:bg-zinc-100" style={{ width: `${Math.max(4, (item.count / maxCount) * 100)}%` }} />
               </div>
             </div>
-          )) : <p className="text-sm text-muted-foreground">Inga svar på frågan ännu.</p>}
+          )) : <p className="text-sm text-muted-foreground">No responses for this question yet.</p>}
         </CardContent>
       </Card>
     );
@@ -207,7 +207,7 @@ function QuestionSummary({ field, values, totalResponses }: { field: FieldRow; v
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <CardTitle>{field.label}</CardTitle>
-              <CardDescription>{nonEmptyValues.length} av {totalResponses} svar</CardDescription>
+              <CardDescription>{nonEmptyValues.length} of {totalResponses} responses</CardDescription>
             </div>
             <Badge>{fieldTypeLabel(field.field_type)}</Badge>
           </div>
@@ -221,7 +221,7 @@ function QuestionSummary({ field, values, totalResponses }: { field: FieldRow; v
                 </div>
               ))}
             </div>
-          ) : <p className="text-sm text-muted-foreground">Inga fritextsvar ännu.</p>}
+          ) : <p className="text-sm text-muted-foreground">No text responses yet.</p>}
         </CardContent>
       </Card>
     );
@@ -260,7 +260,7 @@ function defaultOptionsFor(field: FieldRow) {
     return ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
   }
   if (field.field_type === "yes_no") {
-    return ["Ja", "Nej"];
+    return ["Yes", "No"];
   }
 
   return field.options?.length ? field.options : [];
@@ -268,18 +268,18 @@ function defaultOptionsFor(field: FieldRow) {
 
 function fieldTypeLabel(type: FormFieldType) {
   const labels: Record<FormFieldType, string> = {
-    text: "Kort text",
-    textarea: "Fritext",
-    email: "E-post",
-    phone: "Telefon",
-    number: "Nummer",
-    date: "Datum",
+    text: "Short text",
+    textarea: "Free text",
+    email: "Email",
+    phone: "Phone",
+    number: "Number",
+    date: "Date",
     select: "Dropdown",
-    checkbox: "Kryssrutor",
-    radio: "Flerval",
-    scale_1_5: "Skala 1-5",
-    scale_1_10: "Skala 1-10",
-    yes_no: "Ja/Nej",
+    checkbox: "Checkboxes",
+    radio: "Multiple choice",
+    scale_1_5: "Scale 1-5",
+    scale_1_10: "Scale 1-10",
+    yes_no: "Yes/No",
   };
 
   return labels[type] ?? type;

@@ -12,10 +12,10 @@ export default async function FormsCreatePage({ searchParams }: { searchParams?:
   if (!formType) {
     return (
       <>
-        <ModuleHeader title="Skapa ny" description="Välj om du vill samla in ärenden eller sammanställa en undersökning." items={formsNavItems} />
+        <ModuleHeader title="Create new" description="Choose whether you want an inbox workflow or a summarized survey." items={formsNavItems} />
         <div className="grid gap-4 md:grid-cols-2">
-          <CreateChoice title="Formulär" description="Kontakt, anmälan, felanmälan eller ansökan." href="/dashboard/forms/create?type=form" />
-          <CreateChoice title="Undersökning" description="Enkät, trivselmätning, utvärdering eller feedback." href="/dashboard/forms/create?type=survey" />
+          <CreateChoice title="Form" description="Contact, registration, incident report, or application." href="/dashboard/forms/create?type=form" />
+          <CreateChoice title="Survey" description="Questionnaire, satisfaction check, evaluation, or feedback." href="/dashboard/forms/create?type=survey" />
         </div>
       </>
     );
@@ -23,7 +23,7 @@ export default async function FormsCreatePage({ searchParams }: { searchParams?:
 
   return (
     <>
-      <ModuleHeader title={formType === "survey" ? "Skapa undersökning" : "Skapa formulär"} description={formType === "survey" ? "Bygg en enkät med frågor som kan sammanställas." : "Bygg ett formulär med tydligt inkorgsflöde."} items={formsNavItems} />
+      <ModuleHeader title={formType === "survey" ? "Create survey" : "Create form"} description={formType === "survey" ? "Build a survey with questions that can be summarized." : "Build a form with a clear inbox workflow."} items={formsNavItems} />
       <div className="mx-auto max-w-6xl">
         <FormCreateForm formType={formType} />
       </div>
@@ -38,7 +38,7 @@ function CreateChoice({ title, description, href }: { title: string; description
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
         <ButtonLink href={href} className="mt-4 w-fit">
-          Skapa {title.toLowerCase()}
+          Create {title.toLowerCase()}
         </ButtonLink>
       </CardHeader>
     </Card>

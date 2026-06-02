@@ -42,55 +42,55 @@ export default async function FormsOverviewPage() {
     <>
       <ModuleHeader
         title="Forms"
-        description="Bygg formulär för inkorgsflöden och undersökningar för sammanställning."
+        description="Build forms for inbox workflows and surveys for summarized feedback."
         items={formsNavItems}
-        action={{ href: "/dashboard/forms/create", label: "Skapa ny" }}
+        action={{ href: "/dashboard/forms/create", label: "Create new" }}
       />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Formulär" value={`${totalForms ?? 0}`} detail="Inkorg och ärenden" icon={ClipboardList} />
-        <StatCard label="Undersökningar" value={`${totalSurveys ?? 0}`} detail="Enkäter och feedback" icon={BarChart3} />
-        <StatCard label="Nya svar" value={`${unreadSubmissions ?? 0}`} detail="Olästa formulärsvar" icon={Inbox} />
-        <StatCard label="Behöver hanteras" value={`${needsHandling ?? 0}`} detail="Ohanterade eller delhanterade" icon={ClipboardList} />
+        <StatCard label="Forms" value={`${totalForms ?? 0}`} detail="Inbox and requests" icon={ClipboardList} />
+        <StatCard label="Surveys" value={`${totalSurveys ?? 0}`} detail="Questionnaires and feedback" icon={BarChart3} />
+        <StatCard label="New responses" value={`${unreadSubmissions ?? 0}`} detail="Unread form responses" icon={Inbox} />
+        <StatCard label="Needs handling" value={`${needsHandling ?? 0}`} detail="Unhandled or partially handled" icon={ClipboardList} />
       </div>
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Senaste i Forms</CardTitle>
-            <CardDescription>Nya formulär och undersökningar i arbetsytan.</CardDescription>
+            <CardTitle>Recent in Forms</CardTitle>
+            <CardDescription>Newest forms and surveys in this workspace.</CardDescription>
           </CardHeader>
           <div className="divide-y px-5 pb-5">
             {(forms ?? []).length ? forms?.map((form) => (
               <div key={form.id} className="flex items-center justify-between gap-3 py-3">
                 <div>
                   <p className="text-sm font-medium">{form.title}</p>
-                  <p className="text-xs text-muted-foreground">{form.form_type === "survey" ? "Undersökning" : "Formulär"} · {form.status === "published" ? "Publicerad" : form.status === "draft" ? "Utkast" : "Arkiverad"}</p>
+                  <p className="text-xs text-muted-foreground">{form.form_type === "survey" ? "Survey" : "Form"} · {form.status === "published" ? "Published" : form.status === "draft" ? "Draft" : "Archived"}</p>
                 </div>
                 <span className="text-xs text-muted-foreground">{new Date(form.created_at).toLocaleDateString()}</span>
               </div>
-            )) : <EmptyCopy title="Inget skapat ännu" description="Skapa ett formulär eller en undersökning för att börja samla in svar." />}
+            )) : <EmptyCopy title="Nothing created yet" description="Create a form or survey to start collecting responses." />}
           </div>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Senaste svar</CardTitle>
-            <CardDescription>Senaste inkomna aktiviteten.</CardDescription>
+            <CardTitle>Recent responses</CardTitle>
+            <CardDescription>Latest response activity.</CardDescription>
           </CardHeader>
           <div className="divide-y px-5 pb-5">
             {(submissions ?? []).length ? submissions?.map((submission) => (
               <ButtonLink key={submission.id} href={`/dashboard/forms/submissions/${submission.id}`} variant="ghost" className="h-auto w-full justify-start rounded-none px-0 py-3 text-left">
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium">{formsById.get(submission.form_id)?.title ?? "Unknown form"}</span>
-                  <span className="mt-1 block truncate text-xs text-muted-foreground">{submission.submitter_email ?? "Ingen e-post"} - {new Date(submission.created_at).toLocaleString()}</span>
+                  <span className="mt-1 block truncate text-xs text-muted-foreground">{submission.submitter_email ?? "No email captured"} - {new Date(submission.created_at).toLocaleString()}</span>
                 </span>
               </ButtonLink>
-            )) : <EmptyCopy title="Inga svar ännu" description="Svar visas här när publika formulär används." />}
+            )) : <EmptyCopy title="No responses yet" description="Responses will appear here once public forms are used." />}
           </div>
         </Card>
       </div>
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Senaste nya svar</CardTitle>
-          <CardDescription>Olästa formulärsvar som kan behöva hanteras.</CardDescription>
+          <CardTitle>Latest new responses</CardTitle>
+          <CardDescription>Unread form responses that may need attention.</CardDescription>
         </CardHeader>
         <div className="divide-y px-5 pb-5">
           {(newSubmissions ?? []).length ? newSubmissions?.map((submission) => {
@@ -105,12 +105,12 @@ export default async function FormsOverviewPage() {
                 <span className="shrink-0 text-xs text-muted-foreground">{new Date(submission.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
               </ButtonLink>
             );
-          }) : <EmptyCopy title="Inga nya svar" description="Nya svar visas här när de kommer in." />}
+          }) : <EmptyCopy title="No new responses" description="New responses will surface here as they arrive." />}
         </div>
       </Card>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <ButtonLink href="/dashboard/forms/create"><Plus className="h-4 w-4" />Skapa ny</ButtonLink>
-        <ButtonLink href="/dashboard/forms/submissions" variant="secondary">Visa inkorg</ButtonLink>
+        <ButtonLink href="/dashboard/forms/create"><Plus className="h-4 w-4" />Create new</ButtonLink>
+        <ButtonLink href="/dashboard/forms/submissions" variant="secondary">View inbox</ButtonLink>
       </div>
     </>
   );
