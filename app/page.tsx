@@ -1,39 +1,100 @@
 import {
   ArrowRight,
-  Building2,
+  BarChart3,
   CheckCircle2,
-  Layers3,
+  ClipboardCheck,
+  ClipboardList,
+  FileText,
+  FolderKanban,
   LockKeyhole,
-  Network,
+  PackageCheck,
+  QrCode,
+  ShieldCheck,
   Sparkles,
+  Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { BrandLockup } from "@/components/ui/brand";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const features = [
+const featureCards = [
   {
-    title: "Multi-tenant core",
-    description: "Organization-first architecture prepared for roles, permissions, billing, and audit trails.",
-    icon: Building2,
+    title: "Members",
+    description: "Keep members, students, staff or participants organized in one place.",
+    icon: Users,
   },
   {
-    title: "Modular operations",
-    description: "Enable only the systems a customer needs, from QR flows to forms, bookings, and inventory.",
-    icon: Layers3,
+    title: "Forms & Surveys",
+    description: "Create forms, collect responses and review survey results without extra tools.",
+    icon: FileText,
   },
   {
-    title: "Enterprise control",
-    description: "Clean admin surfaces for teams, settings, module governance, and security visibility.",
+    title: "Inventory & Loans",
+    description: "Track items, QR codes, active loans, due dates and digital signatures.",
+    icon: PackageCheck,
+  },
+  {
+    title: "QR & Attendance",
+    description: "Use QR flows for access, check-ins and attendance tracking.",
+    icon: QrCode,
+  },
+  {
+    title: "Branding",
+    description: "Customize the experience with your organization name, logo and colors.",
+    icon: Sparkles,
+  },
+  {
+    title: "Security",
+    description: "Organization-based access, roles and protected data with Supabase RLS.",
     icon: LockKeyhole,
   },
 ];
 
+const previewModules = [
+  { name: "Members", detail: "128 active", icon: Users },
+  { name: "Forms", detail: "9 published", icon: FileText },
+  { name: "Surveys", detail: "43 responses", icon: BarChart3 },
+  { name: "Inventory", detail: "214 items", icon: PackageCheck },
+  { name: "QR & Attendance", detail: "37 today", icon: QrCode },
+  { name: "Active Loans", detail: "12 borrowed", icon: ClipboardList },
+];
+
+const productPreviews = [
+  {
+    title: "Dashboard",
+    description: "A calm command center for activity, quick actions and what needs attention.",
+    items: ["New responses", "Inventory alerts", "Recent activity"],
+  },
+  {
+    title: "Forms",
+    description: "Build forms, publish links and manage responses from an inbox-style view.",
+    items: ["Published forms", "New responses", "Survey results"],
+  },
+  {
+    title: "Inventory",
+    description: "Track equipment, loans, due dates, signatures and QR labels.",
+    items: ["Available items", "On loan", "Overdue"],
+  },
+  {
+    title: "QR / Attendance",
+    description: "Use mobile-friendly QR flows for check-ins, access points and attendance.",
+    items: ["Scan QR", "Check-ins today", "Attendance activity"],
+  },
+];
+
+const trustItems = [
+  "Organization-based access",
+  "Role permissions",
+  "Secure authentication",
+  "Protected data with RLS",
+  "Activity history",
+];
+
 const pricing = [
-  { name: "Starter", price: "$49", detail: "For small teams validating workflows" },
-  { name: "Scale", price: "$149", detail: "For growing organizations and operators" },
-  { name: "Enterprise", price: "Custom", detail: "For advanced tenant, role, and compliance needs" },
+  { name: "Starter", price: "$49", detail: "For small organizations getting organized." },
+  { name: "Scale", price: "$149", detail: "For teams that need more modules and workflows." },
+  { name: "Enterprise", price: "Custom", detail: "For larger organizations with advanced needs." },
 ];
 
 export default function Home() {
@@ -43,14 +104,14 @@ export default function Home() {
         <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <BrandLockup size="md" />
           <div className="hidden items-center gap-8 text-sm font-medium text-zinc-600 dark:text-zinc-300 md:flex">
-            <a href="#features" className="transition hover:text-zinc-950 dark:hover:text-white">
+            <a href="#platform" className="transition hover:text-zinc-950 dark:hover:text-white">
               Platform
+            </a>
+            <a href="#features" className="transition hover:text-zinc-950 dark:hover:text-white">
+              Features
             </a>
             <a href="#pricing" className="transition hover:text-zinc-950 dark:hover:text-white">
               Pricing
-            </a>
-            <a href="/dashboard" className="transition hover:text-zinc-950 dark:hover:text-white">
-              Dashboard
             </a>
           </div>
           <div className="flex items-center gap-2">
@@ -65,26 +126,25 @@ export default function Home() {
         </nav>
       </header>
 
-      <section className="mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-28">
+      <section id="platform" className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-24">
         <div className="flex flex-col justify-center">
           <Badge className="w-fit gap-2">
             <Sparkles className="h-3.5 w-3.5" />
-            Modular SaaS core for every organization type
+            Built for schools, clubs and organizations
           </Badge>
-          <h1 className="mt-6 max-w-4xl text-5xl font-semibold tracking-tight text-zinc-950 dark:text-white sm:text-6xl lg:text-7xl">
-            HofAdmin
+          <h1 className="mt-6 max-w-4xl text-4xl font-semibold tracking-tight text-zinc-950 dark:text-white sm:text-5xl lg:text-6xl">
+            One simple platform for members, forms, inventory and attendance.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-300">
-            A premium operations platform foundation for businesses, schools, clubs,
-            restaurants, and teams that need one clean place to run modular workflows.
+            HofAdmin helps schools, clubs and organizations manage daily admin workflows without spreadsheets, scattered tools or complicated systems.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <ButtonLink href="/signup" className="h-12 px-5">
-              Create workspace
+              Start free
               <ArrowRight className="h-4 w-4" />
             </ButtonLink>
-            <ButtonLink href="/dashboard" variant="secondary" className="h-12 px-5">
-              View dashboard
+            <ButtonLink href="#product-preview" variant="secondary" className="h-12 px-5">
+              View demo
             </ButtonLink>
           </div>
         </div>
@@ -93,31 +153,40 @@ export default function Home() {
           <div className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-zinc-200/70 via-white to-zinc-100 blur-2xl dark:from-zinc-800/80 dark:via-zinc-900 dark:to-zinc-950" />
           <div className="relative rounded-2xl border bg-white p-3 shadow-2xl shadow-zinc-950/10 dark:bg-zinc-950 dark:shadow-black/40">
             <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium">Organization health</p>
-                  <p className="text-xs text-muted-foreground">Live tenant overview</p>
+                  <p className="text-sm font-medium">Organization overview</p>
+                  <p className="text-xs text-muted-foreground">Daily workflows in one place</p>
                 </div>
-                <Badge>Enterprise</Badge>
+                <Badge>Live preview</Badge>
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                {["6 modules", "42 members", "99.9% uptime"].map((item) => (
-                  <div key={item} className="rounded-xl border bg-white p-4 dark:bg-zinc-950">
-                    <p className="text-lg font-semibold">{item}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Ready to scale</p>
+                {[
+                  ["17", "New responses"],
+                  ["12", "Active loans"],
+                  ["37", "Check-ins today"],
+                ].map(([value, label]) => (
+                  <div key={label} className="rounded-xl border bg-white p-4 dark:bg-zinc-950">
+                    <p className="text-2xl font-semibold">{value}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{label}</p>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 space-y-2">
-                {["QR System", "Forms", "Members"].map((item) => (
-                  <div key={item} className="flex items-center justify-between rounded-xl border bg-white p-3 dark:bg-zinc-950">
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                      {item}
-                    </span>
-                    <span className="text-xs text-muted-foreground">Enabled</span>
-                  </div>
-                ))}
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                {previewModules.map((module) => {
+                  const Icon = module.icon;
+                  return (
+                    <div key={module.name} className="flex items-center justify-between gap-3 rounded-xl border bg-white p-3 dark:bg-zinc-950">
+                      <span className="flex min-w-0 items-center gap-2 text-sm font-medium">
+                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-zinc-100 dark:bg-zinc-900">
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <span className="truncate">{module.name}</span>
+                      </span>
+                      <span className="shrink-0 text-xs text-muted-foreground">{module.detail}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -126,13 +195,13 @@ export default function Home() {
 
       <section id="features" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
-          <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Platform foundation</p>
+          <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Features</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Built for clean growth across verticals.
+            Everything your organization needs to stay organized.
           </h2>
         </div>
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {features.map((feature) => {
+        <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {featureCards.map((feature) => {
             const Icon = feature.icon;
             return (
               <Card key={feature.title} className="transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06]">
@@ -149,21 +218,68 @@ export default function Home() {
         </div>
       </section>
 
+      <section id="product-preview" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="max-w-2xl">
+          <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Product preview</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">See HofAdmin in action.</h2>
+        </div>
+        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {productPreviews.map((preview) => (
+            <div key={preview.title} className="rounded-2xl border bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06] dark:bg-zinc-950">
+              <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold">{preview.title}</p>
+                  <ClipboardCheck className="h-4 w-4 text-zinc-500" />
+                </div>
+                <div className="mt-4 space-y-2">
+                  {preview.items.map((item) => (
+                    <div key={item} className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm dark:bg-zinc-950">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                      <span className="truncate">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">{preview.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="rounded-2xl border bg-white p-5 shadow-sm dark:bg-zinc-950 sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Trust and security</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight">Designed for private organization data.</h2>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+              {trustItems.map((item) => (
+                <div key={item} className="flex items-center gap-2 rounded-xl border bg-zinc-50 px-3 py-2 text-sm dark:bg-zinc-900">
+                  <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="pricing" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="rounded-2xl border bg-white p-6 shadow-sm dark:bg-zinc-950 sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Pricing preview</p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-tight">Plans for each stage.</h2>
+              <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Pricing</p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-tight">Simple plans for growing organizations.</h2>
             </div>
-            <ButtonLink href="/signup" variant="secondary">Compare plans</ButtonLink>
+            <ButtonLink href="/signup" variant="secondary">Start free</ButtonLink>
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {pricing.map((plan) => (
               <div key={plan.name} className="rounded-xl border bg-zinc-50 p-5 dark:bg-zinc-900">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold">{plan.name}</h3>
-                  <Network className="h-4 w-4 text-zinc-500" />
+                  <FolderKanban className="h-4 w-4 text-zinc-500" />
                 </div>
                 <p className="mt-5 text-3xl font-semibold">{plan.price}</p>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">{plan.detail}</p>
