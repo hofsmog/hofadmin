@@ -13,8 +13,9 @@ export default async function ModulesPage({ searchParams }: { searchParams?: Pro
   const { organizationContext } = await requireOrganizationContext();
   const organizationModules = getModulesForOrganization(organizationContext.activeOrganization);
   const canManage = canManageOrganization(organizationContext.activeMembership.role);
-  const activeModules = organizationModules.filter((module) => module.status === "enabled").length;
-  const disabledModules = organizationModules.length - activeModules;
+  const visibleModules = canManage ? organizationModules : organizationModules.filter((module) => module.status === "enabled");
+  const activeModules = visibleModules.filter((module) => module.status === "enabled").length;
+  const disabledModules = canManage ? organizationModules.length - organizationModules.filter((module) => module.status === "enabled").length : 0;
 
   return (
     <>
@@ -36,11 +37,11 @@ export default async function ModulesPage({ searchParams }: { searchParams?: Pro
           <div className="p-5">
             <div className="flex flex-wrap gap-2">
               <Badge>{activeModules} active</Badge>
-              <Badge>{disabledModules} disabled</Badge>
+              {canManage ? <Badge>{disabledModules} disabled</Badge> : null}
             </div>
             <h2 className="mt-3 text-xl font-semibold tracking-tight">A complete organization operations suite</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Enable the modules your organization uses. Disabled modules are hidden from the main navigation but remain available here for owners and admins.
+              {canManage ? "Enable the modules your organization uses. Disabled modules are hidden from the main navigation but remain available here for owners and admins." : "Open the modules enabled for your organization."}
             </p>
           </div>
           <div className="mx-5 mb-5 rounded-xl border bg-zinc-50 p-4 text-sm leading-6 text-muted-foreground dark:bg-zinc-900/60 md:mb-0 md:mr-5 md:max-w-sm">
@@ -50,7 +51,7 @@ export default async function ModulesPage({ searchParams }: { searchParams?: Pro
       </section>
       <div className="space-y-8">
         {categories.map((category) => {
-          const categoryModules = organizationModules.filter((module) => module.category === category);
+          const categoryModules = visibleModules.filter((module) => module.category === category);
 
           if (!categoryModules.length) {
             return null;

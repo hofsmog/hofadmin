@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AlertCircle, AlertTriangle, CalendarDays, CalendarRange, CheckCircle2, CheckSquare, ClipboardList, Inbox, KeyRound, Package, Plus, ScanLine, UserCheck, UserPlus, UsersRound } from "lucide-react";
+import { AlertCircle, AlertTriangle, CalendarDays, CalendarRange, Car, CheckCircle2, CheckSquare, ClipboardList, FileCheck2, GraduationCap, Inbox, KeyRound, MapPin, Package, PackageCheck, PiggyBank, Plus, ScanLine, UserCheck, UserMinus, UserPlus, UsersRound, Vote } from "lucide-react";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +46,20 @@ export default async function DashboardPage() {
     { count: incompleteChecklists },
     { count: checkedInVisitors },
     { count: upcomingPlannerTasks },
+    { count: warrantyExpiringSoon },
+    { count: assetsDueForReplacement },
+    { count: assetsInRepair },
+    { count: activeOnboarding },
+    { count: activeOffboarding },
+    { count: policiesAwaitingAcknowledgement },
+    { count: expiringCertifications },
+    { count: overdueTraining },
+    { count: activeVotes },
+    { count: upcomingElections },
+    { data: budgetRowsForDashboard },
+    { count: upcomingVehicleInspections },
+    { count: upcomingVehicleService },
+    { count: totalLocations },
   ] = await Promise.all([
     supabase
       .from("checkins")
@@ -128,6 +142,20 @@ export default async function DashboardPage() {
     db.from("checklists").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).neq("status", "completed"),
     db.from("visitors").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "checked_in"),
     db.from("annual_planner_tasks").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).neq("status", "completed").lte("due_date", sevenDaysFromToday.toISOString().slice(0, 10)),
+    db.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).gte("warranty_expiration", todayStart.toISOString().slice(0, 10)).lte("warranty_expiration", sevenDaysFromToday.toISOString().slice(0, 10)),
+    db.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).lte("expected_replacement_date", sevenDaysFromToday.toISOString().slice(0, 10)),
+    db.from("inventory_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("lifecycle_status", "in_repair"),
+    db.from("onboarding_processes").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).in("status", ["pending", "in_progress"]),
+    db.from("offboarding_processes").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).in("status", ["pending", "in_progress"]),
+    db.from("policy_acknowledgements").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "pending"),
+    db.from("training_records").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).gte("expires_at", todayStart.toISOString().slice(0, 10)).lte("expires_at", sevenDaysFromToday.toISOString().slice(0, 10)),
+    db.from("training_records").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).neq("status", "completed").lt("due_date", todayStart.toISOString().slice(0, 10)),
+    db.from("votes").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "open"),
+    db.from("votes").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("vote_type", "election").gte("starts_at", todayStart.toISOString()),
+    db.from("budget_categories").select("id, planned_amount, actual_amount").eq("organization_id", organizationId).limit(500),
+    db.from("vehicles").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).lte("inspection_date", sevenDaysFromToday.toISOString().slice(0, 10)),
+    db.from("vehicles").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).lte("next_service_date", sevenDaysFromToday.toISOString().slice(0, 10)),
+    db.from("locations").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
   ]);
 
   const latestSubmissionIds = (latestNewSubmissions ?? []).map((submission) => submission.id);
@@ -150,6 +178,7 @@ export default async function DashboardPage() {
   ]);
   const valuesBySubmissionId = groupSubmissionValues(latestSubmissionValues ?? []);
   const formsById = new Map((submissionForms ?? []).map((form) => [form.id, form.title]));
+  const overBudgetCategories = (budgetRowsForDashboard ?? []).filter((row: any) => Number(row.actual_amount ?? 0) > Number(row.planned_amount ?? 0)).length;
   const organizationModules = getModulesForOrganization(organizationContext.activeOrganization);
   const enabledModuleIds = new Set(organizationModules.filter((module) => module.status === "enabled").map((module) => module.id));
   const hasModule = (moduleId: string) => enabledModuleIds.has(moduleId);
@@ -199,6 +228,18 @@ export default async function DashboardPage() {
     { label: "New fault reports", value: newFaultReports ?? 0, href: "/dashboard/fault-reports", moduleId: "fault-reports" },
     { label: "Overdue keys", value: overdueKeys ?? 0, href: "/dashboard/keys", moduleId: "key-management" },
     { label: "Incomplete checklists", value: incompleteChecklists ?? 0, href: "/dashboard/checklists", moduleId: "checklists" },
+    { label: "Warranty expiring soon", value: warrantyExpiringSoon ?? 0, href: "/dashboard/assets", moduleId: "asset-lifecycle" },
+    { label: "Assets due for replacement", value: assetsDueForReplacement ?? 0, href: "/dashboard/assets", moduleId: "asset-lifecycle" },
+    { label: "Assets in repair", value: assetsInRepair ?? 0, href: "/dashboard/assets", moduleId: "asset-lifecycle" },
+    { label: "Active onboarding", value: activeOnboarding ?? 0, href: "/dashboard/onboarding", moduleId: "onboarding" },
+    { label: "Active offboarding", value: activeOffboarding ?? 0, href: "/dashboard/offboarding", moduleId: "offboarding" },
+    { label: "Policies awaiting acknowledgement", value: policiesAwaitingAcknowledgement ?? 0, href: "/dashboard/policies", moduleId: "policies" },
+    { label: "Expiring certifications", value: expiringCertifications ?? 0, href: "/dashboard/training", moduleId: "training" },
+    { label: "Overdue training", value: overdueTraining ?? 0, href: "/dashboard/training", moduleId: "training" },
+    { label: "Active votes", value: activeVotes ?? 0, href: "/dashboard/voting", moduleId: "voting" },
+    { label: "Over budget categories", value: overBudgetCategories ?? 0, href: "/dashboard/budgets", moduleId: "budgets" },
+    { label: "Upcoming vehicle inspections", value: upcomingVehicleInspections ?? 0, href: "/dashboard/vehicles", moduleId: "vehicles" },
+    { label: "Upcoming vehicle service", value: upcomingVehicleService ?? 0, href: "/dashboard/vehicles", moduleId: "vehicles" },
   ].filter((item) => item.value > 0 && hasModule(item.moduleId));
   const quickActions = [
     { href: "/dashboard/forms/create", icon: ClipboardList, label: "Create form", moduleId: "forms" },
@@ -207,6 +248,8 @@ export default async function DashboardPage() {
     { href: "/dashboard/inventory/items", icon: ScanLine, label: "Start loan", moduleId: "loans" },
     { href: "/dashboard/inventory/loans?filter=overdue", icon: AlertTriangle, label: "View overdue loans", moduleId: "loans" },
     { href: "/dashboard/forms/submissions", icon: Inbox, label: "Open form inbox", moduleId: "forms" },
+    { href: "/dashboard/onboarding", icon: UserPlus, label: "Start onboarding", moduleId: "onboarding" },
+    { href: "/dashboard/assets", icon: PackageCheck, label: "Review assets", moduleId: "asset-lifecycle" },
   ].filter((action) => hasModule(action.moduleId));
   const miniMetrics = [
     { href: "/dashboard/issues", icon: AlertCircle, label: "Open Issues", value: openIssues ?? 0, moduleId: "issue-management" },
@@ -217,6 +260,16 @@ export default async function DashboardPage() {
     { href: "/dashboard/visitors", icon: UserCheck, label: "Checked-In Visitors", value: checkedInVisitors ?? 0, moduleId: "visitor-management" },
     { href: "/dashboard/annual-planner", icon: CalendarRange, label: "Upcoming Planner Tasks", value: upcomingPlannerTasks ?? 0, moduleId: "annual-planner" },
     { href: "/dashboard/members/list", icon: UsersRound, label: "Members", value: totalMembers ?? 0, moduleId: "members" },
+    { href: "/dashboard/assets", icon: PackageCheck, label: "Warranty Expiring Soon", value: warrantyExpiringSoon ?? 0, moduleId: "asset-lifecycle" },
+    { href: "/dashboard/onboarding", icon: UserPlus, label: "Active Onboarding", value: activeOnboarding ?? 0, moduleId: "onboarding" },
+    { href: "/dashboard/offboarding", icon: UserMinus, label: "Active Offboarding", value: activeOffboarding ?? 0, moduleId: "offboarding" },
+    { href: "/dashboard/policies", icon: FileCheck2, label: "Policy Acknowledgements", value: policiesAwaitingAcknowledgement ?? 0, moduleId: "policies" },
+    { href: "/dashboard/training", icon: GraduationCap, label: "Overdue Training", value: overdueTraining ?? 0, moduleId: "training" },
+    { href: "/dashboard/voting", icon: Vote, label: "Active Votes", value: activeVotes ?? 0, moduleId: "voting" },
+    { href: "/dashboard/voting", icon: Vote, label: "Upcoming Elections", value: upcomingElections ?? 0, moduleId: "voting" },
+    { href: "/dashboard/budgets", icon: PiggyBank, label: "Over Budget", value: overBudgetCategories ?? 0, moduleId: "budgets" },
+    { href: "/dashboard/vehicles", icon: Car, label: "Vehicle Service", value: upcomingVehicleService ?? 0, moduleId: "vehicles" },
+    { href: "/dashboard/locations", icon: MapPin, label: "Locations", value: totalLocations ?? 0, moduleId: "locations" },
   ].filter((metric) => hasModule(metric.moduleId));
   const coreModules = organizationModules.filter((module) => module.status === "enabled" && module.href).slice(0, 8);
 

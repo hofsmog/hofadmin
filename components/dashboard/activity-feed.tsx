@@ -1,4 +1,4 @@
-import { Building2, CalendarCheck, CheckCircle2, ClipboardList, Eye, FileText, KeyRound, LayoutGrid, MailPlus, PlugZap, QrCode, Receipt, UserCheck, Workflow } from "lucide-react";
+import { Building2, CalendarCheck, Car, CheckCircle2, ClipboardList, Eye, FileCheck2, FileText, GraduationCap, KeyRound, LayoutGrid, MailPlus, MapPin, PackageCheck, PiggyBank, PlugZap, QrCode, Receipt, UserCheck, UserMinus, UserPlus, Vote, Workflow, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ActivityEventType } from "@/types/database";
@@ -32,6 +32,22 @@ const eventConfig = {
   visitor_checked_in: { icon: UserCheck, label: "Visitor" },
   visitor_checked_out: { icon: UserCheck, label: "Visitor" },
   annual_planner_task_completed: { icon: CalendarCheck, label: "Planner" },
+  asset_lifecycle_updated: { icon: PackageCheck, label: "Asset" },
+  asset_repair_recorded: { icon: Wrench, label: "Repair" },
+  asset_retired: { icon: PackageCheck, label: "Asset" },
+  onboarding_started: { icon: UserPlus, label: "Onboarding" },
+  onboarding_completed: { icon: CheckCircle2, label: "Onboarding" },
+  offboarding_started: { icon: UserMinus, label: "Offboarding" },
+  offboarding_completed: { icon: CheckCircle2, label: "Offboarding" },
+  policy_published: { icon: FileCheck2, label: "Policy" },
+  policy_accepted: { icon: FileCheck2, label: "Policy" },
+  training_completed: { icon: GraduationCap, label: "Training" },
+  certification_expired: { icon: GraduationCap, label: "Training" },
+  vote_created: { icon: Vote, label: "Voting" },
+  vote_closed: { icon: Vote, label: "Voting" },
+  budget_updated: { icon: PiggyBank, label: "Budget" },
+  vehicle_service_recorded: { icon: Car, label: "Vehicle" },
+  location_created: { icon: MapPin, label: "Location" },
   organization_updated: { icon: Building2, label: "Org" },
   module_opened: { icon: LayoutGrid, label: "Module" },
   module_enabled: { icon: PlugZap, label: "Module" },
