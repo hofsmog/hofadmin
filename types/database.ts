@@ -1095,6 +1095,11 @@ export type Database = {
             notify_loan_due_tomorrow: boolean;
             notify_loan_overdue: boolean;
             notify_new_member_added: boolean;
+            notify_new_fault_report: boolean;
+            notify_booking_request: boolean;
+            notify_policy_acknowledgement_reminder: boolean;
+            notify_contract_expiration_reminder: boolean;
+            notify_training_expiration_reminder: boolean;
             notification_emails: string[];
             created_at: string;
             updated_at: string;
@@ -1106,6 +1111,11 @@ export type Database = {
             notify_loan_due_tomorrow?: boolean;
             notify_loan_overdue?: boolean;
             notify_new_member_added?: boolean;
+            notify_new_fault_report?: boolean;
+            notify_booking_request?: boolean;
+            notify_policy_acknowledgement_reminder?: boolean;
+            notify_contract_expiration_reminder?: boolean;
+            notify_training_expiration_reminder?: boolean;
             notification_emails?: string[];
             created_at?: string;
             updated_at?: string;
@@ -1117,6 +1127,11 @@ export type Database = {
             notify_loan_due_tomorrow?: boolean;
             notify_loan_overdue?: boolean;
             notify_new_member_added?: boolean;
+            notify_new_fault_report?: boolean;
+            notify_booking_request?: boolean;
+            notify_policy_acknowledgement_reminder?: boolean;
+            notify_contract_expiration_reminder?: boolean;
+            notify_training_expiration_reminder?: boolean;
             notification_emails?: string[];
             created_at?: string;
             updated_at?: string;
@@ -1126,6 +1141,53 @@ export type Database = {
               foreignKeyName: "organization_notification_preferences_organization_id_fkey";
               columns: ["organization_id"];
               isOneToOne: true;
+              referencedRelation: "organizations";
+              referencedColumns: ["id"];
+            },
+          ];
+        };
+      email_logs: {
+          Row: {
+            id: string;
+            organization_id: string;
+            recipient_email: string;
+            subject: string;
+            event_type: string;
+            status: "pending" | "sent" | "failed";
+            provider: string;
+            provider_message_id: string | null;
+            error_message: string | null;
+            created_at: string;
+          };
+          Insert: {
+            id?: string;
+            organization_id: string;
+            recipient_email: string;
+            subject: string;
+            event_type: string;
+            status?: "pending" | "sent" | "failed";
+            provider?: string;
+            provider_message_id?: string | null;
+            error_message?: string | null;
+            created_at?: string;
+          };
+          Update: {
+            id?: string;
+            organization_id?: string;
+            recipient_email?: string;
+            subject?: string;
+            event_type?: string;
+            status?: "pending" | "sent" | "failed";
+            provider?: string;
+            provider_message_id?: string | null;
+            error_message?: string | null;
+            created_at?: string;
+          };
+          Relationships: [
+            {
+              foreignKeyName: "email_logs_organization_id_fkey";
+              columns: ["organization_id"];
+              isOneToOne: false;
               referencedRelation: "organizations";
               referencedColumns: ["id"];
             },

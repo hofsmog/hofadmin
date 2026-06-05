@@ -2,8 +2,10 @@ import { InventorySettingsForm } from "@/components/dashboard/inventory/inventor
 import { NotificationPreferencesForm } from "@/components/dashboard/notification-preferences-form";
 import { OrganizationBrandingForm } from "@/components/dashboard/organization-branding-form";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Toast } from "@/components/ui/toast";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
+import { getEmailEnvironmentStatus } from "@/lib/email/send-email";
 import { canManageOrganization } from "@/lib/organizations";
 
 export default async function SettingsPage({ searchParams }: { searchParams?: Promise<{ notifications?: string }> }) {
@@ -13,9 +15,15 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
   const canEdit = canManageOrganization(activeMembership.role);
   const { data: notificationPreferences } = await supabase
     .from("organization_notification_preferences")
-    .select("enable_email_notifications, notify_new_form_response, notify_loan_due_tomorrow, notify_loan_overdue, notify_new_member_added, notification_emails")
+    .select("enable_email_notifications, notify_new_form_response, notify_loan_due_tomorrow, notify_loan_overdue, notify_new_member_added, notify_new_fault_report, notify_booking_request, notify_policy_acknowledgement_reminder, notify_contract_expiration_reminder, notify_training_expiration_reminder, notification_emails")
     .eq("organization_id", activeOrganization.id)
     .maybeSingle();
+  const { data: emailLogs } = await supabase
+    .from("email_logs")
+    .select("id, recipient_email, subject, event_type, status, error_message, created_at")
+    .eq("organization_id", activeOrganization.id)
+    .order("created_at", { ascending: false })
+    .limit(10);
 
   return (
     <>
@@ -49,10 +57,20 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
           defaultLoanAgreementText={activeOrganization.defaultLoanAgreementText}
           disabled={!canEdit}
         />
-        <NotificationPreferencesForm
-          preferences={notificationPreferences}
-          disabled={!canEdit}
-        />
+        {canEdit ? (
+          <NotificationPreferencesForm
+            preferences={notificationPreferences}
+            emailStatus={getEmailEnvironmentStatus()}
+            emailLogs={emailLogs ?? []}
+          />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Notifications</CardTitle>
+              <CardDescription>Only organization owners and admins can view or manage notification settings.</CardDescription>
+            </CardHeader>
+          </Card>
+        )}
       </div>
     </>
   );

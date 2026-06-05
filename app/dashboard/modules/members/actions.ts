@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { recordActivityEvent } from "@/lib/activity";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
-import { sendNotificationEmail } from "@/lib/email/sendNotificationEmail";
+import { sendNotificationEmail } from "@/lib/notifications/send-notification-email";
 import type { MemberStatus, MemberType } from "@/types/database";
 
 const memberTypes = new Set<MemberType>([
@@ -89,20 +89,14 @@ export async function createMemberAction(
     metadata: { memberId: member.id, status: member.status, type: member.type },
   });
 
-  const { data: preferences } = await supabase
-    .from("organization_notification_preferences")
-    .select("enable_email_notifications, notify_new_member_added, notification_emails")
-    .eq("organization_id", organizationContext.activeOrganization.id)
-    .maybeSingle();
-
-  if (preferences?.enable_email_notifications && preferences.notify_new_member_added) {
-    await sendNotificationEmail({
-      to: preferences.notification_emails,
-      subject: `New member added: ${member.name}`,
-      preview: `${member.name} was added to ${organizationContext.activeOrganization.name}.`,
-      body: `${member.name} was added as ${member.type}.`,
-    });
-  }
+  await sendNotificationEmail({
+    supabase,
+    organizationId: organizationContext.activeOrganization.id,
+    eventType: "new_member_added",
+    subject: `New member added: ${member.name}`,
+    preview: `${member.name} was added to ${organizationContext.activeOrganization.name}.`,
+    body: `${member.name} was added as ${member.type}.`,
+  }).catch(() => null);
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/members");

@@ -1,33 +1,30 @@
+import "server-only";
+
+import { sendEmail } from "@/lib/email/send-email";
+
 type NotificationEmailInput = {
   to: string[];
   subject: string;
   preview: string;
   body: string;
+  organizationId: string;
 };
 
 export async function sendNotificationEmail(input: NotificationEmailInput) {
-  const recipients = input.to.map((email) => email.trim()).filter(Boolean);
-
-  if (!recipients.length) {
-    return { skipped: true, reason: "no-recipients" };
-  }
-
-  if (!process.env.RESEND_API_KEY) {
-    // TODO: Wire Resend here when RESEND_API_KEY and sender domain are configured.
-    console.info("Notification email skipped. Configure RESEND_API_KEY to send emails.", {
-      subject: input.subject,
-      recipients,
-      preview: input.preview,
-    });
-    return { skipped: true, reason: "missing-resend-api-key" };
-  }
-
-  // TODO: Send through Resend server-side. Keep this module server-only.
-  console.info("Notification email prepared.", {
+  return sendEmail({
+    to: input.to,
     subject: input.subject,
-    recipients,
-    preview: input.preview,
-    bodyLength: input.body.length,
+    html: `<p>${escapeHtml(input.preview)}</p><p>${escapeHtml(input.body)}</p>`,
+    text: [input.preview, "", input.body].join("\n"),
+    organizationId: input.organizationId,
+    eventType: "test_email",
   });
-  return { skipped: true, reason: "resend-not-wired" };
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }

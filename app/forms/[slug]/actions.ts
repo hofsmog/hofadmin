@@ -1,8 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { sendFormSubmissionNotification } from "@/lib/email/sendFormSubmissionNotification";
 import { getRespondentName } from "@/lib/forms/submissions";
+import { sendNotificationEmail } from "@/lib/notifications/send-notification-email";
 import { createClient } from "@/lib/supabase/server";
 
 export type PublicFormState = {
@@ -95,19 +95,34 @@ export async function submitPublicFormAction(
   }
 
   if (form.enable_email_notifications) {
-    const submissionUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://hofadmin.vercel.app"}/dashboard/forms/submissions/${submission.id}`;
+    const appUrl = process.env.APP_URL ?? "https://hofadmin.vercel.app";
+    const submissionUrl = `${appUrl}/dashboard/forms/submissions/${submission.id}`;
     const notificationValues = values.map(({ field, value }) => ({
       field_label: field.label,
       value,
     }));
+    const respondentName = getRespondentName(notificationValues);
+    const summary = notificationValues
+      .slice(0, 8)
+      .map((value) => `${value.field_label}: ${value.value || "No value"}`)
+      .join("\n");
 
-    await sendFormSubmissionNotification({
-      to: form.notification_emails ?? [],
-      formTitle: form.title,
-      respondentName: getRespondentName(notificationValues),
-      submittedAt: new Date().toISOString(),
-      submissionUrl,
-      values: notificationValues,
+    await sendNotificationEmail({
+      supabase,
+      organizationId: form.organization_id,
+      eventType: "new_form_response",
+      subject: `New submission: ${form.title}`,
+      preview: `${respondentName} submitted ${form.title}.`,
+      body: [
+        `Form: ${form.title}`,
+        `Respondent: ${respondentName}`,
+        `Submitted: ${new Date().toISOString()}`,
+        "",
+        "Summary:",
+        summary || "No field values captured.",
+      ].join("\n"),
+      actionUrl: submissionUrl,
+      fallbackRecipients: form.notification_emails ?? [],
     }).catch((error) => {
       console.error("Form submission notification failed", error);
     });

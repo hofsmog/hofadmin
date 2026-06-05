@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { recordActivityEvent } from "@/lib/activity";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
-import { sendNotificationEmail } from "@/lib/email/sendNotificationEmail";
+import { sendNotificationEmail } from "@/lib/notifications/send-notification-email";
 import type { Json } from "@/types/database";
 
 export async function createIssueAction(formData: FormData) {
@@ -61,7 +61,7 @@ export async function createFaultReportAction(formData: FormData) {
 
   if (error || !report) redirect("/dashboard/fault-reports?error=create");
   await activity(supabase, organizationId, "fault_report_submitted", "Fault report submitted", report.title, user.id, { faultReportId: report.id, issueId: issue?.id });
-  await notify(supabase, organizationId, "New fault report", `${report.title} was submitted.`, `${report.title} was submitted in HofAdmin.`);
+  await notify(supabase, organizationId, "new_fault_report", "New fault report", `${report.title} was submitted.`, `${report.title} was submitted in HofAdmin.`);
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/fault-reports");
   revalidatePath("/dashboard/issues");
@@ -99,6 +99,7 @@ export async function createBookingAction(formData: FormData) {
   }).select("id, resource_name").single();
   if (error || !booking) redirect("/dashboard/bookings?error=create");
   await activity(supabase, organizationId, "booking_created", "Booking created", booking.resource_name, user.id, { bookingId: booking.id });
+  await notify(supabase, organizationId, "booking_request", "New booking request", `${booking.resource_name} was requested.`, `${booking.resource_name} was requested in HofAdmin.`);
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/bookings");
   redirect("/dashboard/bookings?created=1");
@@ -224,10 +225,6 @@ async function activity(supabase: Awaited<ReturnType<typeof requireOrganizationC
   await recordActivityEvent({ supabase, organizationId, type, title, description, actorId, metadata: metadata as Json });
 }
 
-async function notify(supabase: Awaited<ReturnType<typeof requireOrganizationContext>>["supabase"], organizationId: string, subject: string, preview: string, body: string) {
-  const db = supabase as any;
-  const { data: preferences } = await db.from("organization_notification_preferences").select("enable_email_notifications, notification_emails").eq("organization_id", organizationId).maybeSingle();
-  if (preferences?.enable_email_notifications) {
-    await sendNotificationEmail({ to: preferences.notification_emails, subject, preview, body });
-  }
+async function notify(supabase: Awaited<ReturnType<typeof requireOrganizationContext>>["supabase"], organizationId: string, eventType: "new_fault_report" | "booking_request", subject: string, preview: string, body: string) {
+  await sendNotificationEmail({ supabase, organizationId, eventType, subject, preview, body }).catch(() => null);
 }

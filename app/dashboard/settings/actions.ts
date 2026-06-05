@@ -31,6 +31,11 @@ export async function updateNotificationPreferencesAction(formData: FormData) {
     notify_loan_due_tomorrow: formData.get("notifyLoanDueTomorrow") === "on",
     notify_loan_overdue: formData.get("notifyLoanOverdue") === "on",
     notify_new_member_added: formData.get("notifyNewMemberAdded") === "on",
+    notify_new_fault_report: formData.get("notifyNewFaultReport") === "on",
+    notify_booking_request: formData.get("notifyBookingRequest") === "on",
+    notify_policy_acknowledgement_reminder: formData.get("notifyPolicyAcknowledgementReminder") === "on",
+    notify_contract_expiration_reminder: formData.get("notifyContractExpirationReminder") === "on",
+    notify_training_expiration_reminder: formData.get("notifyTrainingExpirationReminder") === "on",
     notification_emails: emails,
     updated_at: new Date().toISOString(),
   });
