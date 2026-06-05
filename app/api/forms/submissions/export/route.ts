@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRespondentName, groupSubmissionValues } from "@/lib/forms/submissions";
+import { getResponseTitle, groupSubmissionValues } from "@/lib/forms/submissions";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getOrganizationContext } from "@/lib/organizations";
 import type { FormSubmissionHandlingStatus, FormSubmissionReadStatus } from "@/types/database";
@@ -58,7 +58,7 @@ export async function GET(request: Request) {
     return [
       submission.id,
       formsById.get(submission.form_id) ?? "Unknown form",
-      getRespondentName(submissionValues),
+      getResponseTitle(submissionValues, submission.id),
       submission.created_at,
       submission.read_status,
       submission.handling_status,

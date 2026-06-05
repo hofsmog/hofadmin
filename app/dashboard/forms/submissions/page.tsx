@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { Clock3, Download, Inbox, Search } from "lucide-react";
+import { AlertCircle, Clock3, Download, Inbox, Search } from "lucide-react";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { HandlingStatusBadge, ReadStatusBadge } from "@/components/dashboard/submission-status-badge";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
-import { getRespondentName, groupSubmissionValues, handlingStatusLabels } from "@/lib/forms/submissions";
+import { getResponseTitle, groupSubmissionValues, handlingStatusLabels } from "@/lib/forms/submissions";
 import { formsNavItems } from "@/lib/module-nav";
 import { cn } from "@/lib/utils";
 import type { FormSubmissionHandlingStatus, FormSubmissionReadStatus } from "@/types/database";
@@ -41,19 +41,21 @@ export default async function FormsSubmissionsPage({
   const handlingStatus = sanitizeHandlingStatus(params.handlingStatus);
   const dateFrom = String(params.dateFrom ?? "");
   const dateTo = String(params.dateTo ?? "");
-  const { data: forms } = await supabase
+  const { data: forms, error: formsError } = await supabase
     .from("forms")
     .select("id, title")
     .eq("organization_id", organizationId)
     .eq("form_type", "form")
+    .neq("status", "archived")
     .order("title", { ascending: true });
   const formIds = (forms ?? []).map((form) => form.id);
   const submissionsResult = formIds.length
     ? await buildSubmissionsQuery(supabase, organizationId, { formId, formIds, readStatus, handlingStatus, dateFrom, dateTo })
     : { data: [] };
+  const submissionsError = "error" in submissionsResult ? submissionsResult.error : null;
   const submissions = submissionsResult.data ?? [];
   const submissionIds = submissions.map((submission) => submission.id);
-  const { data: submissionValues } = submissionIds.length
+  const { data: submissionValues, error: valuesError } = submissionIds.length
     ? await supabase
         .from("form_submission_values")
         .select("id, submission_id, field_label, value")
@@ -69,7 +71,7 @@ export default async function FormsSubmissionsPage({
 
     const normalizedQuery = query.toLowerCase();
     const values = valuesBySubmissionId.get(submission.id) ?? [];
-    const respondentName = getRespondentName(values).toLowerCase();
+    const respondentName = getResponseTitle(values, submission.id).toLowerCase();
 
     return (
       respondentName.includes(normalizedQuery) ||
@@ -82,6 +84,19 @@ export default async function FormsSubmissionsPage({
   return (
     <>
       <ModuleHeader title="Form Submissions" description="Triage new responses, assign handling status, and open details only when needed." items={formsNavItems} />
+      {formsError || submissionsError || valuesError ? (
+        <Card className="mb-4 border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+          <CardContent className="flex gap-3 p-4">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+            <div>
+              <p className="text-sm font-semibold">Submissions could not fully load.</p>
+              <p className="mt-1 text-sm opacity-80">
+                {formsError?.message ?? submissionsError?.message ?? valuesError?.message ?? "Please refresh the page or check the database policies for this organization."}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
       <Card className="overflow-hidden">
         <CardHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -142,7 +157,7 @@ export default async function FormsSubmissionsPage({
           {filteredSubmissions.length ? (
             filteredSubmissions.map((submission) => {
               const values = valuesBySubmissionId.get(submission.id) ?? [];
-              const respondentName = getRespondentName(values);
+              const respondentName = getResponseTitle(values, submission.id);
               const submittedAt = new Date(submission.created_at);
               const isNew = submission.read_status === "new";
 

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { recordActivityEvent } from "@/lib/activity";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
+import { canManageOrganization } from "@/lib/organizations";
 import type { FormCornerRadius, FormFieldType, FormFontStyle, FormLayout, FormStatus, FormType } from "@/types/database";
 
 const validStatuses = new Set<FormStatus>(["draft", "published", "archived"]);
@@ -25,6 +26,7 @@ const validFieldTypes = new Set<FormFieldType>([
   "scale_1_10",
   "yes_no",
 ]);
+const formAssetsBucket = "form-public-assets";
 
 export type FormBuilderState = {
   status: "idle" | "success" | "error";
@@ -79,6 +81,21 @@ export async function createFormAction(
 
   if (!fields.length) {
     return { status: "error", message: "Add at least one form field." };
+  }
+
+  const logoUpload = await uploadFormLogo({
+    supabase,
+    organizationId: organizationContext.activeOrganization.id,
+    assetScope: crypto.randomUUID(),
+    file: formData.get("logoFile"),
+  });
+
+  if (logoUpload === null) {
+    return { status: "error", message: "Logo could not be uploaded. Use a PNG, JPG, SVG, or WebP image under 3 MB." };
+  }
+
+  if (logoUpload) {
+    design.logo_url = logoUpload;
   }
 
   const slug = `${createSlug(title)}-${crypto.randomUUID().slice(0, 8)}`;
@@ -161,6 +178,21 @@ export async function updateFormAction(formData: FormData) {
 
   if (!existingForm) {
     redirect("/dashboard/forms/list?error=not-found");
+  }
+
+  const logoUpload = await uploadFormLogo({
+    supabase,
+    organizationId,
+    assetScope: formId,
+    file: formData.get("logoFile"),
+  });
+
+  if (logoUpload === null) {
+    redirect(`/dashboard/forms/${formId}/edit?error=logo`);
+  }
+
+  if (logoUpload) {
+    design.logo_url = logoUpload;
   }
 
   const { error: formError } = await supabase
@@ -375,6 +407,49 @@ export async function duplicateFormAction(formData: FormData) {
   redirect(`/dashboard/forms/${copy.id}/edit?duplicated=1`);
 }
 
+export async function deleteFormAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const formId = String(formData.get("formId") || "").trim();
+
+  if (!canManageOrganization(organizationContext.activeMembership.role)) {
+    redirect("/dashboard/forms/list?error=permission");
+  }
+
+  if (!formId) {
+    redirect("/dashboard/forms/list?error=invalid");
+  }
+
+  const { data: form, error } = await supabase
+    .from("forms")
+    .update({ status: "archived", updated_at: new Date().toISOString() })
+    .eq("id", formId)
+    .eq("organization_id", organizationId)
+    .select("id, title, slug")
+    .single();
+
+  if (error || !form) {
+    redirect("/dashboard/forms/list?error=delete");
+  }
+
+  await recordActivityEvent({
+    supabase,
+    organizationId,
+    type: "form_created",
+    title: "Form deleted",
+    description: `${form.title} was removed from active forms. Existing responses were kept.`,
+    actorId: user.id,
+    metadata: { formId: form.id, slug: form.slug, softDelete: true },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/forms");
+  revalidatePath("/dashboard/forms/list");
+  revalidatePath("/dashboard/forms/submissions");
+  revalidatePath(`/forms/${form.slug}`);
+  redirect("/dashboard/forms/list?deleted=1");
+}
+
 function parseFields(value: string): FieldPayload[] {
   let parsed: unknown;
 
@@ -452,6 +527,53 @@ function parseEmails(value: string) {
     .map((email) => email.trim().toLowerCase())
     .filter((email) => email.includes("@"))
     .slice(0, 20);
+}
+
+async function uploadFormLogo({
+  supabase,
+  organizationId,
+  assetScope,
+  file,
+}: {
+  supabase: Awaited<ReturnType<typeof requireOrganizationContext>>["supabase"];
+  organizationId: string;
+  assetScope: string;
+  file: FormDataEntryValue | null;
+}) {
+  if (!(file instanceof File) || !file.name || file.size === 0) {
+    return undefined;
+  }
+
+  if (file.size > 3 * 1024 * 1024 || !isAllowedLogoType(file)) {
+    return null;
+  }
+
+  const safeName = sanitizeFileName(file.name);
+  const path = `organizations/${organizationId}/forms/${assetScope}/logo-${Date.now()}-${safeName}`;
+  const { error } = await supabase.storage.from(formAssetsBucket).upload(path, file, {
+    contentType: file.type || "application/octet-stream",
+    upsert: false,
+  });
+
+  if (error) {
+    return null;
+  }
+
+  return supabase.storage.from(formAssetsBucket).getPublicUrl(path).data.publicUrl;
+}
+
+function isAllowedLogoType(file: File) {
+  return ["image/png", "image/jpeg", "image/webp", "image/svg+xml"].includes(file.type);
+}
+
+function sanitizeFileName(fileName: string) {
+  const extension = fileName.includes(".") ? `.${fileName.split(".").pop()?.toLowerCase()}` : "";
+  const base = fileName
+    .replace(/\.[^.]+$/, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "logo";
+  return `${base}${extension}`;
 }
 
 function parseColor(value: FormDataEntryValue | null, fallback: string) {

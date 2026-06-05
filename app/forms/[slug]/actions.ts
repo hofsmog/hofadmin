@@ -1,7 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { getRespondentName } from "@/lib/forms/submissions";
+import { getAppUrl } from "@/lib/app-url";
+import { getResponseTitle } from "@/lib/forms/submissions";
 import { sendNotificationEmail } from "@/lib/notifications/send-notification-email";
 import { createClient } from "@/lib/supabase/server";
 
@@ -81,13 +82,12 @@ export async function submitPublicFormAction(
   }
 
   if (form.enable_email_notifications) {
-    const appUrl = process.env.APP_URL ?? "https://hofadmin.vercel.app";
-    const submissionUrl = `${appUrl}/dashboard/forms/submissions/${submissionId}`;
+    const submissionUrl = `${getAppUrl()}/dashboard/forms/submissions/${submissionId}`;
     const notificationValues = values.map(({ field, value }) => ({
       field_label: field.label,
       value,
     }));
-    const respondentName = getRespondentName(notificationValues);
+    const respondentName = getResponseTitle(notificationValues, submissionId);
     const summary = notificationValues
       .slice(0, 8)
       .map((value) => `${value.field_label}: ${value.value || "No value"}`)

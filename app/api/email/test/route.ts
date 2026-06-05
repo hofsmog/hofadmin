@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getAppUrl } from "@/lib/app-url";
 import { canManageOrganization, getOrganizationContext } from "@/lib/organizations";
 import { sendEmail } from "@/lib/email/send-email";
 import { createClient } from "@/lib/supabase/server";
@@ -26,7 +27,7 @@ export async function POST() {
     }
 
     const organizationName = organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name;
-    const appUrl = process.env.APP_URL ?? "https://hofadmin.vercel.app";
+    const appUrl = getAppUrl();
     const result = await sendEmail({
       to: [user.email],
       subject: "HofAdmin test email",

@@ -4,7 +4,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
-import { getRespondentName, groupSubmissionValues } from "@/lib/forms/submissions";
+import { getResponseTitle, groupSubmissionValues } from "@/lib/forms/submissions";
 import { formsNavItems } from "@/lib/module-nav";
 
 export default async function FormsOverviewPage() {
@@ -102,7 +102,7 @@ export default async function FormsOverviewPage() {
             return (
               <ButtonLink key={submission.id} href={`/dashboard/forms/submissions/${submission.id}`} variant="ghost" className="h-auto w-full justify-between rounded-none px-0 py-3 text-left">
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-semibold">{getRespondentName(values)}</span>
+                  <span className="block truncate text-sm font-semibold">{getResponseTitle(values, submission.id)}</span>
                   <span className="mt-1 block truncate text-xs text-muted-foreground">{formsById.get(submission.form_id)?.title ?? "Unknown form"}</span>
                 </span>
                 <span className="shrink-0 text-xs text-muted-foreground">{new Date(submission.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>

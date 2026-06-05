@@ -571,8 +571,14 @@ function DesignPanel({
         </select>
       </label>
       <label className="block space-y-2 md:col-span-2">
-        <span className="text-sm font-medium">Logo URL</span>
+        <span className="text-sm font-medium">Form logo URL</span>
         <Input value={design.logoUrl} onChange={(event) => updateDesign({ logoUrl: event.target.value })} placeholder="https://example.com/logo.png" />
+        <span className="block text-xs text-muted-foreground">This form logo overrides the organization logo on the public form.</span>
+      </label>
+      <label className="block space-y-2 md:col-span-2">
+        <span className="text-sm font-medium">Upload form logo</span>
+        <Input name="logoFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" />
+        <span className="block text-xs text-muted-foreground">Upload a PNG, JPG, SVG, or WebP logo under 3 MB.</span>
       </label>
       <label className="block space-y-2 md:col-span-2">
         <span className="text-sm font-medium">Cover image URL</span>

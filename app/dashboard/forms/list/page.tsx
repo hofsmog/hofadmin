@@ -4,20 +4,22 @@ import { ModuleHeader } from "@/components/dashboard/module-header";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Toast } from "@/components/ui/toast";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
+import { getPublicFormUrl } from "@/lib/app-url";
 import { formsNavItems } from "@/lib/module-nav";
 import type { FormStatus } from "@/types/database";
 
-const publicFormsBaseUrl = "https://hofadmin.vercel.app/forms";
-
-export default async function FormsListPage({ searchParams }: { searchParams?: Promise<{ status?: string }> }) {
+export default async function FormsListPage({ searchParams }: { searchParams?: Promise<{ status?: string; deleted?: string; error?: string }> }) {
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
   const params = (await searchParams) ?? {};
-  const statusFilter: "all" | FormStatus =
+  const statusFilter: "active" | "all" | FormStatus =
     params.status === "draft" || params.status === "published" || params.status === "archived"
       ? params.status
-      : "all";
+      : params.status === "all"
+        ? "all"
+        : "active";
   let formsQuery = supabase
     .from("forms")
     .select("id, title, description, status, slug, form_type, anonymous_responses, created_at")
@@ -25,7 +27,9 @@ export default async function FormsListPage({ searchParams }: { searchParams?: P
     .order("created_at", { ascending: false })
     .limit(50);
 
-  if (statusFilter !== "all") {
+  if (statusFilter === "active") {
+    formsQuery = formsQuery.neq("status", "archived");
+  } else if (statusFilter !== "all") {
     formsQuery = formsQuery.eq("status", statusFilter);
   }
 
@@ -71,6 +75,8 @@ export default async function FormsListPage({ searchParams }: { searchParams?: P
         items={formsNavItems}
         action={{ href: "/dashboard/forms/create", label: "Create new" }}
       />
+      <Toast show={params.deleted === "1"} title="Form deleted" message="The public link was disabled. Existing submissions were kept." />
+      <Toast show={Boolean(params.error)} tone="error" title="Form action failed" message="Please refresh and try again." />
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
@@ -83,6 +89,7 @@ export default async function FormsListPage({ searchParams }: { searchParams?: P
         </CardHeader>
         <form className="flex flex-col gap-3 p-5 pt-0 sm:flex-row sm:items-center">
           <select name="status" defaultValue={statusFilter} className="h-11 rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800">
+            <option value="active">Active forms</option>
             <option value="all">All statuses</option>
             <option value="draft">Draft</option>
             <option value="published">Published</option>
@@ -93,7 +100,7 @@ export default async function FormsListPage({ searchParams }: { searchParams?: P
         <div className="space-y-3 p-5 pt-0">
           {(forms ?? []).length ? forms?.map((form) => {
             const formFields = fieldsByFormId.get(form.id) ?? [];
-            const publicUrl = `${publicFormsBaseUrl}/${form.slug}`;
+            const publicUrl = getPublicFormUrl(form.slug);
             const stats = submissionStats.get(form.id);
 
             return (

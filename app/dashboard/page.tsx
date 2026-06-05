@@ -8,7 +8,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getModulesForOrganization } from "@/lib/modules";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
-import { getRespondentName, groupSubmissionValues } from "@/lib/forms/submissions";
+import { getResponseTitle, groupSubmissionValues } from "@/lib/forms/submissions";
 
 export default async function DashboardPage() {
   const { supabase, organizationContext } = await requireOrganizationContext();
@@ -455,7 +455,7 @@ export default async function DashboardPage() {
                   return (
                     <ButtonLink key={submission.id} href={`/dashboard/forms/submissions/${submission.id}`} variant="ghost" className="h-auto w-full justify-between rounded-xl bg-emerald-50/80 p-3 text-left dark:bg-emerald-950/20">
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold">{getRespondentName(values)}</span>
+                        <span className="block truncate text-sm font-semibold">{getResponseTitle(values, submission.id)}</span>
                         <span className="mt-1 block truncate text-xs text-muted-foreground">
                           {formsById.get(submission.form_id) ?? "Unknown form"} - {new Date(submission.created_at).toLocaleString()}
                         </span>

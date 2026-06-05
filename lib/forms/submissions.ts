@@ -19,7 +19,7 @@ export type SubmissionValueLike = {
   value: string | null;
 };
 
-export function getRespondentName(values: SubmissionValueLike[], fallback = "Unnamed response") {
+export function getRespondentName(values: SubmissionValueLike[], fallback = "Response") {
   const firstName = values.find((value) => ["first name", "first"].includes(normalizeLabel(value.field_label)))?.value?.trim();
   const lastName = values.find((value) => ["last name", "last"].includes(normalizeLabel(value.field_label)))?.value?.trim();
   const fullName = [firstName, lastName].filter(Boolean).join(" ");
@@ -35,6 +35,11 @@ export function getRespondentName(values: SubmissionValueLike[], fallback = "Unn
   }
 
   return fallback;
+}
+
+export function getResponseTitle(values: SubmissionValueLike[], submissionId: string) {
+  const shortId = submissionId.replaceAll("-", "").slice(0, 8).toUpperCase();
+  return getRespondentName(values, `Response #${shortId}`);
 }
 
 export function groupSubmissionValues<T extends { submission_id: string }>(values: T[]) {

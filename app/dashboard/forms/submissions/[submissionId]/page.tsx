@@ -6,7 +6,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { recordActivityEvent } from "@/lib/activity";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
-import { getRespondentName, handlingStatusLabels } from "@/lib/forms/submissions";
+import { getResponseTitle, handlingStatusLabels } from "@/lib/forms/submissions";
 import { formsNavItems } from "@/lib/module-nav";
 import { addSubmissionNoteAction, updateSubmissionHandlingAction } from "../actions";
 import type { FormSubmissionHandlingStatus } from "@/types/database";
@@ -100,7 +100,7 @@ export default async function SubmissionDetailPage({
     const bOrder = b.field_id ? fieldOrder.get(b.field_id) ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER;
     return aOrder - bOrder;
   });
-  const respondentName = getRespondentName(orderedValues);
+  const respondentName = getResponseTitle(orderedValues, submission.id);
   const submittedAt = new Date(submission.created_at);
 
   return (
