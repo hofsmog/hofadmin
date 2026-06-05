@@ -1,4 +1,4 @@
-import { Building2, CheckCircle2, ClipboardList, Eye, FileText, LayoutGrid, MailPlus, PlugZap, QrCode, Receipt, Workflow } from "lucide-react";
+import { Building2, CalendarCheck, CheckCircle2, ClipboardList, Eye, FileText, KeyRound, LayoutGrid, MailPlus, PlugZap, QrCode, Receipt, UserCheck, Workflow } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ActivityEventType } from "@/types/database";
@@ -22,6 +22,16 @@ const eventConfig = {
   form_submission_handling_changed: { icon: Workflow, label: "Submission" },
   document_uploaded: { icon: FileText, label: "Document" },
   receipt_uploaded: { icon: Receipt, label: "Receipt" },
+  issue_created: { icon: Workflow, label: "Issue" },
+  issue_updated: { icon: Workflow, label: "Issue" },
+  fault_report_submitted: { icon: ClipboardList, label: "Fault Report" },
+  booking_created: { icon: CalendarCheck, label: "Booking" },
+  key_issued: { icon: KeyRound, label: "Key" },
+  key_returned: { icon: KeyRound, label: "Key" },
+  checklist_completed: { icon: CheckCircle2, label: "Checklist" },
+  visitor_checked_in: { icon: UserCheck, label: "Visitor" },
+  visitor_checked_out: { icon: UserCheck, label: "Visitor" },
+  annual_planner_task_completed: { icon: CalendarCheck, label: "Planner" },
   organization_updated: { icon: Building2, label: "Org" },
   module_opened: { icon: LayoutGrid, label: "Module" },
   module_enabled: { icon: PlugZap, label: "Module" },

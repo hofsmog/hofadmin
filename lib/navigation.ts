@@ -11,6 +11,12 @@ import {
   Package,
   FileArchive,
   Receipt,
+  AlertCircle,
+  CalendarDays,
+  CheckSquare,
+  KeyRound,
+  UserCheck,
+  CalendarRange,
 } from "lucide-react";
 import type { DashboardNavItem } from "@/types";
 
@@ -22,6 +28,13 @@ export const dashboardNavItems: DashboardNavItem[] = [
   { title: "Inventory", href: "/dashboard/inventory", icon: Package },
   { title: "Documents", href: "/dashboard/documents", icon: FileArchive },
   { title: "Receipts", href: "/dashboard/receipts", icon: Receipt },
+  { title: "Issue Management", href: "/dashboard/issues", icon: AlertCircle },
+  { title: "Fault Reports", href: "/dashboard/fault-reports", icon: ClipboardList },
+  { title: "Bookings", href: "/dashboard/bookings", icon: CalendarDays },
+  { title: "Key Management", href: "/dashboard/keys", icon: KeyRound },
+  { title: "Checklists", href: "/dashboard/checklists", icon: CheckSquare },
+  { title: "Visitors", href: "/dashboard/visitors", icon: UserCheck },
+  { title: "Annual Planner", href: "/dashboard/annual-planner", icon: CalendarRange },
   { title: "Modules", href: "/dashboard/modules", icon: Puzzle },
   { title: "Organizations", href: "/dashboard/organizations", icon: Building2 },
   { title: "Settings", href: "/dashboard/settings", icon: Settings },

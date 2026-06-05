@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
-import { AlertTriangle, CheckCircle2, ClipboardList, Inbox, Package, Plus, ScanLine, UserPlus, UsersRound } from "lucide-react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { AlertCircle, AlertTriangle, CalendarDays, CalendarRange, CheckCircle2, CheckSquare, ClipboardList, Inbox, KeyRound, Package, Plus, ScanLine, UserCheck, UserPlus, UsersRound } from "lucide-react";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,7 @@ import { getRespondentName, groupSubmissionValues } from "@/lib/forms/submission
 export default async function DashboardPage() {
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
+  const db = supabase as any;
   const organizationName =
     organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name;
   const organizationLogo =
@@ -37,6 +39,13 @@ export default async function DashboardPage() {
     { count: pendingInvitations },
     { data: activityEvents },
     { data: recentInventoryEvents },
+    { count: openIssues },
+    { count: newFaultReports },
+    { count: todaysBookings },
+    { count: overdueKeys },
+    { count: incompleteChecklists },
+    { count: checkedInVisitors },
+    { count: upcomingPlannerTasks },
   ] = await Promise.all([
     supabase
       .from("checkins")
@@ -112,6 +121,13 @@ export default async function DashboardPage() {
       .eq("organization_id", organizationId)
       .order("created_at", { ascending: false })
       .limit(3),
+    db.from("issues").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).in("status", ["new", "in_progress", "waiting"]),
+    db.from("fault_reports").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "new"),
+    db.from("bookings").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).gte("start_at", todayStart.toISOString()).lt("start_at", new Date(todayStart.getTime() + 86_400_000).toISOString()),
+    db.from("key_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "on_loan").lt("return_date", todayStart.toISOString().slice(0, 10)),
+    db.from("checklists").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).neq("status", "completed"),
+    db.from("visitors").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "checked_in"),
+    db.from("annual_planner_tasks").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).neq("status", "completed").lte("due_date", sevenDaysFromToday.toISOString().slice(0, 10)),
   ]);
 
   const latestSubmissionIds = (latestNewSubmissions ?? []).map((submission) => submission.id);
@@ -171,6 +187,10 @@ export default async function DashboardPage() {
       value: pendingInvitations ?? 0,
       href: "/dashboard/team",
     },
+    { label: "Open issues", value: openIssues ?? 0, href: "/dashboard/issues" },
+    { label: "New fault reports", value: newFaultReports ?? 0, href: "/dashboard/fault-reports" },
+    { label: "Overdue keys", value: overdueKeys ?? 0, href: "/dashboard/keys" },
+    { label: "Incomplete checklists", value: incompleteChecklists ?? 0, href: "/dashboard/checklists" },
   ].filter((item) => item.value > 0);
   const coreModules = modules.filter((module) => ["qr-checkins", "forms", "members", "inventory"].includes(module.id));
 
@@ -203,6 +223,17 @@ export default async function DashboardPage() {
         <StatCard label="Members" value={`${totalMembers ?? 0}`} detail="People in this organization" icon={UsersRound} />
         <StatCard label="Active loans" value={`${activeInventoryLoans ?? 0}`} detail={`${dueSoonInventoryLoans ?? 0} due soon`} icon={Package} />
         <StatCard label="Overdue loans" value={`${overdueInventoryLoans ?? 0}`} detail={`${inventoryNeedsAttention ?? 0} inventory alerts`} icon={AlertTriangle} />
+      </div>
+
+      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <MiniMetric href="/dashboard/issues" icon={AlertCircle} label="Open Issues" value={openIssues ?? 0} />
+        <MiniMetric href="/dashboard/fault-reports" icon={Inbox} label="New Fault Reports" value={newFaultReports ?? 0} />
+        <MiniMetric href="/dashboard/bookings" icon={CalendarDays} label="Today's Bookings" value={todaysBookings ?? 0} />
+        <MiniMetric href="/dashboard/keys" icon={KeyRound} label="Overdue Keys" value={overdueKeys ?? 0} />
+        <MiniMetric href="/dashboard/checklists" icon={CheckSquare} label="Incomplete Checklists" value={incompleteChecklists ?? 0} />
+        <MiniMetric href="/dashboard/visitors" icon={UserCheck} label="Checked-In Visitors" value={checkedInVisitors ?? 0} />
+        <MiniMetric href="/dashboard/annual-planner" icon={CalendarRange} label="Upcoming Planner Tasks" value={upcomingPlannerTasks ?? 0} />
+        <MiniMetric href="/dashboard/members/list" icon={UsersRound} label="Members" value={totalMembers ?? 0} />
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
@@ -392,6 +423,30 @@ function QuickAction({
         <Icon className="h-4 w-4" />
       </span>
       {label}
+    </ButtonLink>
+  );
+}
+
+function MiniMetric({
+  href,
+  icon: Icon,
+  label,
+  value,
+}: {
+  href: string;
+  icon: ComponentType<{ className?: string }>;
+  label: string;
+  value: number;
+}) {
+  return (
+    <ButtonLink href={href} variant="secondary" className="h-auto justify-start rounded-xl p-3">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-medium">{label}</span>
+        <span className="mt-0.5 block text-xs text-muted-foreground">{value} current</span>
+      </span>
     </ButtonLink>
   );
 }
