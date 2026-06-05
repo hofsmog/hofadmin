@@ -1,4 +1,4 @@
-import { Building2, CalendarCheck, Car, CheckCircle2, ClipboardList, Eye, FileCheck2, FileText, GraduationCap, KeyRound, LayoutGrid, MailPlus, MapPin, PackageCheck, PiggyBank, PlugZap, QrCode, Receipt, UserCheck, UserMinus, UserPlus, Vote, Workflow, Wrench } from "lucide-react";
+import { BarChart3, Building2, CalendarCheck, Car, CheckCircle2, ClipboardList, Eye, FileCheck2, FileSignature, FileText, GraduationCap, Handshake, KeyRound, LayoutGrid, Lightbulb, MailPlus, MapPin, Megaphone, Network, PackageCheck, PiggyBank, PlugZap, QrCode, Receipt, ShieldAlert, UserCheck, UserMinus, UserPlus, Vote, Workflow, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ActivityEventType } from "@/types/database";
@@ -48,6 +48,19 @@ const eventConfig = {
   budget_updated: { icon: PiggyBank, label: "Budget" },
   vehicle_service_recorded: { icon: Car, label: "Vehicle" },
   location_created: { icon: MapPin, label: "Location" },
+  event_created: { icon: CalendarCheck, label: "Event" },
+  event_registration_completed: { icon: UserCheck, label: "Event" },
+  announcement_published: { icon: Megaphone, label: "Announcement" },
+  project_completed: { icon: Network, label: "Project" },
+  contract_renewed: { icon: FileSignature, label: "Contract" },
+  article_published: { icon: FileText, label: "Article" },
+  purchase_approved: { icon: Receipt, label: "Procurement" },
+  department_created: { icon: Building2, label: "Department" },
+  timesheet_approved: { icon: CheckCircle2, label: "Time" },
+  sponsor_added: { icon: Handshake, label: "Sponsor" },
+  idea_submitted: { icon: Lightbulb, label: "Idea" },
+  risk_created: { icon: ShieldAlert, label: "Risk" },
+  report_generated: { icon: BarChart3, label: "Report" },
   organization_updated: { icon: Building2, label: "Org" },
   module_opened: { icon: LayoutGrid, label: "Module" },
   module_enabled: { icon: PlugZap, label: "Module" },

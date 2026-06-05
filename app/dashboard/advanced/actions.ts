@@ -283,6 +283,278 @@ export async function createLocationAction(formData: FormData) {
   redirect("/dashboard/locations?created=1");
 }
 
+export async function createEventAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const title = requiredText(formData, "title", "/dashboard/events");
+  const startAt = requiredText(formData, "startAt", "/dashboard/events");
+  const db = supabase as any;
+  const { data: event, error } = await db.from("events").insert({
+    organization_id: organizationId,
+    title,
+    description: clean(formData.get("description")),
+    start_at: startAt,
+    end_at: clean(formData.get("endAt")),
+    location: clean(formData.get("location")),
+    capacity: numberOrNull(formData.get("capacity")),
+    registration_deadline: clean(formData.get("registrationDeadline")),
+    status: String(formData.get("status") || "draft"),
+    qr_value: `event:${crypto.randomUUID()}`,
+    created_by: user.id,
+  }).select("id, title").single();
+  if (error || !event) redirect("/dashboard/events?error=create");
+  await activity(supabase, organizationId, "event_created", "Event created", event.title, user.id, { eventId: event.id });
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/events");
+  redirect("/dashboard/events?created=1");
+}
+
+export async function createAnnouncementAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const title = requiredText(formData, "title", "/dashboard/announcements");
+  const status = String(formData.get("status") || "draft");
+  const db = supabase as any;
+  const { data: announcement, error } = await db.from("announcements").insert({
+    organization_id: organizationId,
+    title,
+    content: clean(formData.get("content")),
+    target_audience: clean(formData.get("targetAudience")),
+    status,
+    pinned: formData.get("pinned") === "on",
+    publish_at: clean(formData.get("publishAt")),
+    expires_at: clean(formData.get("expiresAt")),
+    created_by: user.id,
+  }).select("id, title").single();
+  if (error || !announcement) redirect("/dashboard/announcements?error=create");
+  if (status === "published") await activity(supabase, organizationId, "announcement_published", "Announcement published", announcement.title, user.id, { announcementId: announcement.id });
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/announcements");
+  redirect("/dashboard/announcements?created=1");
+}
+
+export async function createProjectAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const name = requiredText(formData, "name", "/dashboard/projects");
+  const status = String(formData.get("status") || "planning");
+  const db = supabase as any;
+  const { data: project, error } = await db.from("projects").insert({
+    organization_id: organizationId,
+    name,
+    description: clean(formData.get("description")),
+    status,
+    due_date: clean(formData.get("dueDate")),
+    progress: numberOrZero(formData.get("progress")),
+    attachment_path: clean(formData.get("attachmentPath")),
+    created_by: user.id,
+  }).select("id, name").single();
+  if (error || !project) redirect("/dashboard/projects?error=create");
+  if (status === "completed") await activity(supabase, organizationId, "project_completed", "Project completed", project.name, user.id, { projectId: project.id });
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/projects");
+  redirect("/dashboard/projects?created=1");
+}
+
+export async function createContractAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const title = requiredText(formData, "title", "/dashboard/contracts");
+  const db = supabase as any;
+  const { data: contract, error } = await db.from("contracts").insert({
+    organization_id: organizationId,
+    title,
+    category: clean(formData.get("category")),
+    supplier: clean(formData.get("supplier")),
+    start_date: clean(formData.get("startDate")),
+    expiration_date: clean(formData.get("expirationDate")),
+    renewal_date: clean(formData.get("renewalDate")),
+    status: String(formData.get("status") || "draft"),
+    file_path: clean(formData.get("filePath")),
+    notes: clean(formData.get("notes")),
+    created_by: user.id,
+  }).select("id, title").single();
+  if (error || !contract) redirect("/dashboard/contracts?error=create");
+  await activity(supabase, organizationId, "contract_renewed", "Contract record updated", contract.title, user.id, { contractId: contract.id });
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/contracts");
+  redirect("/dashboard/contracts?created=1");
+}
+
+export async function createKnowledgeArticleAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const title = requiredText(formData, "title", "/dashboard/knowledge-base");
+  const status = String(formData.get("status") || "draft");
+  const db = supabase as any;
+  const { data: article, error } = await db.from("knowledge_articles").insert({
+    organization_id: organizationId,
+    title,
+    content: clean(formData.get("content")),
+    status,
+    version: clean(formData.get("version")) ?? "1.0",
+    updated_by: user.id,
+  }).select("id, title").single();
+  if (error || !article) redirect("/dashboard/knowledge-base?error=create");
+  if (status === "published") await activity(supabase, organizationId, "article_published", "Article published", article.title, user.id, { articleId: article.id });
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/knowledge-base");
+  redirect("/dashboard/knowledge-base?created=1");
+}
+
+export async function createProcurementAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const title = requiredText(formData, "title", "/dashboard/procurement");
+  const status = String(formData.get("status") || "draft");
+  const db = supabase as any;
+  const { data: request, error } = await db.from("procurement_requests").insert({
+    organization_id: organizationId,
+    title,
+    description: clean(formData.get("description")),
+    supplier: clean(formData.get("supplier")),
+    cost_estimate: numberOrNull(formData.get("costEstimate")),
+    priority: String(formData.get("priority") || "normal"),
+    status,
+    requested_by: user.id,
+  }).select("id, title").single();
+  if (error || !request) redirect("/dashboard/procurement?error=create");
+  if (status === "approved") await activity(supabase, organizationId, "purchase_approved", "Purchase approved", request.title, user.id, { procurementRequestId: request.id });
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/procurement");
+  redirect("/dashboard/procurement?created=1");
+}
+
+export async function createDepartmentAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const name = requiredText(formData, "name", "/dashboard/departments");
+  const db = supabase as any;
+  const { data: department, error } = await db.from("departments").insert({
+    organization_id: organizationId,
+    name,
+    description: clean(formData.get("description")),
+    created_by: user.id,
+  }).select("id, name").single();
+  if (error || !department) redirect("/dashboard/departments?error=create");
+  await activity(supabase, organizationId, "department_created", "Department created", department.name, user.id, { departmentId: department.id });
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/departments");
+  redirect("/dashboard/departments?created=1");
+}
+
+export async function createTimeEntryAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const startedAt = requiredText(formData, "startedAt", "/dashboard/time-tracking");
+  const status = String(formData.get("status") || "draft");
+  const db = supabase as any;
+  const { data: entry, error } = await db.from("time_entries").insert({
+    organization_id: organizationId,
+    entry_type: String(formData.get("entryType") || "work"),
+    started_at: startedAt,
+    ended_at: clean(formData.get("endedAt")),
+    hours: numberOrNull(formData.get("hours")),
+    status,
+    notes: clean(formData.get("notes")),
+    approved_by: status === "approved" ? user.id : null,
+    created_by: user.id,
+  }).select("id").single();
+  if (error || !entry) redirect("/dashboard/time-tracking?error=create");
+  if (status === "approved") await activity(supabase, organizationId, "timesheet_approved", "Timesheet approved", "Time entry approved.", user.id, { timeEntryId: entry.id });
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/time-tracking");
+  redirect("/dashboard/time-tracking?created=1");
+}
+
+export async function createSponsorAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const name = requiredText(formData, "name", "/dashboard/sponsors");
+  const db = supabase as any;
+  const { data: sponsor, error } = await db.from("sponsors").insert({
+    organization_id: organizationId,
+    name,
+    sponsor_type: String(formData.get("sponsorType") || "sponsor"),
+    contact_person: clean(formData.get("contactPerson")),
+    email: clean(formData.get("email")),
+    phone: clean(formData.get("phone")),
+    sponsorship_value: numberOrNull(formData.get("sponsorshipValue")),
+    renewal_date: clean(formData.get("renewalDate")),
+    agreement_path: clean(formData.get("agreementPath")),
+    notes: clean(formData.get("notes")),
+    created_by: user.id,
+  }).select("id, name").single();
+  if (error || !sponsor) redirect("/dashboard/sponsors?error=create");
+  await activity(supabase, organizationId, "sponsor_added", "Sponsor added", sponsor.name, user.id, { sponsorId: sponsor.id });
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/sponsors");
+  redirect("/dashboard/sponsors?created=1");
+}
+
+export async function createIdeaAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const title = requiredText(formData, "title", "/dashboard/ideas");
+  const db = supabase as any;
+  const { data: idea, error } = await db.from("ideas").insert({
+    organization_id: organizationId,
+    title,
+    description: clean(formData.get("description")),
+    category: clean(formData.get("category")),
+    status: String(formData.get("status") || "new"),
+    created_by: user.id,
+  }).select("id, title").single();
+  if (error || !idea) redirect("/dashboard/ideas?error=create");
+  await activity(supabase, organizationId, "idea_submitted", "Idea submitted", idea.title, user.id, { ideaId: idea.id });
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/ideas");
+  redirect("/dashboard/ideas?created=1");
+}
+
+export async function createRiskAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const title = requiredText(formData, "title", "/dashboard/risks");
+  const db = supabase as any;
+  const { data: risk, error } = await db.from("risks").insert({
+    organization_id: organizationId,
+    title,
+    category: clean(formData.get("category")),
+    impact_level: String(formData.get("impactLevel") || "medium"),
+    probability_level: String(formData.get("probabilityLevel") || "medium"),
+    mitigation_plan: clean(formData.get("mitigationPlan")),
+    review_date: clean(formData.get("reviewDate")),
+    status: String(formData.get("status") || "open"),
+    created_by: user.id,
+  }).select("id, title").single();
+  if (error || !risk) redirect("/dashboard/risks?error=create");
+  await activity(supabase, organizationId, "risk_created", "Risk created", risk.title, user.id, { riskId: risk.id });
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/risks");
+  redirect("/dashboard/risks?created=1");
+}
+
+export async function createReportAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const organizationId = organizationContext.activeOrganization.id;
+  const name = requiredText(formData, "name", "/dashboard/reports");
+  const db = supabase as any;
+  const { data: report, error } = await db.from("reports").insert({
+    organization_id: organizationId,
+    name,
+    description: clean(formData.get("description")),
+    export_format: String(formData.get("exportFormat") || "csv"),
+    last_generated_at: new Date().toISOString(),
+    created_by: user.id,
+  }).select("id, name").single();
+  if (error || !report) redirect("/dashboard/reports?error=create");
+  await activity(supabase, organizationId, "report_generated", "Report generated", report.name, user.id, { reportId: report.id });
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/reports");
+  redirect("/dashboard/reports?created=1");
+}
+
 function requiredText(formData: FormData, key: string, failTo: string) {
   const text = String(formData.get(key) || "").trim();
   if (text.length < 2) redirect(`${failTo}?error=invalid`);

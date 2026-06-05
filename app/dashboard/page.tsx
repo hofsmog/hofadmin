@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AlertCircle, AlertTriangle, CalendarDays, CalendarRange, Car, CheckCircle2, CheckSquare, ClipboardList, FileCheck2, GraduationCap, Inbox, KeyRound, MapPin, Package, PackageCheck, PiggyBank, Plus, ScanLine, UserCheck, UserMinus, UserPlus, UsersRound, Vote } from "lucide-react";
+import { AlertCircle, AlertTriangle, BarChart3, CalendarDays, CalendarRange, Car, CheckCircle2, CheckSquare, ClipboardList, FileCheck2, FileSignature, GraduationCap, Handshake, Inbox, KeyRound, Lightbulb, MapPin, Megaphone, Network, Package, PackageCheck, PiggyBank, Plus, ScanLine, ShieldAlert, UserCheck, UserMinus, UserPlus, UsersRound, Vote } from "lucide-react";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +60,30 @@ export default async function DashboardPage() {
     { count: upcomingVehicleInspections },
     { count: upcomingVehicleService },
     { count: totalLocations },
+    { count: upcomingEvents },
+    { count: eventRegistrations },
+    { count: eventsThisWeek },
+    { count: activeAnnouncements },
+    { count: scheduledAnnouncements },
+    { count: activeProjects },
+    { count: overdueProjectTasks },
+    { count: upcomingMilestones },
+    { count: expiringContracts },
+    { count: contractsRequiringRenewal },
+    { count: recentlyUpdatedArticles },
+    { count: pendingProcurementRequests },
+    { count: approvedPurchases },
+    { count: outstandingOrders },
+    { count: departmentOverview },
+    { data: dashboardTimeEntries },
+    { count: pendingTimeApprovals },
+    { count: activeSponsors },
+    { count: upcomingSponsorRenewals },
+    { count: newIdeas },
+    { count: ideaVotes },
+    { count: openRisks },
+    { data: dashboardRisks },
+    { count: reportUsage },
   ] = await Promise.all([
     supabase
       .from("checkins")
@@ -156,6 +180,30 @@ export default async function DashboardPage() {
     db.from("vehicles").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).lte("inspection_date", sevenDaysFromToday.toISOString().slice(0, 10)),
     db.from("vehicles").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).lte("next_service_date", sevenDaysFromToday.toISOString().slice(0, 10)),
     db.from("locations").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    db.from("events").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).gte("start_at", todayStart.toISOString()),
+    db.from("event_registrations").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    db.from("events").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).gte("start_at", todayStart.toISOString()).lte("start_at", sevenDaysFromToday.toISOString()),
+    db.from("announcements").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "published"),
+    db.from("announcements").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "scheduled"),
+    db.from("projects").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "active"),
+    db.from("project_tasks").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).neq("status", "completed").lt("due_date", todayStart.toISOString().slice(0, 10)),
+    db.from("project_milestones").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).is("completed_at", null).lte("due_date", sevenDaysFromToday.toISOString().slice(0, 10)),
+    db.from("contracts").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).lte("expiration_date", sevenDaysFromToday.toISOString().slice(0, 10)),
+    db.from("contracts").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).lte("renewal_date", sevenDaysFromToday.toISOString().slice(0, 10)),
+    db.from("knowledge_articles").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).gte("updated_at", new Date(todayStart.getTime() - 30 * 86_400_000).toISOString()),
+    db.from("procurement_requests").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "submitted"),
+    db.from("procurement_requests").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "approved"),
+    db.from("procurement_requests").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "ordered"),
+    db.from("departments").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    db.from("time_entries").select("id, hours, started_at").eq("organization_id", organizationId).gte("started_at", new Date(todayStart.getTime() - 7 * 86_400_000).toISOString()).limit(500),
+    db.from("time_entries").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "submitted"),
+    db.from("sponsors").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "active"),
+    db.from("sponsors").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).lte("renewal_date", sevenDaysFromToday.toISOString().slice(0, 10)),
+    db.from("ideas").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "new"),
+    db.from("idea_votes").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    db.from("risks").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "open"),
+    db.from("risks").select("id, impact_level, probability_level").eq("organization_id", organizationId).limit(500),
+    db.from("reports").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
   ]);
 
   const latestSubmissionIds = (latestNewSubmissions ?? []).map((submission) => submission.id);
@@ -179,6 +227,8 @@ export default async function DashboardPage() {
   const valuesBySubmissionId = groupSubmissionValues(latestSubmissionValues ?? []);
   const formsById = new Map((submissionForms ?? []).map((form) => [form.id, form.title]));
   const overBudgetCategories = (budgetRowsForDashboard ?? []).filter((row: any) => Number(row.actual_amount ?? 0) > Number(row.planned_amount ?? 0)).length;
+  const hoursThisWeek = (dashboardTimeEntries ?? []).reduce((sum: number, row: any) => sum + Number(row.hours ?? 0), 0);
+  const highRiskItems = (dashboardRisks ?? []).filter((risk: any) => risk.impact_level === "high" || risk.probability_level === "high").length;
   const organizationModules = getModulesForOrganization(organizationContext.activeOrganization);
   const enabledModuleIds = new Set(organizationModules.filter((module) => module.status === "enabled").map((module) => module.id));
   const hasModule = (moduleId: string) => enabledModuleIds.has(moduleId);
@@ -240,6 +290,17 @@ export default async function DashboardPage() {
     { label: "Over budget categories", value: overBudgetCategories ?? 0, href: "/dashboard/budgets", moduleId: "budgets" },
     { label: "Upcoming vehicle inspections", value: upcomingVehicleInspections ?? 0, href: "/dashboard/vehicles", moduleId: "vehicles" },
     { label: "Upcoming vehicle service", value: upcomingVehicleService ?? 0, href: "/dashboard/vehicles", moduleId: "vehicles" },
+    { label: "Upcoming events", value: upcomingEvents ?? 0, href: "/dashboard/events", moduleId: "events" },
+    { label: "New registrations", value: eventRegistrations ?? 0, href: "/dashboard/events", moduleId: "events" },
+    { label: "Active announcements", value: activeAnnouncements ?? 0, href: "/dashboard/announcements", moduleId: "announcements" },
+    { label: "Overdue project tasks", value: overdueProjectTasks ?? 0, href: "/dashboard/projects", moduleId: "projects" },
+    { label: "Expiring contracts", value: expiringContracts ?? 0, href: "/dashboard/contracts", moduleId: "contracts" },
+    { label: "Pending purchase requests", value: pendingProcurementRequests ?? 0, href: "/dashboard/procurement", moduleId: "procurement" },
+    { label: "Pending time approvals", value: pendingTimeApprovals ?? 0, href: "/dashboard/time-tracking", moduleId: "time-tracking" },
+    { label: "Upcoming sponsor renewals", value: upcomingSponsorRenewals ?? 0, href: "/dashboard/sponsors", moduleId: "sponsors" },
+    { label: "New ideas", value: newIdeas ?? 0, href: "/dashboard/ideas", moduleId: "ideas" },
+    { label: "Open risks", value: openRisks ?? 0, href: "/dashboard/risks", moduleId: "risk-management" },
+    { label: "High-risk items", value: highRiskItems, href: "/dashboard/risks", moduleId: "risk-management" },
   ].filter((item) => item.value > 0 && hasModule(item.moduleId));
   const quickActions = [
     { href: "/dashboard/forms/create", icon: ClipboardList, label: "Create form", moduleId: "forms" },
@@ -250,6 +311,9 @@ export default async function DashboardPage() {
     { href: "/dashboard/forms/submissions", icon: Inbox, label: "Open form inbox", moduleId: "forms" },
     { href: "/dashboard/onboarding", icon: UserPlus, label: "Start onboarding", moduleId: "onboarding" },
     { href: "/dashboard/assets", icon: PackageCheck, label: "Review assets", moduleId: "asset-lifecycle" },
+    { href: "/dashboard/events", icon: CalendarDays, label: "Create event", moduleId: "events" },
+    { href: "/dashboard/announcements", icon: Megaphone, label: "Post announcement", moduleId: "announcements" },
+    { href: "/dashboard/projects", icon: Network, label: "Create project", moduleId: "projects" },
   ].filter((action) => hasModule(action.moduleId));
   const miniMetrics = [
     { href: "/dashboard/issues", icon: AlertCircle, label: "Open Issues", value: openIssues ?? 0, moduleId: "issue-management" },
@@ -270,6 +334,20 @@ export default async function DashboardPage() {
     { href: "/dashboard/budgets", icon: PiggyBank, label: "Over Budget", value: overBudgetCategories ?? 0, moduleId: "budgets" },
     { href: "/dashboard/vehicles", icon: Car, label: "Vehicle Service", value: upcomingVehicleService ?? 0, moduleId: "vehicles" },
     { href: "/dashboard/locations", icon: MapPin, label: "Locations", value: totalLocations ?? 0, moduleId: "locations" },
+    { href: "/dashboard/events", icon: CalendarDays, label: "Events This Week", value: eventsThisWeek ?? 0, moduleId: "events" },
+    { href: "/dashboard/announcements", icon: Megaphone, label: "Scheduled Announcements", value: scheduledAnnouncements ?? 0, moduleId: "announcements" },
+    { href: "/dashboard/projects", icon: Network, label: "Active Projects", value: activeProjects ?? 0, moduleId: "projects" },
+    { href: "/dashboard/projects", icon: Network, label: "Upcoming Milestones", value: upcomingMilestones ?? 0, moduleId: "projects" },
+    { href: "/dashboard/contracts", icon: FileSignature, label: "Contracts Renewal", value: contractsRequiringRenewal ?? 0, moduleId: "contracts" },
+    { href: "/dashboard/knowledge-base", icon: FileCheck2, label: "Updated Articles", value: recentlyUpdatedArticles ?? 0, moduleId: "knowledge-base" },
+    { href: "/dashboard/procurement", icon: PackageCheck, label: "Approved Purchases", value: approvedPurchases ?? 0, moduleId: "procurement" },
+    { href: "/dashboard/procurement", icon: PackageCheck, label: "Outstanding Orders", value: outstandingOrders ?? 0, moduleId: "procurement" },
+    { href: "/dashboard/departments", icon: UsersRound, label: "Departments", value: departmentOverview ?? 0, moduleId: "departments" },
+    { href: "/dashboard/time-tracking", icon: CalendarRange, label: "Hours This Week", value: hoursThisWeek, moduleId: "time-tracking" },
+    { href: "/dashboard/sponsors", icon: Handshake, label: "Active Sponsors", value: activeSponsors ?? 0, moduleId: "sponsors" },
+    { href: "/dashboard/ideas", icon: Lightbulb, label: "Idea Votes", value: ideaVotes ?? 0, moduleId: "ideas" },
+    { href: "/dashboard/risks", icon: ShieldAlert, label: "Open Risks", value: openRisks ?? 0, moduleId: "risk-management" },
+    { href: "/dashboard/reports", icon: BarChart3, label: "Report Usage", value: reportUsage ?? 0, moduleId: "reporting" },
   ].filter((metric) => hasModule(metric.moduleId));
   const coreModules = organizationModules.filter((module) => module.status === "enabled" && module.href).slice(0, 8);
 
