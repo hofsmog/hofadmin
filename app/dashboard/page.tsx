@@ -6,7 +6,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { modules } from "@/lib/modules";
+import { getModulesForOrganization } from "@/lib/modules";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { getRespondentName, groupSubmissionValues } from "@/lib/forms/submissions";
 
@@ -150,6 +150,9 @@ export default async function DashboardPage() {
   ]);
   const valuesBySubmissionId = groupSubmissionValues(latestSubmissionValues ?? []);
   const formsById = new Map((submissionForms ?? []).map((form) => [form.id, form.title]));
+  const organizationModules = getModulesForOrganization(organizationContext.activeOrganization);
+  const enabledModuleIds = new Set(organizationModules.filter((module) => module.status === "enabled").map((module) => module.id));
+  const hasModule = (moduleId: string) => enabledModuleIds.has(moduleId);
   const checklistItems = [
     { done: (totalForms ?? 0) > 0, label: "Create your first form", href: "/dashboard/forms/create" },
     { done: (totalMembers ?? 0) > 0, label: "Add your first member", href: "/dashboard/members/create#add-member" },
@@ -166,33 +169,56 @@ export default async function DashboardPage() {
       label: "New form submissions",
       value: newSubmissionsCount ?? 0,
       href: "/dashboard/forms/submissions?readStatus=new",
+      moduleId: "forms",
     },
     {
       label: "Submissions needing handling",
       value: submissionsNeedingHandling ?? 0,
       href: "/dashboard/forms/submissions?handlingStatus=unhandled",
+      moduleId: "forms",
     },
     {
       label: "Inventory alerts",
       value: inventoryNeedsAttention ?? 0,
       href: "/dashboard/inventory/items?status=maintenance",
+      moduleId: "inventory",
     },
     {
       label: "Overdue inventory",
       value: overdueInventoryLoans ?? 0,
       href: "/dashboard/inventory/items?status=overdue",
+      moduleId: "inventory",
     },
     {
       label: "Pending invitations",
       value: pendingInvitations ?? 0,
       href: "/dashboard/team",
+      moduleId: "members",
     },
-    { label: "Open issues", value: openIssues ?? 0, href: "/dashboard/issues" },
-    { label: "New fault reports", value: newFaultReports ?? 0, href: "/dashboard/fault-reports" },
-    { label: "Overdue keys", value: overdueKeys ?? 0, href: "/dashboard/keys" },
-    { label: "Incomplete checklists", value: incompleteChecklists ?? 0, href: "/dashboard/checklists" },
-  ].filter((item) => item.value > 0);
-  const coreModules = modules.filter((module) => ["qr-checkins", "forms", "members", "inventory"].includes(module.id));
+    { label: "Open issues", value: openIssues ?? 0, href: "/dashboard/issues", moduleId: "issue-management" },
+    { label: "New fault reports", value: newFaultReports ?? 0, href: "/dashboard/fault-reports", moduleId: "fault-reports" },
+    { label: "Overdue keys", value: overdueKeys ?? 0, href: "/dashboard/keys", moduleId: "key-management" },
+    { label: "Incomplete checklists", value: incompleteChecklists ?? 0, href: "/dashboard/checklists", moduleId: "checklists" },
+  ].filter((item) => item.value > 0 && hasModule(item.moduleId));
+  const quickActions = [
+    { href: "/dashboard/forms/create", icon: ClipboardList, label: "Create form", moduleId: "forms" },
+    { href: "/dashboard/members/create#add-member", icon: UserPlus, label: "Add member", moduleId: "members" },
+    { href: "/dashboard/inventory/create", icon: Package, label: "Add inventory item", moduleId: "inventory" },
+    { href: "/dashboard/inventory/items", icon: ScanLine, label: "Start loan", moduleId: "loans" },
+    { href: "/dashboard/inventory/loans?filter=overdue", icon: AlertTriangle, label: "View overdue loans", moduleId: "loans" },
+    { href: "/dashboard/forms/submissions", icon: Inbox, label: "Open form inbox", moduleId: "forms" },
+  ].filter((action) => hasModule(action.moduleId));
+  const miniMetrics = [
+    { href: "/dashboard/issues", icon: AlertCircle, label: "Open Issues", value: openIssues ?? 0, moduleId: "issue-management" },
+    { href: "/dashboard/fault-reports", icon: Inbox, label: "New Fault Reports", value: newFaultReports ?? 0, moduleId: "fault-reports" },
+    { href: "/dashboard/bookings", icon: CalendarDays, label: "Today's Bookings", value: todaysBookings ?? 0, moduleId: "bookings" },
+    { href: "/dashboard/keys", icon: KeyRound, label: "Overdue Keys", value: overdueKeys ?? 0, moduleId: "key-management" },
+    { href: "/dashboard/checklists", icon: CheckSquare, label: "Incomplete Checklists", value: incompleteChecklists ?? 0, moduleId: "checklists" },
+    { href: "/dashboard/visitors", icon: UserCheck, label: "Checked-In Visitors", value: checkedInVisitors ?? 0, moduleId: "visitor-management" },
+    { href: "/dashboard/annual-planner", icon: CalendarRange, label: "Upcoming Planner Tasks", value: upcomingPlannerTasks ?? 0, moduleId: "annual-planner" },
+    { href: "/dashboard/members/list", icon: UsersRound, label: "Members", value: totalMembers ?? 0, moduleId: "members" },
+  ].filter((metric) => hasModule(metric.moduleId));
+  const coreModules = organizationModules.filter((module) => module.status === "enabled" && module.href).slice(0, 8);
 
   return (
     <>
@@ -226,14 +252,9 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <MiniMetric href="/dashboard/issues" icon={AlertCircle} label="Open Issues" value={openIssues ?? 0} />
-        <MiniMetric href="/dashboard/fault-reports" icon={Inbox} label="New Fault Reports" value={newFaultReports ?? 0} />
-        <MiniMetric href="/dashboard/bookings" icon={CalendarDays} label="Today's Bookings" value={todaysBookings ?? 0} />
-        <MiniMetric href="/dashboard/keys" icon={KeyRound} label="Overdue Keys" value={overdueKeys ?? 0} />
-        <MiniMetric href="/dashboard/checklists" icon={CheckSquare} label="Incomplete Checklists" value={incompleteChecklists ?? 0} />
-        <MiniMetric href="/dashboard/visitors" icon={UserCheck} label="Checked-In Visitors" value={checkedInVisitors ?? 0} />
-        <MiniMetric href="/dashboard/annual-planner" icon={CalendarRange} label="Upcoming Planner Tasks" value={upcomingPlannerTasks ?? 0} />
-        <MiniMetric href="/dashboard/members/list" icon={UsersRound} label="Members" value={totalMembers ?? 0} />
+        {miniMetrics.map((metric) => (
+          <MiniMetric key={metric.label} href={metric.href} icon={metric.icon} label={metric.label} value={metric.value} />
+        ))}
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
@@ -362,12 +383,9 @@ export default async function DashboardPage() {
               <CardDescription>Common things to do next.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-2">
-              <QuickAction href="/dashboard/forms/create" icon={ClipboardList} label="Create form" />
-              <QuickAction href="/dashboard/members/create#add-member" icon={UserPlus} label="Add member" />
-              <QuickAction href="/dashboard/inventory/create" icon={Package} label="Add inventory item" />
-              <QuickAction href="/dashboard/inventory/items" icon={ScanLine} label="Start loan" />
-              <QuickAction href="/dashboard/inventory/loans?filter=overdue" icon={AlertTriangle} label="View overdue loans" />
-              <QuickAction href="/dashboard/forms/submissions" icon={Inbox} label="Open form inbox" />
+              {quickActions.map((action) => (
+                <QuickAction key={action.label} href={action.href} icon={action.icon} label={action.label} />
+              ))}
             </CardContent>
           </Card>
 

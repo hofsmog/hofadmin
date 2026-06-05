@@ -1,38 +1,65 @@
 import type { ComponentType } from "react";
 import {
+  Activity,
+  AlertCircle,
+  Bell,
   CalendarCheck,
+  CalendarRange,
+  ChartBar,
+  CheckSquare,
   ClipboardList,
   Coffee,
-  HardHat,
+  FileArchive,
+  KeyRound,
   Package,
   QrCode,
+  Receipt,
   ScanLine,
+  Settings,
+  ShieldCheck,
   SquareCheckBig,
+  UserCheck,
   UsersRound,
 } from "lucide-react";
-import { openModuleAction } from "@/app/dashboard/modules/actions";
+import { openModuleAction, toggleModuleAction } from "@/app/dashboard/modules/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { systemModuleIds } from "@/lib/modules";
 import { cn } from "@/lib/utils";
 import type { ModuleDefinition, ModuleIconKey } from "@/types";
 
 const icons: Record<ModuleIconKey, ComponentType<{ className?: string }>> = {
   qr: QrCode,
   forms: ClipboardList,
+  surveys: ChartBar,
   bookings: CalendarCheck,
   inventory: Package,
+  loans: ScanLine,
   members: UsersRound,
+  receipts: Receipt,
+  documents: FileArchive,
+  issues: AlertCircle,
+  faultReports: ClipboardList,
+  keys: KeyRound,
+  checklists: CheckSquare,
+  planner: CalendarRange,
+  dashboard: SquareCheckBig,
+  activity: Activity,
+  branding: ShieldCheck,
+  notifications: Bell,
+  settings: Settings,
   checkIns: ScanLine,
   tasks: SquareCheckBig,
   lunch: Coffee,
-  visitors: HardHat,
-  equipment: HardHat,
+  visitors: UserCheck,
+  equipment: Package,
 };
 
-export function ModuleCard({ module }: { module: ModuleDefinition }) {
+export function ModuleCard({ module, canManage = false }: { module: ModuleDefinition; canManage?: boolean }) {
   const Icon = icons[module.icon];
   const active = module.status === "enabled";
+  const locked = systemModuleIds.includes(module.id as (typeof systemModuleIds)[number]);
 
   return (
     <Card className="group flex min-h-72 flex-col overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-zinc-950/[0.06] dark:hover:shadow-black/30">
@@ -65,22 +92,33 @@ export function ModuleCard({ module }: { module: ModuleDefinition }) {
       </CardHeader>
       <CardContent className="mt-auto flex items-center justify-between gap-3">
         <Badge>{module.category}</Badge>
-        {module.href && active ? (
-          <form action={openModuleAction}>
-            <input type="hidden" name="moduleId" value={module.id} />
-            <Button type="submit" className="h-9 px-3">
-              Open
+        <div className="flex gap-2">
+          {canManage && !locked ? (
+            <form action={toggleModuleAction}>
+              <input type="hidden" name="moduleId" value={module.id} />
+              <input type="hidden" name="enabled" value={active ? "false" : "true"} />
+              <Button type="submit" variant="secondary" className="h-9 px-3">
+                {active ? "Disable" : "Enable"}
+              </Button>
+            </form>
+          ) : null}
+          {module.href && active ? (
+            <form action={openModuleAction}>
+              <input type="hidden" name="moduleId" value={module.id} />
+              <Button type="submit" className="h-9 px-3">
+                Open
+              </Button>
+            </form>
+          ) : module.href ? (
+            <ButtonLink href={module.href} variant="secondary" className="h-9 px-3">
+              Preview
+            </ButtonLink>
+          ) : (
+            <Button type="button" variant="secondary" className="h-9 px-3" disabled>
+              Unavailable
             </Button>
-          </form>
-        ) : module.href ? (
-          <ButtonLink href={module.href} variant="secondary" className="h-9 px-3">
-            Preview
-          </ButtonLink>
-        ) : (
-          <Button type="button" variant="secondary" className="h-9 px-3" disabled>
-            Notify me
-          </Button>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   );

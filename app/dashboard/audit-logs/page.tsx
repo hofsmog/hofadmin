@@ -6,13 +6,13 @@ export default function AuditLogsPage() {
   return (
     <>
       <PageHeader
-        title="Audit Logs"
-        description="Track organization-scoped events for security, compliance, admin changes, and module lifecycle activity."
+        title="Activity Feed"
+        description="Track organization-scoped events, admin changes, and module activity in one place."
       />
       <EmptyState
         icon={Activity}
-        title="Audit event shell"
-        description="This page is structured for immutable event records once Supabase tables and policies are introduced."
+        title="No activity yet"
+        description="Important organization activity will appear here as your team uses HofAdmin."
       />
     </>
   );

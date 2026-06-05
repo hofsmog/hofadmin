@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { recordActivityEvent } from "@/lib/activity";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
-import { modules } from "@/lib/modules";
+import { canManageOrganization } from "@/lib/organizations";
+import { defaultEnabledModuleIds, modules, systemModuleIds } from "@/lib/modules";
 
 export async function openModuleAction(formData: FormData) {
   const { user, supabase, organizationContext } = await requireOrganizationContext();
@@ -28,4 +29,49 @@ export async function openModuleAction(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/modules");
   redirect(targetModule.href);
+}
+
+export async function toggleModuleAction(formData: FormData) {
+  const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const moduleId = String(formData.get("moduleId") || "");
+  const shouldEnable = String(formData.get("enabled") || "") === "true";
+  const targetModule = modules.find((item) => item.id === moduleId);
+
+  if (!targetModule || systemModuleIds.includes(moduleId as (typeof systemModuleIds)[number])) {
+    redirect("/dashboard/modules?error=module");
+  }
+
+  if (!canManageOrganization(organizationContext.activeMembership.role)) {
+    redirect("/dashboard/modules?error=permission");
+  }
+
+  const currentEnabled = organizationContext.activeOrganization.starterModules.length
+    ? organizationContext.activeOrganization.starterModules
+    : defaultEnabledModuleIds;
+  const nextEnabled = shouldEnable
+    ? Array.from(new Set([...currentEnabled, moduleId]))
+    : currentEnabled.filter((id) => id !== moduleId);
+
+  const { error } = await supabase
+    .from("organizations")
+    .update({ starter_modules: nextEnabled, updated_at: new Date().toISOString() })
+    .eq("id", organizationContext.activeOrganization.id);
+
+  if (error) {
+    redirect("/dashboard/modules?error=save");
+  }
+
+  await recordActivityEvent({
+    supabase,
+    organizationId: organizationContext.activeOrganization.id,
+    type: shouldEnable ? "module_enabled" : "module_opened",
+    title: shouldEnable ? "Module enabled" : "Module disabled",
+    description: `${targetModule.name} was ${shouldEnable ? "enabled" : "disabled"}.`,
+    actorId: user.id,
+    metadata: { moduleId },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/modules");
+  redirect("/dashboard/modules?updated=1");
 }

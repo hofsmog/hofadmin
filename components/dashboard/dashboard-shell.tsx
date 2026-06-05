@@ -8,7 +8,7 @@ import { BrandLockup } from "@/components/ui/brand";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
 import { OrganizationSwitcher } from "@/components/dashboard/organization-switcher";
 import { createClient } from "@/lib/supabase/client";
-import { dashboardNavItems } from "@/lib/navigation";
+import { getDashboardNavItems } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import type { OrganizationContext } from "@/types";
 
@@ -177,7 +177,7 @@ function Sidebar({
       </div>
 
       <nav className="flex-1 space-y-1 p-4">
-        {dashboardNavItems.map((item) => {
+        {getDashboardNavItems(organizationContext.activeOrganization).map((item) => {
           const Icon = item.icon;
           const active =
             pathname === item.href ||

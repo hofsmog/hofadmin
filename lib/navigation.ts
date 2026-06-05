@@ -18,26 +18,31 @@ import {
   UserCheck,
   CalendarRange,
 } from "lucide-react";
-import type { DashboardNavItem } from "@/types";
+import { isModuleEnabled } from "@/lib/modules";
+import type { DashboardNavItem, Organization } from "@/types";
 
-export const dashboardNavItems: DashboardNavItem[] = [
-  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { title: "Access & Attendance", href: "/dashboard/qr", icon: QrCode },
-  { title: "Forms", href: "/dashboard/forms", icon: ClipboardList },
-  { title: "Members", href: "/dashboard/members", icon: UsersRound },
-  { title: "Inventory", href: "/dashboard/inventory", icon: Package },
-  { title: "Documents", href: "/dashboard/documents", icon: FileArchive },
-  { title: "Receipts", href: "/dashboard/receipts", icon: Receipt },
-  { title: "Issue Management", href: "/dashboard/issues", icon: AlertCircle },
-  { title: "Fault Reports", href: "/dashboard/fault-reports", icon: ClipboardList },
-  { title: "Bookings", href: "/dashboard/bookings", icon: CalendarDays },
-  { title: "Key Management", href: "/dashboard/keys", icon: KeyRound },
-  { title: "Checklists", href: "/dashboard/checklists", icon: CheckSquare },
-  { title: "Visitors", href: "/dashboard/visitors", icon: UserCheck },
-  { title: "Annual Planner", href: "/dashboard/annual-planner", icon: CalendarRange },
-  { title: "Modules", href: "/dashboard/modules", icon: Puzzle },
-  { title: "Organizations", href: "/dashboard/organizations", icon: Building2 },
-  { title: "Settings", href: "/dashboard/settings", icon: Settings },
-  { title: "Billing", href: "/dashboard/billing", icon: CreditCard },
-  { title: "Audit Logs", href: "/dashboard/audit-logs", icon: Activity },
+export const dashboardNavItems: Array<DashboardNavItem & { moduleId?: string; system?: boolean }> = [
+  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, moduleId: "dashboard", system: true },
+  { title: "Access & Attendance", href: "/dashboard/qr", icon: QrCode, moduleId: "qr-checkins" },
+  { title: "Forms", href: "/dashboard/forms", icon: ClipboardList, moduleId: "forms" },
+  { title: "Members", href: "/dashboard/members", icon: UsersRound, moduleId: "members" },
+  { title: "Inventory", href: "/dashboard/inventory", icon: Package, moduleId: "inventory" },
+  { title: "Documents", href: "/dashboard/documents", icon: FileArchive, moduleId: "documents" },
+  { title: "Receipts", href: "/dashboard/receipts", icon: Receipt, moduleId: "receipts" },
+  { title: "Issue Management", href: "/dashboard/issues", icon: AlertCircle, moduleId: "issue-management" },
+  { title: "Fault Reports", href: "/dashboard/fault-reports", icon: ClipboardList, moduleId: "fault-reports" },
+  { title: "Bookings", href: "/dashboard/bookings", icon: CalendarDays, moduleId: "bookings" },
+  { title: "Key Management", href: "/dashboard/keys", icon: KeyRound, moduleId: "key-management" },
+  { title: "Checklists", href: "/dashboard/checklists", icon: CheckSquare, moduleId: "checklists" },
+  { title: "Visitor Management", href: "/dashboard/visitors", icon: UserCheck, moduleId: "visitor-management" },
+  { title: "Annual Planner", href: "/dashboard/annual-planner", icon: CalendarRange, moduleId: "annual-planner" },
+  { title: "Modules", href: "/dashboard/modules", icon: Puzzle, system: true },
+  { title: "Organizations", href: "/dashboard/organizations", icon: Building2, system: true },
+  { title: "Settings", href: "/dashboard/settings", icon: Settings, moduleId: "settings", system: true },
+  { title: "Billing", href: "/dashboard/billing", icon: CreditCard, system: true },
+  { title: "Activity Feed", href: "/dashboard/audit-logs", icon: Activity, moduleId: "activity-feed", system: true },
 ];
+
+export function getDashboardNavItems(organization: Pick<Organization, "starterModules">) {
+  return dashboardNavItems.filter((item) => item.system || !item.moduleId || isModuleEnabled(item.moduleId, organization));
+}

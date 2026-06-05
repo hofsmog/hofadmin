@@ -52,9 +52,23 @@ export type ModuleStatus = "enabled" | "disabled";
 export type ModuleIconKey =
   | "qr"
   | "forms"
+  | "surveys"
   | "bookings"
   | "inventory"
+  | "loans"
   | "members"
+  | "receipts"
+  | "documents"
+  | "issues"
+  | "faultReports"
+  | "keys"
+  | "checklists"
+  | "planner"
+  | "dashboard"
+  | "activity"
+  | "branding"
+  | "notifications"
+  | "settings"
   | "checkIns"
   | "tasks"
   | "lunch"
@@ -65,7 +79,7 @@ export type ModuleDefinition = {
   id: string;
   name: string;
   description: string;
-  category: "Operations" | "Engagement" | "Commerce" | "Workspace" | "Facilities";
+  category: "Overview" | "Operations" | "Engagement" | "Finance" | "Workspace" | "Facilities" | "Administration";
   status: ModuleStatus;
   icon: ModuleIconKey;
   href?: string;

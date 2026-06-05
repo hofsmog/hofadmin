@@ -16,7 +16,15 @@ const organizationTypes = new Set<OrganizationType>([
   "other",
 ]);
 
-const starterModules = new Set(["qr-checkins", "members", "forms", "inventory", "bookings"]);
+const starterModules = new Set([
+  "qr-checkins",
+  "members",
+  "forms",
+  "surveys",
+  "inventory",
+  "documents",
+  "bookings",
+]);
 
 export type OnboardingState = {
   status: "idle" | "error";
