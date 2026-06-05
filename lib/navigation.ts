@@ -9,6 +9,8 @@ import {
   Settings,
   UsersRound,
   Package,
+  FileArchive,
+  Receipt,
 } from "lucide-react";
 import type { DashboardNavItem } from "@/types";
 
@@ -18,6 +20,8 @@ export const dashboardNavItems: DashboardNavItem[] = [
   { title: "Forms", href: "/dashboard/forms", icon: ClipboardList },
   { title: "Members", href: "/dashboard/members", icon: UsersRound },
   { title: "Inventory", href: "/dashboard/inventory", icon: Package },
+  { title: "Documents", href: "/dashboard/documents", icon: FileArchive },
+  { title: "Receipts", href: "/dashboard/receipts", icon: Receipt },
   { title: "Modules", href: "/dashboard/modules", icon: Puzzle },
   { title: "Organizations", href: "/dashboard/organizations", icon: Building2 },
   { title: "Settings", href: "/dashboard/settings", icon: Settings },

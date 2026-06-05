@@ -184,7 +184,7 @@ export default async function FormsSubmissionsPage({
                         <option value="partially_handled">Partially handled</option>
                         <option value="handled">Handled</option>
                       </select>
-                      <button type="submit" className="h-8 rounded-lg border bg-white px-2 text-xs font-medium shadow-sm dark:bg-zinc-950">Spara</button>
+                      <button type="submit" className="h-8 rounded-lg border bg-white px-2 text-xs font-medium shadow-sm dark:bg-zinc-950">Save</button>
                     </form>
                   </div>
                 </article>

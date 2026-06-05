@@ -28,6 +28,7 @@ export type InventoryEventType =
   | "agreement_updated"
   | "agreement_accepted";
 export type InventoryLoanStatus = "active" | "returned" | "overdue" | "cancelled";
+export type DocumentRecordScope = "organization" | "member" | "inventory";
 export type ActivityEventType =
   | "qr_created"
   | "checkin_created"
@@ -37,6 +38,8 @@ export type ActivityEventType =
   | "form_submission_received"
   | "form_submission_read"
   | "form_submission_handling_changed"
+  | "document_uploaded"
+  | "receipt_uploaded"
   | "organization_updated"
   | "module_opened"
   | "module_enabled";
@@ -334,11 +337,13 @@ export type Database = {
         Row: {
           id: string;
           organization_id: string;
+          member_number: string | null;
           name: string;
           status: MemberStatus;
           type: MemberType;
           email: string | null;
           phone: string | null;
+          tags: string[];
           notes: string | null;
           created_by: string;
           created_at: string;
@@ -347,11 +352,13 @@ export type Database = {
         Insert: {
           id?: string;
           organization_id: string;
+          member_number?: string | null;
           name: string;
           status?: MemberStatus;
           type?: MemberType;
           email?: string | null;
           phone?: string | null;
+          tags?: string[];
           notes?: string | null;
           created_by: string;
           created_at?: string;
@@ -360,11 +367,13 @@ export type Database = {
         Update: {
           id?: string;
           organization_id?: string;
+          member_number?: string | null;
           name?: string;
           status?: MemberStatus;
           type?: MemberType;
           email?: string | null;
           phone?: string | null;
+          tags?: string[];
           notes?: string | null;
           created_by?: string;
           created_at?: string;
@@ -1039,6 +1048,179 @@ export type Database = {
             },
           ];
         };
+      organization_notification_preferences: {
+          Row: {
+            organization_id: string;
+            enable_email_notifications: boolean;
+            notify_new_form_response: boolean;
+            notify_loan_due_tomorrow: boolean;
+            notify_loan_overdue: boolean;
+            notify_new_member_added: boolean;
+            notification_emails: string[];
+            created_at: string;
+            updated_at: string;
+          };
+          Insert: {
+            organization_id: string;
+            enable_email_notifications?: boolean;
+            notify_new_form_response?: boolean;
+            notify_loan_due_tomorrow?: boolean;
+            notify_loan_overdue?: boolean;
+            notify_new_member_added?: boolean;
+            notification_emails?: string[];
+            created_at?: string;
+            updated_at?: string;
+          };
+          Update: {
+            organization_id?: string;
+            enable_email_notifications?: boolean;
+            notify_new_form_response?: boolean;
+            notify_loan_due_tomorrow?: boolean;
+            notify_loan_overdue?: boolean;
+            notify_new_member_added?: boolean;
+            notification_emails?: string[];
+            created_at?: string;
+            updated_at?: string;
+          };
+          Relationships: [
+            {
+              foreignKeyName: "organization_notification_preferences_organization_id_fkey";
+              columns: ["organization_id"];
+              isOneToOne: true;
+              referencedRelation: "organizations";
+              referencedColumns: ["id"];
+            },
+          ];
+        };
+      documents: {
+          Row: {
+            id: string;
+            organization_id: string;
+            title: string;
+            description: string | null;
+            folder: string;
+            file_path: string;
+            file_name: string;
+            file_type: string | null;
+            related_member_id: string | null;
+            related_inventory_item_id: string | null;
+            record_scope: DocumentRecordScope;
+            uploaded_by: string | null;
+            created_at: string;
+            updated_at: string;
+          };
+          Insert: {
+            id?: string;
+            organization_id: string;
+            title: string;
+            description?: string | null;
+            folder?: string;
+            file_path: string;
+            file_name: string;
+            file_type?: string | null;
+            related_member_id?: string | null;
+            related_inventory_item_id?: string | null;
+            record_scope?: DocumentRecordScope;
+            uploaded_by?: string | null;
+            created_at?: string;
+            updated_at?: string;
+          };
+          Update: {
+            id?: string;
+            organization_id?: string;
+            title?: string;
+            description?: string | null;
+            folder?: string;
+            file_path?: string;
+            file_name?: string;
+            file_type?: string | null;
+            related_member_id?: string | null;
+            related_inventory_item_id?: string | null;
+            record_scope?: DocumentRecordScope;
+            uploaded_by?: string | null;
+            created_at?: string;
+            updated_at?: string;
+          };
+          Relationships: [
+            {
+              foreignKeyName: "documents_organization_id_fkey";
+              columns: ["organization_id"];
+              isOneToOne: false;
+              referencedRelation: "organizations";
+              referencedColumns: ["id"];
+            },
+            {
+              foreignKeyName: "documents_related_member_id_fkey";
+              columns: ["related_member_id"];
+              isOneToOne: false;
+              referencedRelation: "members";
+              referencedColumns: ["id"];
+            },
+            {
+              foreignKeyName: "documents_related_inventory_item_id_fkey";
+              columns: ["related_inventory_item_id"];
+              isOneToOne: false;
+              referencedRelation: "inventory_items";
+              referencedColumns: ["id"];
+            },
+          ];
+        };
+      receipts: {
+          Row: {
+            id: string;
+            organization_id: string;
+            vendor: string;
+            amount: number | null;
+            receipt_date: string | null;
+            category: string | null;
+            notes: string | null;
+            file_path: string;
+            file_name: string;
+            file_type: string | null;
+            uploaded_by: string | null;
+            created_at: string;
+            updated_at: string;
+          };
+          Insert: {
+            id?: string;
+            organization_id: string;
+            vendor: string;
+            amount?: number | null;
+            receipt_date?: string | null;
+            category?: string | null;
+            notes?: string | null;
+            file_path: string;
+            file_name: string;
+            file_type?: string | null;
+            uploaded_by?: string | null;
+            created_at?: string;
+            updated_at?: string;
+          };
+          Update: {
+            id?: string;
+            organization_id?: string;
+            vendor?: string;
+            amount?: number | null;
+            receipt_date?: string | null;
+            category?: string | null;
+            notes?: string | null;
+            file_path?: string;
+            file_name?: string;
+            file_type?: string | null;
+            uploaded_by?: string | null;
+            created_at?: string;
+            updated_at?: string;
+          };
+          Relationships: [
+            {
+              foreignKeyName: "receipts_organization_id_fkey";
+              columns: ["organization_id"];
+              isOneToOne: false;
+              referencedRelation: "organizations";
+              referencedColumns: ["id"];
+            },
+          ];
+        };
       };
       Views: Record<string, never>;
     Functions: {
@@ -1067,6 +1249,7 @@ export type Database = {
         inventory_item_condition: InventoryItemCondition;
         inventory_event_type: InventoryEventType;
         inventory_loan_status: InventoryLoanStatus;
+        document_record_scope: DocumentRecordScope;
       };
     CompositeTypes: Record<string, never>;
   };

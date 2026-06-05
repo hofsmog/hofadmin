@@ -201,7 +201,8 @@ export default async function DashboardPage() {
         <StatCard label="New submissions" value={`${newSubmissionsCount ?? 0}`} detail={`${submissionsNeedingHandling ?? 0} need handling`} icon={Inbox} />
         <StatCard label="Check-ins today" value={`${todayCheckins ?? 0}`} detail="Attendance and access scans" icon={CheckCircle2} />
         <StatCard label="Members" value={`${totalMembers ?? 0}`} detail="People in this organization" icon={UsersRound} />
-        <StatCard label="Inventory alerts" value={`${(inventoryNeedsAttention ?? 0) + (overdueInventoryLoans ?? 0)}`} detail={`${activeInventoryLoans ?? 0} active loans, ${dueSoonInventoryLoans ?? 0} due soon`} icon={AlertTriangle} />
+        <StatCard label="Active loans" value={`${activeInventoryLoans ?? 0}`} detail={`${dueSoonInventoryLoans ?? 0} due soon`} icon={Package} />
+        <StatCard label="Overdue loans" value={`${overdueInventoryLoans ?? 0}`} detail={`${inventoryNeedsAttention ?? 0} inventory alerts`} icon={AlertTriangle} />
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
@@ -333,7 +334,9 @@ export default async function DashboardPage() {
               <QuickAction href="/dashboard/forms/create" icon={ClipboardList} label="Create form" />
               <QuickAction href="/dashboard/members/create#add-member" icon={UserPlus} label="Add member" />
               <QuickAction href="/dashboard/inventory/create" icon={Package} label="Add inventory item" />
-              <QuickAction href="/dashboard/inventory/scan" icon={ScanLine} label="Scan inventory item" />
+              <QuickAction href="/dashboard/inventory/items" icon={ScanLine} label="Start loan" />
+              <QuickAction href="/dashboard/inventory/loans?filter=overdue" icon={AlertTriangle} label="View overdue loans" />
+              <QuickAction href="/dashboard/forms/submissions" icon={Inbox} label="Open form inbox" />
             </CardContent>
           </Card>
 

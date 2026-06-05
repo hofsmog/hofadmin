@@ -8,22 +8,29 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { inventoryNavItems } from "@/lib/module-nav";
 
-export default async function InventoryLoansPage() {
+export default async function InventoryLoansPage({ searchParams }: { searchParams?: Promise<{ filter?: string }> }) {
+  const params = (await searchParams) ?? {};
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
-  const { data: loans } = await supabase
+  const today = dateOnly(new Date()).toISOString().slice(0, 10);
+  const filter = params.filter === "overdue" ? "overdue" : "active";
+  let loansQuery = supabase
     .from("inventory_loans")
     .select("id, inventory_item_id, borrower_name, loaned_at, due_date, inventory_items(id, name, asset_tag)")
     .eq("organization_id", organizationId)
     .eq("status", "active")
     .order("due_date", { ascending: true, nullsFirst: false })
     .limit(50);
+  if (filter === "overdue") {
+    loansQuery = loansQuery.lt("due_date", today);
+  }
+  const { data: loans } = await loansQuery;
 
   return (
     <>
       <ModuleHeader
         title="Active Loans"
-        description="See what is currently borrowed and return items quickly."
+        description={filter === "overdue" ? "Overdue borrowed items that need follow-up." : "See what is currently borrowed and return items quickly."}
         items={inventoryNavItems}
         action={{ href: "/dashboard/inventory/items", label: "View items" }}
       />
@@ -31,8 +38,8 @@ export default async function InventoryLoansPage() {
         <CardHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <CardTitle>Currently borrowed</CardTitle>
-              <CardDescription>Active inventory loans sorted by due date.</CardDescription>
+              <CardTitle>{filter === "overdue" ? "Overdue loans" : "Currently borrowed"}</CardTitle>
+              <CardDescription>{filter === "overdue" ? "Items past their due date." : "Active inventory loans sorted by due date."}</CardDescription>
             </div>
             <Badge>{loans?.length ?? 0} active</Badge>
           </div>

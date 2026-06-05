@@ -1,4 +1,4 @@
-import { Building2, CheckCircle2, ClipboardList, Eye, LayoutGrid, MailPlus, PlugZap, QrCode, Workflow } from "lucide-react";
+import { Building2, CheckCircle2, ClipboardList, Eye, FileText, LayoutGrid, MailPlus, PlugZap, QrCode, Receipt, Workflow } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ActivityEventType } from "@/types/database";
@@ -20,6 +20,8 @@ const eventConfig = {
   form_submission_received: { icon: ClipboardList, label: "Submission" },
   form_submission_read: { icon: Eye, label: "Submission" },
   form_submission_handling_changed: { icon: Workflow, label: "Submission" },
+  document_uploaded: { icon: FileText, label: "Document" },
+  receipt_uploaded: { icon: Receipt, label: "Receipt" },
   organization_updated: { icon: Building2, label: "Org" },
   module_opened: { icon: LayoutGrid, label: "Module" },
   module_enabled: { icon: PlugZap, label: "Module" },

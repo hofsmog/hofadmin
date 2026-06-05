@@ -22,11 +22,11 @@ export default async function MembersListPage({ searchParams }: { searchParams?:
   const type = params.type ?? "all";
   let membersQuery = supabase
     .from("members")
-    .select("id, name, type, status, email, phone, notes, created_at")
+    .select("id, name, member_number, type, status, email, phone, tags, notes, created_at")
     .eq("organization_id", organizationContext.activeOrganization.id)
     .order("created_at", { ascending: false })
     .limit(50);
-  if (searchTerm) membersQuery = membersQuery.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`);
+  if (searchTerm) membersQuery = membersQuery.or(`name.ilike.%${searchTerm}%,member_number.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`);
   if (status !== "all") membersQuery = membersQuery.eq("status", status);
   if (type !== "all") membersQuery = membersQuery.eq("type", type);
   const [{ data: members }, { count: totalMembers }, { count: activeMembers }] = await Promise.all([
@@ -56,7 +56,7 @@ export default async function MembersListPage({ searchParams }: { searchParams?:
         <div className="divide-y px-5 pb-5">
           {(members ?? []).length ? members?.map((member) => (
             <div key={member.id} className="grid gap-3 py-4 md:grid-cols-[1fr_auto] md:items-center">
-              <div><div className="flex flex-wrap items-center gap-2"><p className="font-medium">{member.name}</p><Badge className="capitalize">{member.type}</Badge><Badge>{member.status}</Badge></div><p className="mt-1 text-sm text-muted-foreground">{[member.email, member.phone].filter(Boolean).join(" - ") || "No contact details"}</p>{member.notes ? <p className="mt-2 text-sm leading-6 text-muted-foreground">{member.notes}</p> : null}</div>
+              <div><div className="flex flex-wrap items-center gap-2"><p className="font-medium">{member.name}</p>{member.member_number ? <Badge>{member.member_number}</Badge> : null}<Badge className="capitalize">{member.type}</Badge><Badge>{member.status}</Badge></div><p className="mt-1 text-sm text-muted-foreground">{[member.email, member.phone].filter(Boolean).join(" - ") || "No contact details"}</p>{member.tags?.length ? <div className="mt-2 flex flex-wrap gap-1">{member.tags.map((tag) => <span key={tag} className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">{tag}</span>)}</div> : null}{member.notes ? <p className="mt-2 text-sm leading-6 text-muted-foreground">{member.notes}</p> : null}</div>
               <p className="text-xs text-muted-foreground">Created {new Date(member.created_at).toLocaleDateString()}</p>
             </div>
           )) : <div className="rounded-xl border border-dashed p-8 text-center"><UsersRound className="mx-auto h-9 w-9 text-muted-foreground" /><p className="mt-3 font-medium">No members found</p><p className="mt-1 text-sm text-muted-foreground">Add your first member or adjust filters.</p></div>}

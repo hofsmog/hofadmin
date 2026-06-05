@@ -50,6 +50,10 @@ export function MemberCreateForm() {
           <Input name="name" placeholder="Alex Morgan" required />
         </label>
         <label className="block space-y-2">
+          <span className="text-sm font-medium">Member number</span>
+          <Input name="memberNumber" placeholder="M-1004" />
+        </label>
+        <label className="block space-y-2">
           <span className="text-sm font-medium">Type</span>
           <select name="type" defaultValue="other" className="h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800">
             {memberTypes.map(([value, label]) => (
@@ -73,6 +77,11 @@ export function MemberCreateForm() {
         <label className="block space-y-2">
           <span className="text-sm font-medium">Phone</span>
           <Input name="phone" type="tel" placeholder="+46..." />
+        </label>
+        <label className="block space-y-2 md:col-span-2">
+          <span className="text-sm font-medium">Tags</span>
+          <Input name="tags" placeholder="Grade 6, Board, Goalkeeper" />
+          <span className="text-xs text-muted-foreground">Separate tags with commas.</span>
         </label>
         <label className="block space-y-2 md:col-span-2">
           <span className="text-sm font-medium">Notes</span>

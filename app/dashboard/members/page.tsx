@@ -32,7 +32,7 @@ export default async function MembersOverviewPage() {
             <div key={member.id} className="flex items-center justify-between gap-3 py-3">
               <div>
                 <p className="text-sm font-medium">{member.name}</p>
-                <p className="text-xs capitalize text-muted-foreground">{member.type} · {member.status}</p>
+                <p className="text-xs capitalize text-muted-foreground">{member.type} - {member.status}</p>
               </div>
               <span className="text-xs text-muted-foreground">{new Date(member.created_at).toLocaleDateString()}</span>
             </div>
