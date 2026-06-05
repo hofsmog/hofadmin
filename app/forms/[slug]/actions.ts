@@ -64,26 +64,31 @@ export async function submitPublicFormAction(
       ? null
       : values.find(({ field, value }) => field.field_type === "email" && value)?.value || null;
 
-  const { data: submission, error: submissionError } = await supabase
+  const submissionId = crypto.randomUUID();
+  const { error: submissionError } = await supabase
     .from("form_submissions")
     .insert({
+      id: submissionId,
       organization_id: form.organization_id,
       form_id: form.id,
       submitted_by: null,
       submitter_email: submitterEmail,
+      read_status: "new",
+      handling_status: "unhandled",
+      handled_note: null,
+      handled_by: null,
+      handled_at: null,
       metadata: { source: "public", anonymous: isAnonymousSurvey },
-    })
-    .select("id")
-    .single();
+    });
 
-  if (submissionError || !submission) {
+  if (submissionError) {
     return { status: "error", message: submissionError?.message ?? "Submission could not be saved." };
   }
 
   const { error: valuesError } = await supabase.from("form_submission_values").insert(
     values.map(({ field, value }) => ({
       organization_id: form.organization_id,
-      submission_id: submission.id,
+      submission_id: submissionId,
       field_id: field.id,
       field_label: field.label,
       value,
@@ -96,7 +101,7 @@ export async function submitPublicFormAction(
 
   if (form.enable_email_notifications) {
     const appUrl = process.env.APP_URL ?? "https://hofadmin.vercel.app";
-    const submissionUrl = `${appUrl}/dashboard/forms/submissions/${submission.id}`;
+    const submissionUrl = `${appUrl}/dashboard/forms/submissions/${submissionId}`;
     const notificationValues = values.map(({ field, value }) => ({
       field_label: field.label,
       value,
