@@ -20,6 +20,7 @@ export async function GET(request: Request) {
   const handlingStatus = sanitizeHandlingStatus(url.searchParams.get("handlingStatus"));
   const dateFrom = url.searchParams.get("dateFrom");
   const dateTo = url.searchParams.get("dateTo");
+  const includeArchived = url.searchParams.get("includeArchived") === "1";
 
   let query = supabase
     .from("form_submissions")
@@ -27,7 +28,35 @@ export async function GET(request: Request) {
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: false });
 
-  if (formId !== "all") query = query.eq("form_id", formId);
+  if (formId !== "all") {
+    query = query.eq("form_id", formId);
+  } else {
+    let formsQuery = supabase
+      .from("forms")
+      .select("id")
+      .eq("organization_id", organizationId);
+
+    if (!includeArchived) {
+      formsQuery = formsQuery.neq("status", "archived");
+    }
+
+    const { data: visibleForms, error: formsError } = await formsQuery;
+    if (formsError) {
+      return new NextResponse(formsError.message, { status: 400 });
+    }
+
+    const visibleFormIds = (visibleForms ?? []).map((form) => form.id);
+    if (!visibleFormIds.length) {
+      return new NextResponse(emptyCsv(), {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="hofadmin-form-responses-${new Date().toISOString().slice(0, 10)}.csv"`,
+        },
+      });
+    }
+
+    query = query.in("form_id", visibleFormIds);
+  }
   if (readStatus !== "all") query = query.eq("read_status", readStatus);
   if (handlingStatus !== "all") query = query.eq("handling_status", handlingStatus);
   if (dateFrom) query = query.gte("created_at", new Date(dateFrom).toISOString());
@@ -51,7 +80,7 @@ export async function GET(request: Request) {
   const valuesBySubmission = groupSubmissionValues(values ?? []);
   const formsById = new Map((forms ?? []).map((form) => [form.id, form.title]));
   const fieldLabels = [...new Set((values ?? []).map((value) => value.field_label))];
-  const headers = ["submission id", "form title", "respondent name", "submitted_at", "read_status", "handling_status", ...fieldLabels];
+  const headers = ["response id", "form title", "response title", "submitted_at", "read_status", "handling_status", ...fieldLabels];
   const rows = (submissions ?? []).map((submission) => {
     const submissionValues = valuesBySubmission.get(submission.id) ?? [];
     const valuesByLabel = new Map(submissionValues.map((value) => [value.field_label, value.value ?? ""]));
@@ -70,7 +99,7 @@ export async function GET(request: Request) {
   return new NextResponse(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="hofadmin-form-submissions-${new Date().toISOString().slice(0, 10)}.csv"`,
+      "Content-Disposition": `attachment; filename="hofadmin-form-responses-${new Date().toISOString().slice(0, 10)}.csv"`,
     },
   });
 }
@@ -85,4 +114,8 @@ function sanitizeHandlingStatus(value: string | null): "all" | FormSubmissionHan
 
 function escapeCsv(value: string) {
   return `"${String(value).replaceAll("\"", "\"\"")}"`;
+}
+
+function emptyCsv() {
+  return ["response id", "form title", "response title", "submitted_at", "read_status", "handling_status"].join(",");
 }

@@ -30,6 +30,7 @@ export default async function FormsSubmissionsPage({
     handlingStatus?: string;
     dateFrom?: string;
     dateTo?: string;
+    includeArchived?: string;
   }>;
 }) {
   const { supabase, organizationContext } = await requireOrganizationContext();
@@ -41,13 +42,19 @@ export default async function FormsSubmissionsPage({
   const handlingStatus = sanitizeHandlingStatus(params.handlingStatus);
   const dateFrom = String(params.dateFrom ?? "");
   const dateTo = String(params.dateTo ?? "");
-  const { data: forms, error: formsError } = await supabase
+  const includeArchived = params.includeArchived === "1";
+  let formsQuery = supabase
     .from("forms")
     .select("id, title")
     .eq("organization_id", organizationId)
     .eq("form_type", "form")
-    .neq("status", "archived")
     .order("title", { ascending: true });
+
+  if (!includeArchived) {
+    formsQuery = formsQuery.neq("status", "archived");
+  }
+
+  const { data: forms, error: formsError } = await formsQuery;
   const formIds = (forms ?? []).map((form) => form.id);
   const submissionsResult = formIds.length
     ? await buildSubmissionsQuery(supabase, organizationId, { formId, formIds, readStatus, handlingStatus, dateFrom, dateTo })
@@ -104,8 +111,16 @@ export default async function FormsSubmissionsPage({
               <CardTitle>All responses</CardTitle>
               <CardDescription>Search and update responses across all forms.</CardDescription>
             </div>
-            <div className="rounded-full border bg-zinc-50 px-3 py-1 text-xs font-medium text-muted-foreground dark:bg-zinc-900">
-              {filteredSubmissions.length} shown
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href={includeArchived ? "/dashboard/forms/submissions" : "/dashboard/forms/submissions?includeArchived=1"}
+                className="rounded-full border bg-white px-3 py-1 text-xs font-medium text-muted-foreground transition hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900"
+              >
+                {includeArchived ? "Hide archived responses" : "Show archived responses"}
+              </Link>
+              <div className="rounded-full border bg-zinc-50 px-3 py-1 text-xs font-medium text-muted-foreground dark:bg-zinc-900">
+                {filteredSubmissions.length} shown
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -145,7 +160,7 @@ export default async function FormsSubmissionsPage({
         </form>
         <div className="flex justify-end border-t px-5 py-3">
           <Link
-            href={`/api/forms/submissions/export?${new URLSearchParams({ formId, readStatus, handlingStatus, dateFrom, dateTo }).toString()}`}
+            href={`/api/forms/submissions/export?${new URLSearchParams({ formId, readStatus, handlingStatus, dateFrom, dateTo, includeArchived: includeArchived ? "1" : "0" }).toString()}`}
             className="inline-flex h-9 items-center gap-2 rounded-xl border bg-white px-3 text-sm font-medium shadow-sm transition hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800"
           >
             <Download className="h-4 w-4" />

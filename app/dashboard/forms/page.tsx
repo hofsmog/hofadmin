@@ -46,18 +46,29 @@ export default async function FormsPage({ searchParams }: { searchParams?: Promi
     formsQuery = formsQuery.eq("status", statusFilter);
   }
 
-  const [{ data: forms }, { count: totalForms }, { count: newResponses }, { count: needsHandling }] = await Promise.all([
+  const [{ data: forms }, { data: activeFormsForCounters }] = await Promise.all([
     formsQuery,
-    supabase.from("forms").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).neq("status", "archived"),
-    supabase.from("form_submissions").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("read_status", "new"),
-    supabase
-      .from("form_submissions")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", organizationId)
-      .in("handling_status", ["unhandled", "partially_handled"]),
+    supabase.from("forms").select("id").eq("organization_id", organizationId).neq("status", "archived"),
   ]);
 
   const typedForms = (forms ?? []) as FormCardRow[];
+  const activeFormIds = (activeFormsForCounters ?? []).map((form) => form.id);
+  const [{ count: newResponses }, { count: needsHandling }] = activeFormIds.length
+    ? await Promise.all([
+        supabase
+          .from("form_submissions")
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", organizationId)
+          .in("form_id", activeFormIds)
+          .eq("read_status", "new"),
+        supabase
+          .from("form_submissions")
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", organizationId)
+          .in("form_id", activeFormIds)
+          .in("handling_status", ["unhandled", "partially_handled"]),
+      ])
+    : [{ count: 0 }, { count: 0 }];
   const formIds = typedForms.map((form) => form.id);
   const { data: submissions } = formIds.length
     ? await supabase
@@ -93,7 +104,7 @@ export default async function FormsPage({ searchParams }: { searchParams?: Promi
       <Toast show={params.updated === "1"} title="Form updated" message="Your form changes were saved." />
 
       <div className="grid gap-4 md:grid-cols-3">
-        <StatCard label="Forms" value={`${totalForms ?? 0}`} detail="Active forms and surveys" icon={ClipboardList} />
+        <StatCard label="Forms" value={`${activeFormIds.length}`} detail="Active forms and surveys" icon={ClipboardList} />
         <StatCard label="New responses" value={`${newResponses ?? 0}`} detail="Unread responses" icon={Inbox} />
         <StatCard label="Needs handling" value={`${needsHandling ?? 0}`} detail="Open response follow-up" icon={BarChart3} />
       </div>
