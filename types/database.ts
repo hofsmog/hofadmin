@@ -1333,6 +1333,16 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["organizations"]["Row"];
       };
+      submit_public_form_response: {
+        Args: {
+          p_slug: string;
+          p_submission_id: string;
+          p_submitter_email: string | null;
+          p_metadata: Json;
+          p_values: Json;
+        };
+        Returns: string;
+      };
     };
     Enums: {
       organization_role: OrganizationRole;

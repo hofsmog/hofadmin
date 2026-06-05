@@ -65,38 +65,19 @@ export async function submitPublicFormAction(
       : values.find(({ field, value }) => field.field_type === "email" && value)?.value || null;
 
   const submissionId = crypto.randomUUID();
-  const { error: submissionError } = await supabase
-    .from("form_submissions")
-    .insert({
-      id: submissionId,
-      organization_id: form.organization_id,
-      form_id: form.id,
-      submitted_by: null,
-      submitter_email: submitterEmail,
-      read_status: "new",
-      handling_status: "unhandled",
-      handled_note: null,
-      handled_by: null,
-      handled_at: null,
-      metadata: { source: "public", anonymous: isAnonymousSurvey },
-    });
-
-  if (submissionError) {
-    return { status: "error", message: submissionError?.message ?? "Submission could not be saved." };
-  }
-
-  const { error: valuesError } = await supabase.from("form_submission_values").insert(
-    values.map(({ field, value }) => ({
-      organization_id: form.organization_id,
-      submission_id: submissionId,
+  const { error: submissionError } = await supabase.rpc("submit_public_form_response", {
+    p_slug: slug,
+    p_submission_id: submissionId,
+    p_submitter_email: submitterEmail,
+    p_metadata: { source: "public", anonymous: isAnonymousSurvey },
+    p_values: values.map(({ field, value }) => ({
       field_id: field.id,
-      field_label: field.label,
       value,
     })),
-  );
+  });
 
-  if (valuesError) {
-    return { status: "error", message: valuesError.message };
+  if (submissionError) {
+    return { status: "error", message: submissionError.message || "Submission could not be saved." };
   }
 
   if (form.enable_email_notifications) {
