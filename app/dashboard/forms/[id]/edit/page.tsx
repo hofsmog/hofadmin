@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { FormEditForm } from "@/components/dashboard/form-create-form";
 import { ModuleHeader } from "@/components/dashboard/module-header";
+import { getPublicFormUrl } from "@/lib/app-url";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { formsNavItems } from "@/lib/module-nav";
 
@@ -33,11 +34,11 @@ export default async function FormsEditPage({
     <>
       <ModuleHeader
         title="Edit Form"
-        description="Adjust fields, order, publishing status, and public design."
+        description="Edit questions, design, settings, and the public share link."
         items={formsNavItems}
       />
       <div className="mx-auto max-w-6xl">
-        <FormEditForm form={form} fields={fields ?? []} updated={query.updated === "1"} error={Boolean(query.error)} />
+        <FormEditForm form={form} fields={fields ?? []} updated={query.updated === "1"} error={Boolean(query.error)} publicUrl={getPublicFormUrl(form.slug)} />
       </div>
     </>
   );

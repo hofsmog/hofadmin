@@ -28,7 +28,7 @@ export const modules: ModuleDefinition[] = [
     category: "Workspace",
     status: "enabled",
     icon: "surveys",
-    href: "/dashboard/forms/create?type=survey",
+    href: "/dashboard/forms/new?type=survey",
   },
   {
     id: "inventory",

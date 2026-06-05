@@ -147,8 +147,7 @@ export async function createFormAction(
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/forms");
-  revalidatePath("/dashboard/forms/list");
-  revalidatePath("/dashboard/forms/create");
+  revalidatePath("/dashboard/forms/new");
 
   return { status: "success", message: `${createdForm.title} was created.` };
 }
@@ -177,7 +176,7 @@ export async function updateFormAction(formData: FormData) {
     .single();
 
   if (!existingForm) {
-    redirect("/dashboard/forms/list?error=not-found");
+    redirect("/dashboard/forms?error=not-found");
   }
 
   const logoUpload = await uploadFormLogo({
@@ -276,7 +275,6 @@ export async function updateFormAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/forms");
-  revalidatePath("/dashboard/forms/list");
   revalidatePath(`/dashboard/forms/${formId}/edit`);
   revalidatePath(`/forms/${existingForm.slug}`);
   redirect(`/dashboard/forms/${formId}/edit?updated=1`);
@@ -289,7 +287,7 @@ export async function updateFormStatusAction(formData: FormData) {
   const status = String(formData.get("status") || "draft") as FormStatus;
 
   if (!formId || !validStatuses.has(status)) {
-    redirect("/dashboard/forms/list?error=invalid");
+    redirect("/dashboard/forms?error=invalid");
   }
 
   const { data: form, error } = await supabase
@@ -301,7 +299,7 @@ export async function updateFormStatusAction(formData: FormData) {
     .single();
 
   if (error || !form) {
-    redirect("/dashboard/forms/list?error=status");
+    redirect("/dashboard/forms?error=status");
   }
 
   await recordActivityEvent({
@@ -316,9 +314,8 @@ export async function updateFormStatusAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/forms");
-  revalidatePath("/dashboard/forms/list");
   revalidatePath(`/forms/${form.slug}`);
-  redirect("/dashboard/forms/list?updated=1");
+  redirect("/dashboard/forms?updated=1");
 }
 
 export async function duplicateFormAction(formData: FormData) {
@@ -327,7 +324,7 @@ export async function duplicateFormAction(formData: FormData) {
   const formId = String(formData.get("formId") || "").trim();
 
   if (!formId) {
-    redirect("/dashboard/forms/list?error=invalid");
+    redirect("/dashboard/forms?error=invalid");
   }
 
   const [{ data: form }, { data: fields }] = await Promise.all([
@@ -336,7 +333,7 @@ export async function duplicateFormAction(formData: FormData) {
   ]);
 
   if (!form) {
-    redirect("/dashboard/forms/list?error=not-found");
+    redirect("/dashboard/forms?error=not-found");
   }
 
   const title = `Copy of ${form.title}`.slice(0, 140);
@@ -371,7 +368,7 @@ export async function duplicateFormAction(formData: FormData) {
     .single();
 
   if (copyError || !copy) {
-    redirect("/dashboard/forms/list?error=duplicate");
+    redirect("/dashboard/forms?error=duplicate");
   }
 
   if (fields?.length) {
@@ -388,7 +385,7 @@ export async function duplicateFormAction(formData: FormData) {
     );
 
     if (fieldsError) {
-      redirect("/dashboard/forms/list?error=duplicate-fields");
+      redirect("/dashboard/forms?error=duplicate-fields");
     }
   }
 
@@ -403,7 +400,6 @@ export async function duplicateFormAction(formData: FormData) {
   });
 
   revalidatePath("/dashboard/forms");
-  revalidatePath("/dashboard/forms/list");
   redirect(`/dashboard/forms/${copy.id}/edit?duplicated=1`);
 }
 
@@ -413,11 +409,11 @@ export async function deleteFormAction(formData: FormData) {
   const formId = String(formData.get("formId") || "").trim();
 
   if (!canManageOrganization(organizationContext.activeMembership.role)) {
-    redirect("/dashboard/forms/list?error=permission");
+    redirect("/dashboard/forms?error=permission");
   }
 
   if (!formId) {
-    redirect("/dashboard/forms/list?error=invalid");
+    redirect("/dashboard/forms?error=invalid");
   }
 
   const { data: form, error } = await supabase
@@ -429,7 +425,7 @@ export async function deleteFormAction(formData: FormData) {
     .single();
 
   if (error || !form) {
-    redirect("/dashboard/forms/list?error=delete");
+    redirect("/dashboard/forms?error=delete");
   }
 
   await recordActivityEvent({
@@ -444,10 +440,9 @@ export async function deleteFormAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/forms");
-  revalidatePath("/dashboard/forms/list");
   revalidatePath("/dashboard/forms/submissions");
   revalidatePath(`/forms/${form.slug}`);
-  redirect("/dashboard/forms/list?deleted=1");
+  redirect("/dashboard/forms?deleted=1");
 }
 
 function parseFields(value: string): FieldPayload[] {

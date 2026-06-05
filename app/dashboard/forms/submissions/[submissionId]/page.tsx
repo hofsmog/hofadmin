@@ -39,13 +39,13 @@ export default async function SubmissionDetailPage({
   if (!submission) {
     return (
       <>
-        <ModuleHeader title="Submission not found" description="This response is unavailable or outside your organization." items={formsNavItems} />
+        <ModuleHeader title="Response not found" description="This response is unavailable or outside your organization." items={formsNavItems} />
         <Card>
           <CardContent className="p-8 text-center">
             <Inbox className="mx-auto h-9 w-9 text-muted-foreground" />
-            <p className="mt-3 font-medium">No submission found</p>
+            <p className="mt-3 font-medium">No response found</p>
             <ButtonLink href="/dashboard/forms/submissions" variant="secondary" className="mt-4">
-              Back to submissions
+              Back to all responses
             </ButtonLink>
           </CardContent>
         </Card>
@@ -110,13 +110,13 @@ export default async function SubmissionDetailPage({
         description="All answers, contact details, status, and internal notes."
         items={formsNavItems}
       />
-      <Toast show={query.updated === "1"} title="Submission updated" message="Handling status and notes were saved." />
-      <Toast show={Boolean(query.error)} tone="error" title="Could not update submission" message="Please check the submission and try again." />
+      <Toast show={query.updated === "1"} title="Response updated" message="Status and notes were saved." />
+      <Toast show={Boolean(query.error)} tone="error" title="Could not update response" message="Please check the response and try again." />
 
       <div className="mb-4">
         <ButtonLink href="/dashboard/forms/submissions" variant="ghost" className="h-9 px-2">
           <ArrowLeft className="h-4 w-4" />
-          Back to submissions
+          Back to all responses
         </ButtonLink>
       </div>
 
@@ -156,13 +156,13 @@ export default async function SubmissionDetailPage({
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Metadata</CardTitle>
-              <CardDescription>Submission context and timestamps.</CardDescription>
+              <CardTitle>Details</CardTitle>
+              <CardDescription>Response context and timestamps.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <MetaItem icon={CalendarClock} label="Submitted" value={`${submittedAt.toLocaleDateString()} at ${submittedAt.toLocaleTimeString()}`} />
               <MetaItem icon={Mail} label="Email" value={submission.submitter_email ?? "No email captured"} />
-              <MetaItem icon={Inbox} label="Submission ID" value={submission.id.slice(0, 8)} />
+              <MetaItem icon={Inbox} label="Response ID" value={submission.id.slice(0, 8)} />
               {submission.handled_at ? (
                 <MetaItem icon={StickyNote} label="Last handled" value={new Date(submission.handled_at).toLocaleString()} />
               ) : null}
@@ -191,7 +191,7 @@ export default async function SubmissionDetailPage({
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium" htmlFor="handlingStatus">Status</label>
+                  <label className="text-sm font-medium" htmlFor="handlingStatus">Handling status</label>
                   <select
                     id="handlingStatus"
                     name="handlingStatus"
@@ -220,7 +220,7 @@ export default async function SubmissionDetailPage({
                   type="submit"
                   className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-zinc-950 px-4 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950"
                 >
-                  Save handling update
+                  Save response status
                 </button>
               </form>
             </CardContent>

@@ -57,11 +57,11 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
   if (form.form_type !== "survey") {
     return (
       <>
-        <ModuleHeader title={form.title} description="This is a regular form with an inbox workflow." items={formsNavItems} />
+        <ModuleHeader title={form.title} description="This is a regular form with responses." items={formsNavItems} />
         <Card>
           <CardContent className="flex flex-col gap-3 pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">Open the inbox to handle responses and internal notes.</p>
-            <ButtonLink href={`/dashboard/forms/submissions?formId=${form.id}`}>Open inbox</ButtonLink>
+            <p className="text-sm text-muted-foreground">Open responses to handle answers and internal notes.</p>
+            <ButtonLink href={`/dashboard/forms/${form.id}/responses`}>Open responses</ButtonLink>
           </CardContent>
         </Card>
       </>

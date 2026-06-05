@@ -97,7 +97,7 @@ export async function submitPublicFormAction(
       supabase,
       organizationId: form.organization_id,
       eventType: "new_form_response",
-      subject: `New submission: ${form.title}`,
+      subject: `New response: ${form.title}`,
       preview: `${respondentName} submitted ${form.title}.`,
       body: [
         `Form: ${form.title}`,

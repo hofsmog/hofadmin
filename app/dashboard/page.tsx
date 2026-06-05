@@ -233,7 +233,7 @@ export default async function DashboardPage() {
   const enabledModuleIds = new Set(organizationModules.filter((module) => module.status === "enabled").map((module) => module.id));
   const hasModule = (moduleId: string) => enabledModuleIds.has(moduleId);
   const checklistItems = [
-    { done: (totalForms ?? 0) > 0, label: "Create your first form", href: "/dashboard/forms/create" },
+    { done: (totalForms ?? 0) > 0, label: "Create your first form", href: "/dashboard/forms/new" },
     { done: (totalMembers ?? 0) > 0, label: "Add your first member", href: "/dashboard/members/create#add-member" },
     { done: (totalInventoryItems ?? 0) > 0, label: "Add your first inventory item", href: "/dashboard/inventory/create" },
     {
@@ -251,7 +251,7 @@ export default async function DashboardPage() {
       moduleId: "forms",
     },
     {
-      label: "Submissions needing handling",
+      label: "Responses needing handling",
       value: submissionsNeedingHandling ?? 0,
       href: "/dashboard/forms/submissions?handlingStatus=unhandled",
       moduleId: "forms",
@@ -303,7 +303,7 @@ export default async function DashboardPage() {
     { label: "High-risk items", value: highRiskItems, href: "/dashboard/risks", moduleId: "risk-management" },
   ].filter((item) => item.value > 0 && hasModule(item.moduleId));
   const quickActions = [
-    { href: "/dashboard/forms/create", icon: ClipboardList, label: "Create form", moduleId: "forms" },
+    { href: "/dashboard/forms/new", icon: ClipboardList, label: "Create form", moduleId: "forms" },
     { href: "/dashboard/members/create#add-member", icon: UserPlus, label: "Add member", moduleId: "members" },
     { href: "/dashboard/inventory/create", icon: Package, label: "Add inventory item", moduleId: "inventory" },
     { href: "/dashboard/inventory/items", icon: ScanLine, label: "Start loan", moduleId: "loans" },
@@ -367,7 +367,7 @@ export default async function DashboardPage() {
               </p>
             </div>
           </div>
-          <ButtonLink href="/dashboard/forms/create" className="shrink-0" style={{ backgroundColor: accentColor }}>
+          <ButtonLink href="/dashboard/forms/new" className="shrink-0" style={{ backgroundColor: accentColor }}>
             <Plus className="h-4 w-4" />
             Create form
           </ButtonLink>
@@ -375,7 +375,7 @@ export default async function DashboardPage() {
       </section>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="New submissions" value={`${newSubmissionsCount ?? 0}`} detail={`${submissionsNeedingHandling ?? 0} need handling`} icon={Inbox} />
+        <StatCard label="New responses" value={`${newSubmissionsCount ?? 0}`} detail={`${submissionsNeedingHandling ?? 0} need handling`} icon={Inbox} />
         <StatCard label="Check-ins today" value={`${todayCheckins ?? 0}`} detail="Attendance and access scans" icon={CheckCircle2} />
         <StatCard label="Members" value={`${totalMembers ?? 0}`} detail="People in this organization" icon={UsersRound} />
         <StatCard label="Active loans" value={`${activeInventoryLoans ?? 0}`} detail={`${dueSoonInventoryLoans ?? 0} due soon`} icon={Package} />

@@ -83,13 +83,13 @@ export default async function FormsSubmissionsPage({
 
   return (
     <>
-      <ModuleHeader title="Form Submissions" description="Triage new responses, assign handling status, and open details only when needed." items={formsNavItems} />
+      <ModuleHeader title="All responses" description="Advanced view for responses across every form." items={formsNavItems} />
       {formsError || submissionsError || valuesError ? (
         <Card className="mb-4 border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
           <CardContent className="flex gap-3 p-4">
             <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
             <div>
-              <p className="text-sm font-semibold">Submissions could not fully load.</p>
+              <p className="text-sm font-semibold">Responses could not fully load.</p>
               <p className="mt-1 text-sm opacity-80">
                 {formsError?.message ?? submissionsError?.message ?? valuesError?.message ?? "Please refresh the page or check the database policies for this organization."}
               </p>
@@ -101,8 +101,8 @@ export default async function FormsSubmissionsPage({
         <CardHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <CardTitle>Submission inbox</CardTitle>
-              <CardDescription>Compact list view for high-volume response workflows.</CardDescription>
+              <CardTitle>All responses</CardTitle>
+              <CardDescription>Search and update responses across all forms.</CardDescription>
             </div>
             <div className="rounded-full border bg-zinc-50 px-3 py-1 text-xs font-medium text-muted-foreground dark:bg-zinc-900">
               {filteredSubmissions.length} shown
@@ -208,7 +208,7 @@ export default async function FormsSubmissionsPage({
           ) : (
             <div className="px-5 py-10 text-center">
               <Inbox className="mx-auto h-9 w-9 text-muted-foreground" />
-              <p className="mt-3 text-sm font-medium">No submissions found</p>
+              <p className="mt-3 text-sm font-medium">No responses found</p>
               <p className="mt-1 text-sm text-muted-foreground">Try a different filter, or wait for public form responses to arrive.</p>
             </div>
           )}

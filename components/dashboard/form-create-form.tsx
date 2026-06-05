@@ -5,7 +5,7 @@ import { ArrowDown, ArrowUp, Check, Eye, GripVertical, Palette, Plus, Settings, 
 import { createFormAction, updateFormAction, type FormBuilderState } from "@/app/dashboard/modules/forms/actions";
 import { ActionSubmitButton } from "@/components/dashboard/action-submit-button";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
@@ -30,10 +30,10 @@ const fieldTypes: Array<{ label: string; value: FormFieldType }> = [
 ];
 
 const tabs = [
-  { id: "fields", label: "Fields", icon: SlidersHorizontal },
-  { id: "design", label: "Design", icon: Palette },
-  { id: "settings", label: "Settings", icon: Settings },
-  { id: "preview", label: "Preview", icon: Eye },
+  { id: "fields", label: "1. Questions", icon: SlidersHorizontal },
+  { id: "design", label: "2. Design", icon: Palette },
+  { id: "settings", label: "3. Settings", icon: Settings },
+  { id: "share", label: "4. Share", icon: Eye },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
@@ -83,11 +83,13 @@ export function FormEditForm({
   fields,
   updated,
   error,
+  publicUrl,
 }: {
   form: FormRow;
   fields: FieldRow[];
   updated?: boolean;
   error?: boolean;
+  publicUrl?: string;
 }) {
   return (
     <FormBuilder
@@ -97,6 +99,7 @@ export function FormEditForm({
       action={updateFormAction}
       updated={updated}
       error={error}
+      publicUrl={publicUrl}
       toastTitle="Form updated"
     />
   );
@@ -111,6 +114,7 @@ function FormBuilder({
   action,
   updated,
   error,
+  publicUrl,
   toastTitle,
 }: {
   mode: "create" | "edit";
@@ -121,6 +125,7 @@ function FormBuilder({
   action: (payload: FormData) => void | Promise<void> | ((payload: FormData) => void);
   updated?: boolean;
   error?: boolean;
+  publicUrl?: string;
   toastTitle: string;
 }) {
   const [activeTab, setActiveTab] = useState<TabId>("fields");
@@ -296,8 +301,8 @@ function FormBuilder({
             />
           ) : null}
 
-          {activeTab === "preview" ? (
-            <PreviewPanel title={title} description={description} fields={fields} design={design} />
+          {activeTab === "share" ? (
+            <SharePanel status={status} publicUrl={publicUrl} />
           ) : null}
 
           <ActionSubmitButton pendingLabel={mode === "create" ? "Creating form" : "Saving form"} className="h-11">
@@ -526,6 +531,34 @@ function FieldsPanel({
           </div>
         </div>
       ))}
+    </section>
+  );
+}
+
+function SharePanel({ status, publicUrl }: { status: FormStatus; publicUrl?: string }) {
+  const published = status === "published" || status === "active";
+
+  return (
+    <section className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900/60">
+      <p className="text-sm font-semibold">Share link</p>
+      <p className="mt-1 text-sm leading-6 text-muted-foreground">
+        Publish the form, then share the public link with people who should respond.
+      </p>
+      {publicUrl ? (
+        <div className="mt-4 rounded-xl border bg-white p-3 dark:bg-zinc-950">
+          <p className="text-xs font-medium uppercase text-muted-foreground">{published ? "Public form" : "Public link disabled until published"}</p>
+          <code className="mt-2 block overflow-x-auto text-xs">{publicUrl}</code>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <ButtonLink href={publicUrl} target="_blank" variant="secondary" className="h-9 px-3" aria-disabled={!published}>
+              Open public form
+            </ButtonLink>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 rounded-xl border border-dashed bg-white p-4 text-sm text-muted-foreground dark:bg-zinc-950">
+          Create the form first. The share link will appear after it has been saved.
+        </div>
+      )}
     </section>
   );
 }

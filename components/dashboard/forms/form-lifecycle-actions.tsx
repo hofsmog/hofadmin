@@ -1,37 +1,44 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, EyeOff, Rocket, Trash2, X } from "lucide-react";
+import { Copy, EyeOff, MoreHorizontal, Rocket, Trash2, X } from "lucide-react";
 import { deleteFormAction, duplicateFormAction, updateFormStatusAction } from "@/app/dashboard/modules/forms/actions";
 import { Button } from "@/components/ui/button";
 import type { FormStatus } from "@/types/database";
 
-export function FormLifecycleActions({ formId, status }: { formId: string; status: FormStatus }) {
+export function FormLifecycleActions({ formId, status, compact = false }: { formId: string; status: FormStatus; compact?: boolean }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
-    <div className="flex flex-wrap gap-2">
-      <form action={duplicateFormAction}>
-        <input type="hidden" name="formId" value={formId} />
-        <Button type="submit" variant="secondary" className="h-9 px-3">
-          <Copy className="h-4 w-4" />
-          Duplicate
-        </Button>
-      </form>
-      {status !== "published" ? (
-        <StatusForm formId={formId} status="published" label="Publish" icon={Rocket} />
-      ) : (
-        <StatusForm formId={formId} status="draft" label="Unpublish" icon={EyeOff} />
-      )}
-      {status !== "archived" ? <DeleteFormButton formId={formId} /> : null}
+    <div className="relative flex flex-wrap gap-2">
+      {!compact ? (status !== "published" ? <StatusForm formId={formId} status="published" label="Publish" icon={Rocket} /> : <StatusForm formId={formId} status="draft" label="Unpublish" icon={EyeOff} />) : null}
+      <Button type="button" variant="secondary" className="h-9 px-3" onClick={() => setMenuOpen((open) => !open)}>
+        <MoreHorizontal className="h-4 w-4" />
+        <span className={compact ? "sr-only" : ""}>More</span>
+      </Button>
+      {menuOpen ? (
+        <div className="absolute right-0 top-10 z-30 w-48 rounded-xl border bg-white p-2 shadow-lg dark:bg-zinc-950">
+          {compact ? (status !== "published" ? <StatusForm formId={formId} status="published" label="Publish" icon={Rocket} menuItem /> : <StatusForm formId={formId} status="draft" label="Unpublish" icon={EyeOff} menuItem />) : null}
+          <form action={duplicateFormAction}>
+            <input type="hidden" name="formId" value={formId} />
+            <Button type="submit" variant="ghost" className="h-9 w-full justify-start px-3">
+              <Copy className="h-4 w-4" />
+              Duplicate
+            </Button>
+          </form>
+          {status !== "archived" ? <DeleteFormButton formId={formId} menuItem /> : null}
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function DeleteFormButton({ formId }: { formId: string }) {
+function DeleteFormButton({ formId, menuItem = false }: { formId: string; menuItem?: boolean }) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <Button type="button" variant="outline" className="h-9 px-3" onClick={() => setOpen(true)}>
+      <Button type="button" variant={menuItem ? "ghost" : "outline"} className={menuItem ? "h-9 w-full justify-start px-3 text-red-600 dark:text-red-300" : "h-9 px-3"} onClick={() => setOpen(true)}>
         <Trash2 className="h-4 w-4" />
         Delete
       </Button>
@@ -72,17 +79,19 @@ function StatusForm({
   status,
   label,
   icon: Icon,
+  menuItem = false,
 }: {
   formId: string;
   status: "draft" | "published";
   label: string;
   icon: typeof Rocket;
+  menuItem?: boolean;
 }) {
   return (
     <form action={updateFormStatusAction}>
       <input type="hidden" name="formId" value={formId} />
       <input type="hidden" name="status" value={status} />
-      <Button type="submit" variant="secondary" className="h-9 px-3">
+      <Button type="submit" variant={menuItem ? "ghost" : "secondary"} className={menuItem ? "h-9 w-full justify-start px-3" : "h-9 px-3"}>
         <Icon className="h-4 w-4" />
         {label}
       </Button>

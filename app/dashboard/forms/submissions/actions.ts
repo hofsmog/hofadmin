@@ -63,7 +63,7 @@ export async function updateSubmissionHandlingAction(formData: FormData) {
       organizationId,
       actorId: user.id,
       type: "form_submission_handling_changed",
-      title: "Submission handling updated",
+      title: "Response status updated",
       description: `Handling status changed to ${handlingStatusLabels[handlingStatus]}.`,
       metadata: { submission_id: submissionId, form_id: existing.form_id, handling_status: handlingStatus },
     });
@@ -121,7 +121,7 @@ export async function updateSubmissionStatusAction(formData: FormData) {
       organizationId,
       actorId: user.id,
       type: "form_submission_handling_changed",
-      title: "Submission handling updated",
+      title: "Response status updated",
       description: `Handling status changed to ${handlingStatusLabels[handlingStatus]}.`,
       metadata: { submission_id: submissionId, form_id: existing.form_id, handling_status: handlingStatus },
     });
