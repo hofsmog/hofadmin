@@ -17,60 +17,20 @@ import { BrandLockup } from "@/components/ui/brand";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const featureCards = [
-  {
-    title: "Member Management",
-    description: "Keep people organized without Excel or complicated setup.",
-    icon: Users,
-  },
-  {
-    title: "Forms & Applications",
-    description: "Publish forms, collect answers and handle responses in a simple inbox.",
-    icon: FileText,
-  },
-  {
-    title: "Equipment & Loans",
-    description: "Track borrowed items, due dates and signed agreements without paper.",
-    icon: PackageCheck,
-  },
-  {
-    title: "Check-ins & Attendance",
-    description: "Scan, check in and track attendance without manual lists.",
-    icon: QrCode,
-  },
-  {
-    title: "Digital Agreements",
-    description: "Let borrowers accept agreements and sign directly on their phone.",
-    icon: Sparkles,
-  },
-  {
-    title: "Secure Access",
-    description: "Give the right people access with roles, permissions and protected data.",
-    icon: LockKeyhole,
-  },
+const heroBenefits = [
+  "Set up in minutes",
+  "No training required",
+  "Mobile-friendly",
+  "Built for non-technical staff",
 ];
 
-const audienceCards = [
-  {
-    title: "Schools",
-    description: "Manage students, forms, attendance and equipment.",
-    emoji: "🏫",
-  },
-  {
-    title: "Sports clubs",
-    description: "Manage members, registrations and loans.",
-    emoji: "⚽",
-  },
-  {
-    title: "Associations",
-    description: "Handle memberships, forms and activities.",
-    emoji: "🎭",
-  },
-  {
-    title: "Small organizations",
-    description: "Keep everything organized in one place.",
-    emoji: "🏢",
-  },
+const previewModules = [
+  { name: "Members", detail: "128 active", icon: Users },
+  { name: "Forms", detail: "9 published", icon: FileText },
+  { name: "Responses", detail: "17 new", icon: BarChart3 },
+  { name: "Inventory", detail: "214 items", icon: PackageCheck },
+  { name: "Attendance", detail: "37 today", icon: QrCode },
+  { name: "Loans", detail: "12 active", icon: ClipboardList },
 ];
 
 const withoutHofAdmin = [
@@ -91,85 +51,114 @@ const withHofAdmin = [
   "One attendance system",
 ];
 
-const heroBenefits = [
-  "Set up in minutes",
-  "No training required",
-  "Mobile-friendly",
-  "Built for non-technical staff",
-];
-
-const previewModules = [
-  { name: "Members", detail: "128 active", icon: Users },
-  { name: "Forms", detail: "9 published", icon: FileText },
-  { name: "Surveys", detail: "43 responses", icon: BarChart3 },
-  { name: "Inventory", detail: "214 items", icon: PackageCheck },
-  { name: "QR & Attendance", detail: "37 today", icon: QrCode },
-  { name: "Active Loans", detail: "12 borrowed", icon: ClipboardList },
-];
-
 const productPreviews = [
   {
-    title: "Forms inbox",
+    title: "New form response",
     status: "New",
-    detail: "Camp registration",
-    rows: ["Submitted by Emma Lind", "Staff marked handled", "Confirmation sent"],
+    label: "Forms inbox",
+    primary: "Camp registration",
+    rows: ["Emma Lind", "2 min ago", "Mark handled"],
   },
   {
-    title: "Inventory loan",
-    status: "Active",
-    detail: "Projector borrowed",
-    rows: ["Due Friday", "Agreement accepted", "Signature saved"],
+    title: "Loan awaiting return",
+    status: "Due Friday",
+    label: "Equipment loan",
+    primary: "Projector #12",
+    rows: ["Borrower: Alex", "Signed", "Send reminder"],
   },
   {
-    title: "QR attendance",
+    title: "Signature completed",
+    status: "Signed",
+    label: "Digital agreement",
+    primary: "Loan agreement",
+    rows: ["Signed on phone", "PDF saved", "Item updated"],
+  },
+  {
+    title: "Attendance checked in",
     status: "Live",
-    detail: "Training session",
+    label: "QR attendance",
+    primary: "Training session",
     rows: ["37 checked in", "5 absent", "Export ready"],
   },
+];
+
+const audienceCards = [
   {
-    title: "Member profile",
-    status: "Updated",
-    detail: "Participant record",
-    rows: ["Contact details", "Forms history", "Current loans"],
+    title: "Schools",
+    description: "Students, forms and attendance.",
+    icon: Users,
+  },
+  {
+    title: "Sports clubs",
+    description: "Members, registrations and loans.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Associations",
+    description: "Memberships, forms and activities.",
+    icon: ClipboardList,
+  },
+  {
+    title: "Small organizations",
+    description: "Everything in one place.",
+    icon: FolderKanban,
   },
 ];
 
-const workflowSteps = [
-  "A new form response comes in",
-  "Staff marks it as handled",
-  "A member borrows equipment",
-  "The borrower signs on phone",
-  "QR attendance is scanned",
-  "Inventory status updates automatically",
+const featureCards = [
+  {
+    title: "Member Management",
+    description: "Keep members organized.",
+    icon: Users,
+  },
+  {
+    title: "Forms & Applications",
+    description: "Collect and manage responses.",
+    icon: FileText,
+  },
+  {
+    title: "Equipment & Loans",
+    description: "Track items and borrowers.",
+    icon: PackageCheck,
+  },
+  {
+    title: "Check-ins & Attendance",
+    description: "QR-based attendance tracking.",
+    icon: QrCode,
+  },
+  {
+    title: "Digital Agreements",
+    description: "Sign agreements on any device.",
+    icon: Sparkles,
+  },
+  {
+    title: "Secure Access",
+    description: "Simple roles and permissions.",
+    icon: LockKeyhole,
+  },
 ];
 
-const simplicityCards = [
+const socialProofCards = [
   {
-    title: "Few clicks",
-    description: "Get daily tasks done without digging through menus.",
+    title: "School case study",
+    detail: "Forms and equipment",
   },
   {
-    title: "Clear workflows",
-    description: "Forms, loans, attendance and inventory follow simple step-by-step flows.",
+    title: "Club testimonial",
+    detail: "Registrations and attendance",
   },
   {
-    title: "Works on mobile",
-    description: "Handle QR scans, signatures and updates directly from a phone.",
+    title: "Association rollout",
+    detail: "Members and agreements",
   },
 ];
 
-const trustItems = [
-  "Organization-based access",
-  "Role permissions",
-  "Secure authentication",
-  "Protected data with RLS",
-  "Activity history",
-];
+const trustItems = ["Roles", "Secure login", "Protected data", "Activity history"];
 
 const pricing = [
   { name: "Starter", price: "$49", detail: "For small organizations getting organized." },
-  { name: "Scale", price: "$149", detail: "For teams that need more modules and workflows." },
-  { name: "Enterprise", price: "Custom", detail: "For larger organizations with advanced needs." },
+  { name: "Scale", price: "$149", detail: "For teams that need more workflows." },
+  { name: "Enterprise", price: "Custom", detail: "For larger organizations." },
 ];
 
 export default function Home() {
@@ -182,14 +171,11 @@ export default function Home() {
             <a href="#platform" className="transition hover:text-zinc-950 dark:hover:text-white">
               Platform
             </a>
-            <a href="#what-is" className="transition hover:text-zinc-950 dark:hover:text-white">
-              What is it?
+            <a href="#product-preview" className="transition hover:text-zinc-950 dark:hover:text-white">
+              Preview
             </a>
-            <a href="#perfect-for" className="transition hover:text-zinc-950 dark:hover:text-white">
-              Use cases
-            </a>
-            <a href="#features" className="transition hover:text-zinc-950 dark:hover:text-white">
-              Features
+            <a href="#proof" className="transition hover:text-zinc-950 dark:hover:text-white">
+              Proof
             </a>
             <a href="#pricing" className="transition hover:text-zinc-950 dark:hover:text-white">
               Pricing
@@ -217,8 +203,7 @@ export default function Home() {
             Stop managing your organization with spreadsheets, paper and scattered tools.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-300">
-            Simple administration for schools, clubs and organizations without training, spreadsheets or
-            complicated setup.
+            Simple administration for schools, clubs and organizations.
           </p>
           <div className="mt-5 flex max-w-2xl flex-wrap gap-2">
             {heroBenefits.map((benefit) => (
@@ -252,7 +237,7 @@ export default function Home() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium">Organization overview</p>
-                  <p className="text-xs text-muted-foreground">Daily workflows in one place</p>
+                  <p className="text-xs text-muted-foreground">Everything in one place</p>
                 </div>
                 <Badge>Live preview</Badge>
               </div>
@@ -260,7 +245,7 @@ export default function Home() {
                 {[
                   ["17", "New responses"],
                   ["12", "Active loans"],
-                  ["37", "Check-ins today"],
+                  ["37", "Check-ins"],
                 ].map(([value, label]) => (
                   <div key={label} className="rounded-xl border bg-white p-4 dark:bg-zinc-950">
                     <p className="text-2xl font-semibold">{value}</p>
@@ -289,17 +274,13 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="what-is" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-8 rounded-2xl border bg-white p-6 shadow-sm dark:bg-zinc-950 sm:p-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+      <section id="what-is" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="grid gap-6 rounded-2xl border bg-white p-6 shadow-sm dark:bg-zinc-950 sm:p-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
-            <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">What is HofAdmin?</p>
+            <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Created to replace</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-              Run your entire organization from one system
+              Spreadsheets, paper forms and complicated admin systems.
             </h2>
-            <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
-              Instead of using Excel, Google Forms, paper agreements, attendance lists and inventory
-              spreadsheets, manage everything in HofAdmin.
-            </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
@@ -328,117 +309,71 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="product-preview" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <section id="product-preview" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="max-w-3xl">
           <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Product preview</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             Everything your organization needs. Nothing it doesn&apos;t.
           </h2>
-          <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
-            Manage daily admin from one clean dashboard: responses, members, loans, attendance, inventory and
-            activity.
-          </p>
-        </div>
-        <div className="mt-8 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-          <div className="rounded-2xl border bg-white p-4 shadow-sm dark:bg-zinc-950">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold">Simple workflow</p>
-              <Badge>Daily admin</Badge>
-            </div>
-            <div className="mt-4 space-y-2">
-              {workflowSteps.map((step, index) => (
-                <div key={step} className="flex items-center gap-3 rounded-xl border bg-zinc-50 p-3 text-sm dark:bg-zinc-900">
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-xs font-semibold shadow-sm dark:bg-zinc-950">
-                    {index + 1}
-                  </span>
-                  <span>{step}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            {productPreviews.map((preview) => (
-              <div key={preview.title} className="rounded-2xl border bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06] dark:bg-zinc-950">
-                <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold">{preview.title}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{preview.detail}</p>
-                    </div>
-                    <span className="rounded-full border bg-white px-2.5 py-1 text-xs font-medium dark:bg-zinc-950">
-                      {preview.status}
-                    </span>
-                  </div>
-                  <div className="mt-4 space-y-2">
-                    {preview.rows.map((row) => (
-                      <div key={row} className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm dark:bg-zinc-950">
-                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-                        <span className="truncate">{row}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-          <div className="max-w-2xl">
-            <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Built for real teams</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-              Made for people who do not want another complicated system
-            </h2>
-            <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
-              HofAdmin is designed for staff, volunteers and small teams. Clear screens, few clicks and simple
-              workflows mean people can start using it without long onboarding or technical knowledge.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {simplicityCards.map((card) => (
-              <Card key={card.title} className="transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06]">
-                <CardHeader>
-                  <div className="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-zinc-100 dark:bg-zinc-900">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  </div>
-                  <CardTitle>{card.title}</CardTitle>
-                  <CardDescription>{card.description}</CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="perfect-for" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="max-w-2xl">
-          <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Perfect for:</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Schools, clubs and organizations that need simple admin.
-          </h2>
         </div>
         <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {audienceCards.map((audience) => (
-            <Card key={audience.title} className="transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06]">
-              <CardHeader>
-                <div className="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-zinc-100 text-xl dark:bg-zinc-900">
-                  {audience.emoji}
+          {productPreviews.map((preview) => (
+            <div key={preview.title} className="rounded-2xl border bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06] dark:bg-zinc-950">
+              <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">{preview.label}</p>
+                  <span className="rounded-full border bg-white px-2.5 py-1 text-xs font-medium dark:bg-zinc-950">
+                    {preview.status}
+                  </span>
                 </div>
-                <CardTitle>{audience.title}</CardTitle>
-                <CardDescription>{audience.description}</CardDescription>
-              </CardHeader>
-            </Card>
+                <p className="mt-4 text-lg font-semibold">{preview.title}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{preview.primary}</p>
+                <div className="mt-4 space-y-2">
+                  {preview.rows.map((row) => (
+                    <div key={row} className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm dark:bg-zinc-950">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                      <span className="truncate">{row}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </section>
 
-      <section id="features" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <section id="perfect-for" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Perfect for</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+              Schools, clubs and small teams.
+            </h2>
+          </div>
+        </div>
+        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {audienceCards.map((audience) => {
+            const Icon = audience.icon;
+            return (
+              <Card key={audience.title} className="transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06]">
+                <CardHeader>
+                  <div className="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-zinc-100 dark:bg-zinc-900">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <CardTitle>{audience.title}</CardTitle>
+                  <CardDescription>{audience.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            );
+          })}
+        </div>
+      </section>
+
+      <section id="features" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
           <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Features</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Practical tools that replace admin busywork.
+            Simple tools for daily admin.
           </h2>
         </div>
         <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -459,14 +394,36 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <section id="proof" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="rounded-2xl border bg-white p-6 shadow-sm dark:bg-zinc-950 sm:p-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Built for real organizations</p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-tight">
+                Trusted by schools, clubs and organizations.
+              </h2>
+            </div>
+            <p className="max-w-sm text-sm leading-6 text-muted-foreground">
+              Customer stories and logos can be added here as HofAdmin rolls out.
+            </p>
+          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {socialProofCards.map((card) => (
+              <div key={card.title} className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
+                <p className="text-sm font-semibold">{card.title}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{card.detail}</p>
+                <p className="mt-5 text-xs font-medium text-zinc-500 dark:text-zinc-400">Coming soon</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="rounded-2xl border bg-white p-5 shadow-sm dark:bg-zinc-950 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Trust and security</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight">Designed for private organization data.</h2>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            <h2 className="text-2xl font-semibold tracking-tight">Private organization data stays protected.</h2>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               {trustItems.map((item) => (
                 <div key={item} className="flex items-center gap-2 rounded-xl border bg-zinc-50 px-3 py-2 text-sm dark:bg-zinc-900">
                   <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
