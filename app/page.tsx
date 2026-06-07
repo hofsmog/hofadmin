@@ -2,7 +2,6 @@ import {
   ArrowRight,
   BarChart3,
   CheckCircle2,
-  ClipboardCheck,
   ClipboardList,
   FileText,
   FolderKanban,
@@ -21,27 +20,27 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 const featureCards = [
   {
     title: "Member Management",
-    description: "Keep students, members, staff or participants organized without Excel.",
+    description: "Keep people organized without Excel or complicated setup.",
     icon: Users,
   },
   {
     title: "Forms & Applications",
-    description: "Create forms, collect answers and handle responses without switching tools.",
+    description: "Publish forms, collect answers and handle responses in a simple inbox.",
     icon: FileText,
   },
   {
     title: "Equipment & Loans",
-    description: "Track equipment, loans, due dates and signed agreements in one place.",
+    description: "Track borrowed items, due dates and signed agreements without paper.",
     icon: PackageCheck,
   },
   {
     title: "Check-ins & Attendance",
-    description: "Run check-ins and attendance flows from a simple QR-based system.",
+    description: "Scan, check in and track attendance without manual lists.",
     icon: QrCode,
   },
   {
     title: "Digital Agreements",
-    description: "Collect signed loan agreements and important confirmations digitally.",
+    description: "Let borrowers accept agreements and sign directly on their phone.",
     icon: Sparkles,
   },
   {
@@ -92,6 +91,13 @@ const withHofAdmin = [
   "One attendance system",
 ];
 
+const heroBenefits = [
+  "Set up in minutes",
+  "No training required",
+  "Mobile-friendly",
+  "Built for non-technical staff",
+];
+
 const previewModules = [
   { name: "Members", detail: "128 active", icon: Users },
   { name: "Forms", detail: "9 published", icon: FileText },
@@ -103,24 +109,52 @@ const previewModules = [
 
 const productPreviews = [
   {
-    title: "Dashboard",
-    description: "A calm command center for activity, quick actions and what needs attention.",
-    items: ["New responses", "Inventory alerts", "Recent activity"],
+    title: "Forms inbox",
+    status: "New",
+    detail: "Camp registration",
+    rows: ["Submitted by Emma Lind", "Staff marked handled", "Confirmation sent"],
   },
   {
-    title: "Forms",
-    description: "Build forms, publish links and manage responses from an inbox-style view.",
-    items: ["Published forms", "New responses", "Survey results"],
+    title: "Inventory loan",
+    status: "Active",
+    detail: "Projector borrowed",
+    rows: ["Due Friday", "Agreement accepted", "Signature saved"],
   },
   {
-    title: "Inventory",
-    description: "Track equipment, loans, due dates, signatures and QR labels.",
-    items: ["Available items", "On loan", "Overdue"],
+    title: "QR attendance",
+    status: "Live",
+    detail: "Training session",
+    rows: ["37 checked in", "5 absent", "Export ready"],
   },
   {
-    title: "QR / Attendance",
-    description: "Use mobile-friendly QR flows for check-ins, access points and attendance.",
-    items: ["Scan QR", "Check-ins today", "Attendance activity"],
+    title: "Member profile",
+    status: "Updated",
+    detail: "Participant record",
+    rows: ["Contact details", "Forms history", "Current loans"],
+  },
+];
+
+const workflowSteps = [
+  "A new form response comes in",
+  "Staff marks it as handled",
+  "A member borrows equipment",
+  "The borrower signs on phone",
+  "QR attendance is scanned",
+  "Inventory status updates automatically",
+];
+
+const simplicityCards = [
+  {
+    title: "Few clicks",
+    description: "Get daily tasks done without digging through menus.",
+  },
+  {
+    title: "Clear workflows",
+    description: "Forms, loans, attendance and inventory follow simple step-by-step flows.",
+  },
+  {
+    title: "Works on mobile",
+    description: "Handle QR scans, signatures and updates directly from a phone.",
   },
 ];
 
@@ -183,8 +217,22 @@ export default function Home() {
             Stop managing your organization with spreadsheets, paper and scattered tools.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-300">
-            HofAdmin is an all-in-one administration platform for schools, clubs and small organizations.
-            Manage members, forms, inventory, loans, attendance and digital signatures in one place.
+            Simple administration for schools, clubs and organizations without training, spreadsheets or
+            complicated setup.
+          </p>
+          <div className="mt-5 flex max-w-2xl flex-wrap gap-2">
+            {heroBenefits.map((benefit) => (
+              <span
+                key={benefit}
+                className="inline-flex items-center gap-2 rounded-full border bg-white/80 px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm shadow-zinc-950/[0.03] dark:bg-zinc-950/70 dark:text-zinc-200"
+              >
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                {benefit}
+              </span>
+            ))}
+          </div>
+          <p className="mt-5 max-w-2xl text-base font-medium text-zinc-800 dark:text-zinc-200">
+            The admin system that does not require a manual.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <ButtonLink href="/signup" className="h-12 px-5">
@@ -281,30 +329,86 @@ export default function Home() {
       </section>
 
       <section id="product-preview" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="max-w-2xl">
+        <div className="max-w-3xl">
           <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Product preview</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">See the admin system in action.</h2>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+            Everything your organization needs. Nothing it doesn&apos;t.
+          </h2>
+          <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
+            Manage daily admin from one clean dashboard: responses, members, loans, attendance, inventory and
+            activity.
+          </p>
         </div>
-        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {productPreviews.map((preview) => (
-            <div key={preview.title} className="rounded-2xl border bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06] dark:bg-zinc-950">
-              <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold">{preview.title}</p>
-                  <ClipboardCheck className="h-4 w-4 text-zinc-500" />
+        <div className="mt-8 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+          <div className="rounded-2xl border bg-white p-4 shadow-sm dark:bg-zinc-950">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold">Simple workflow</p>
+              <Badge>Daily admin</Badge>
+            </div>
+            <div className="mt-4 space-y-2">
+              {workflowSteps.map((step, index) => (
+                <div key={step} className="flex items-center gap-3 rounded-xl border bg-zinc-50 p-3 text-sm dark:bg-zinc-900">
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-xs font-semibold shadow-sm dark:bg-zinc-950">
+                    {index + 1}
+                  </span>
+                  <span>{step}</span>
                 </div>
-                <div className="mt-4 space-y-2">
-                  {preview.items.map((item) => (
-                    <div key={item} className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm dark:bg-zinc-950">
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-                      <span className="truncate">{item}</span>
+              ))}
+            </div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {productPreviews.map((preview) => (
+              <div key={preview.title} className="rounded-2xl border bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06] dark:bg-zinc-950">
+                <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold">{preview.title}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{preview.detail}</p>
                     </div>
-                  ))}
+                    <span className="rounded-full border bg-white px-2.5 py-1 text-xs font-medium dark:bg-zinc-950">
+                      {preview.status}
+                    </span>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {preview.rows.map((row) => (
+                      <div key={row} className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm dark:bg-zinc-950">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                        <span className="truncate">{row}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-              <p className="mt-4 text-sm leading-6 text-muted-foreground">{preview.description}</p>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Built for real teams</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+              Made for people who do not want another complicated system
+            </h2>
+            <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
+              HofAdmin is designed for staff, volunteers and small teams. Clear screens, few clicks and simple
+              workflows mean people can start using it without long onboarding or technical knowledge.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {simplicityCards.map((card) => (
+              <Card key={card.title} className="transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06]">
+                <CardHeader>
+                  <div className="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-zinc-100 dark:bg-zinc-900">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                  </div>
+                  <CardTitle>{card.title}</CardTitle>
+                  <CardDescription>{card.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -352,21 +456,6 @@ export default function Home() {
               </Card>
             );
           })}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border bg-white p-6 shadow-sm dark:bg-zinc-950 sm:p-8">
-          <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-            <div>
-              <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Problem solved</p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-tight">Everything in one place</h2>
-            </div>
-            <p className="text-base leading-7 text-zinc-600 dark:text-zinc-300">
-              Many organizations use Excel for members, Google Forms for signups, paper for agreements and
-              separate lists for equipment. HofAdmin brings it all together in one simple dashboard.
-            </p>
-          </div>
         </div>
       </section>
 
