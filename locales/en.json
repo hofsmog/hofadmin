@@ -1,0 +1,118 @@
+{
+  "language": {
+    "label": "Language",
+    "english": "English",
+    "swedish": "Svenska"
+  },
+  "nav": {
+    "platform": "Platform",
+    "features": "Features",
+    "pricing": "Pricing",
+    "login": "Login",
+    "startFree": "Start free"
+  },
+  "hero": {
+    "badge": "Built for schools, clubs and organizations",
+    "headline": "Stop managing your organization with spreadsheets, paper and scattered tools.",
+    "subheadline": "Simple administration for schools, clubs and organizations.",
+    "positioning": "The admin system that does not require a manual.",
+    "primaryCta": "Start free",
+    "secondaryCta": "View demo",
+    "benefits": ["Set up in minutes", "No training required", "Mobile-friendly", "Built for non-technical staff"]
+  },
+  "dashboardPreview": {
+    "title": "Organization overview",
+    "subtitle": "Everything in one place",
+    "badge": "Live preview",
+    "stats": [
+      ["17", "New responses"],
+      ["12", "Active loans"],
+      ["37", "Check-ins"]
+    ],
+    "modules": [
+      { "name": "Members", "detail": "128 active", "icon": "users" },
+      { "name": "Forms", "detail": "9 published", "icon": "forms" },
+      { "name": "Responses", "detail": "17 new", "icon": "responses" },
+      { "name": "Inventory", "detail": "214 items", "icon": "inventory" },
+      { "name": "Attendance", "detail": "37 today", "icon": "attendance" },
+      { "name": "Loans", "detail": "12 active", "icon": "loans" }
+    ]
+  },
+  "organizationFit": {
+    "eyebrow": "Find your fit",
+    "title": "Which best describes your organization?",
+    "commonUseCases": "Common use cases",
+    "cards": [
+      {
+        "title": "School",
+        "icon": "school",
+        "useCases": ["Student forms", "Attendance tracking", "QR check-ins", "Equipment loans", "Digital agreements", "Student records"]
+      },
+      {
+        "title": "Club / Association",
+        "icon": "club",
+        "useCases": ["Member management", "Registrations", "Attendance tracking", "Equipment loans", "Digital signatures", "Activities"]
+      },
+      {
+        "title": "Business",
+        "icon": "business",
+        "useCases": ["Employee records", "Visitor check-ins", "Forms & approvals", "Asset tracking", "Equipment loans", "Digital agreements"]
+      }
+    ]
+  },
+  "replace": {
+    "eyebrow": "Created to replace",
+    "title": "Spreadsheets, paper forms and complicated admin systems.",
+    "withoutTitle": "Without HofAdmin",
+    "withTitle": "With HofAdmin",
+    "without": ["Excel spreadsheets", "Google Forms", "Paper agreements", "Attendance sheets", "Equipment lists", "Multiple logins"],
+    "with": ["One login", "One dashboard", "One member database", "One inventory system", "One form builder", "One attendance system"]
+  },
+  "productPreview": {
+    "eyebrow": "Product preview",
+    "title": "Everything your organization needs. Nothing it doesn't.",
+    "cards": [
+      { "title": "New form response", "status": "New", "label": "Forms inbox", "primary": "Camp registration", "rows": ["Emma Lind", "2 min ago", "Mark handled"] },
+      { "title": "Loan awaiting return", "status": "Due Friday", "label": "Equipment loan", "primary": "Projector #12", "rows": ["Borrower: Alex", "Signed", "Send reminder"] },
+      { "title": "Signature completed", "status": "Signed", "label": "Digital agreement", "primary": "Loan agreement", "rows": ["Signed on phone", "PDF saved", "Item updated"] },
+      { "title": "Attendance checked in", "status": "Live", "label": "QR attendance", "primary": "Training session", "rows": ["37 checked in", "5 absent", "Export ready"] }
+    ]
+  },
+  "features": {
+    "eyebrow": "Features",
+    "title": "Simple tools for daily admin.",
+    "cards": [
+      { "title": "Member Management", "description": "Keep members organized.", "icon": "users" },
+      { "title": "Forms & Applications", "description": "Collect and manage responses.", "icon": "forms" },
+      { "title": "Equipment & Loans", "description": "Track items and borrowers.", "icon": "inventory" },
+      { "title": "Check-ins & Attendance", "description": "QR-based attendance tracking.", "icon": "attendance" },
+      { "title": "Digital Agreements", "description": "Sign agreements on any device.", "icon": "agreements" },
+      { "title": "Secure Access", "description": "Simple roles and permissions.", "icon": "secure" }
+    ]
+  },
+  "pilot": {
+    "eyebrow": "Built for schools, clubs and organizations",
+    "title": "Early adopters are helping shape HofAdmin.",
+    "description": "Looking for pilot organizations that want simpler admin.",
+    "cards": [
+      { "title": "Early adopter program", "detail": "Help shape the workflows." },
+      { "title": "Pilot organizations", "detail": "Schools, clubs and associations." },
+      { "title": "Real product feedback", "detail": "Built around daily admin." }
+    ]
+  },
+  "trust": {
+    "title": "Private organization data stays protected.",
+    "items": ["Roles", "Secure login", "Protected data", "Activity history"]
+  },
+  "pricing": {
+    "eyebrow": "Pricing",
+    "title": "Replace spreadsheets, forms and paper admin from $49/month.",
+    "description": "Simple pricing for organizations replacing spreadsheets, paper and scattered tools.",
+    "cta": "Start free",
+    "plans": [
+      { "name": "Starter", "price": "From $49/mo", "detail": "Start with the essentials." },
+      { "name": "Growth", "price": "Custom pricing", "detail": "For growing teams that need more workflows." },
+      { "name": "Enterprise", "price": "Custom", "detail": "For larger organizations." }
+    ]
+  }
+}

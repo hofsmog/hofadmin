@@ -1,0 +1,118 @@
+{
+  "language": {
+    "label": "Språk",
+    "english": "English",
+    "swedish": "Svenska"
+  },
+  "nav": {
+    "platform": "Produkt",
+    "features": "Funktioner",
+    "pricing": "Priser",
+    "login": "Logga in",
+    "startFree": "Kom igång gratis"
+  },
+  "hero": {
+    "badge": "Byggt för skolor, föreningar och organisationer",
+    "headline": "Sluta administrera din organisation med kalkylark, papper och utspridda verktyg.",
+    "subheadline": "Enkel administration för skolor, föreningar och organisationer.",
+    "positioning": "Administrationssystemet som inte kräver en manual.",
+    "primaryCta": "Kom igång gratis",
+    "secondaryCta": "Visa demo",
+    "benefits": ["Kom igång på några minuter", "Ingen utbildning krävs", "Mobilvänligt", "Byggt för icke-teknisk personal"]
+  },
+  "dashboardPreview": {
+    "title": "Organisationsöversikt",
+    "subtitle": "Allt på ett ställe",
+    "badge": "Liveförhandsvisning",
+    "stats": [
+      ["17", "Nya svar"],
+      ["12", "Aktiva lån"],
+      ["37", "Incheckningar"]
+    ],
+    "modules": [
+      { "name": "Medlemmar", "detail": "128 aktiva", "icon": "users" },
+      { "name": "Formulär", "detail": "9 publicerade", "icon": "forms" },
+      { "name": "Svar", "detail": "17 nya", "icon": "responses" },
+      { "name": "Inventarier", "detail": "214 objekt", "icon": "inventory" },
+      { "name": "Närvaro", "detail": "37 idag", "icon": "attendance" },
+      { "name": "Lån", "detail": "12 aktiva", "icon": "loans" }
+    ]
+  },
+  "organizationFit": {
+    "eyebrow": "Hitta rätt",
+    "title": "Vilken typ av organisation beskriver er bäst?",
+    "commonUseCases": "Vanliga användningsområden",
+    "cards": [
+      {
+        "title": "Skola",
+        "icon": "school",
+        "useCases": ["Elevformulär", "Närvarohantering", "QR-incheckningar", "Utrustningslån", "Digitala avtal", "Elevregister"]
+      },
+      {
+        "title": "Klubb / Förening",
+        "icon": "club",
+        "useCases": ["Medlemshantering", "Anmälningar", "Närvarohantering", "Utrustningslån", "Digitala signaturer", "Aktiviteter"]
+      },
+      {
+        "title": "Företag",
+        "icon": "business",
+        "useCases": ["Personalregister", "Besöksincheckningar", "Formulär & godkännanden", "Tillgångshantering", "Utrustningslån", "Digitala avtal"]
+      }
+    ]
+  },
+  "replace": {
+    "eyebrow": "Skapat för att ersätta",
+    "title": "Kalkylark, pappersformulär och krångliga administrationssystem.",
+    "withoutTitle": "Utan HofAdmin",
+    "withTitle": "Med HofAdmin",
+    "without": ["Excel-kalkylark", "Google Forms", "Pappersavtal", "Närvarolistor", "Utrustningslistor", "Flera inloggningar"],
+    "with": ["En inloggning", "En dashboard", "Ett medlemsregister", "Ett inventariesystem", "En formulärbyggare", "Ett närvarosystem"]
+  },
+  "productPreview": {
+    "eyebrow": "Produktförhandsvisning",
+    "title": "Allt organisationen behöver. Inget den inte behöver.",
+    "cards": [
+      { "title": "Nytt formulärsvar", "status": "Nytt", "label": "Formulärinkorg", "primary": "Lägeranmälan", "rows": ["Emma Lind", "2 min sedan", "Markera hanterad"] },
+      { "title": "Lån väntar på retur", "status": "Fredag", "label": "Utrustningslån", "primary": "Projektor #12", "rows": ["Låntagare: Alex", "Signerat", "Skicka påminnelse"] },
+      { "title": "Signatur klar", "status": "Signerat", "label": "Digitalt avtal", "primary": "Låneavtal", "rows": ["Signerat i mobilen", "PDF sparad", "Objekt uppdaterat"] },
+      { "title": "Närvaro registrerad", "status": "Live", "label": "QR-närvaro", "primary": "Träningspass", "rows": ["37 incheckade", "5 frånvarande", "Export klar"] }
+    ]
+  },
+  "features": {
+    "eyebrow": "Funktioner",
+    "title": "Enkla verktyg för daglig administration.",
+    "cards": [
+      { "title": "Medlemshantering", "description": "Håll ordning på medlemmar.", "icon": "users" },
+      { "title": "Formulär & ansökningar", "description": "Samla in och hantera svar.", "icon": "forms" },
+      { "title": "Utrustning & lån", "description": "Spåra objekt och låntagare.", "icon": "inventory" },
+      { "title": "Incheckningar & närvaro", "description": "QR-baserad närvarohantering.", "icon": "attendance" },
+      { "title": "Digitala avtal", "description": "Signera avtal på valfri enhet.", "icon": "agreements" },
+      { "title": "Säker åtkomst", "description": "Enkla roller och behörigheter.", "icon": "secure" }
+    ]
+  },
+  "pilot": {
+    "eyebrow": "Byggt för skolor, föreningar och organisationer",
+    "title": "Tidiga användare hjälper till att forma HofAdmin.",
+    "description": "Vi söker pilotorganisationer som vill ha enklare administration.",
+    "cards": [
+      { "title": "Early adopter-program", "detail": "Var med och forma arbetsflödena." },
+      { "title": "Pilotorganisationer", "detail": "Skolor, klubbar och föreningar." },
+      { "title": "Riktig produktfeedback", "detail": "Byggt kring daglig administration." }
+    ]
+  },
+  "trust": {
+    "title": "Privat organisationsdata är skyddad.",
+    "items": ["Roller", "Säker inloggning", "Skyddad data", "Aktivitetshistorik"]
+  },
+  "pricing": {
+    "eyebrow": "Priser",
+    "title": "Ersätt kalkylark, formulär och pappersadmin från $49/månad.",
+    "description": "Enkla priser för organisationer som vill ersätta kalkylark, papper och utspridda verktyg.",
+    "cta": "Kom igång gratis",
+    "plans": [
+      { "name": "Starter", "price": "Från $49/mån", "detail": "Börja med det viktigaste." },
+      { "name": "Growth", "price": "Anpassat pris", "detail": "För växande team som behöver fler arbetsflöden." },
+      { "name": "Enterprise", "price": "Anpassat", "detail": "För större organisationer." }
+    ]
+  }
+}
