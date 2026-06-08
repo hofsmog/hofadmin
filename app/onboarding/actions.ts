@@ -22,8 +22,9 @@ const starterModules = new Set([
   "members",
   "forms",
   "inventory",
-  "documents",
+  "loans",
   "bookings",
+  "sponsors",
 ]);
 
 export type OnboardingState = {

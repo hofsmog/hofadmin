@@ -107,7 +107,7 @@ export type ModuleDefinition = {
   id: string;
   name: string;
   description: string;
-  category: "Overview" | "Operations" | "Engagement" | "Finance" | "Workspace" | "Facilities" | "Administration";
+  category: "Workspace" | "Operations" | "Admin";
   status: ModuleStatus;
   icon: ModuleIconKey;
   href?: string;

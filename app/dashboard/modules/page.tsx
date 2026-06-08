@@ -7,7 +7,7 @@ import { canManageOrganization } from "@/lib/organizations";
 import { getModulesForOrganization, getSelectableEnabledModuleIds } from "@/lib/modules";
 import { formatLimit, getEffectiveModuleLimit, getModuleLimitMessage, getOrganizationPlan } from "@/lib/plans";
 
-const categories = ["Overview", "Workspace", "Operations", "Engagement", "Facilities", "Finance", "Administration"] as const;
+const categories = ["Workspace", "Operations", "Admin"] as const;
 
 export default async function ModulesPage({ searchParams }: { searchParams?: Promise<{ updated?: string; error?: string }> }) {
   const params = (await searchParams) ?? {};
@@ -25,8 +25,8 @@ export default async function ModulesPage({ searchParams }: { searchParams?: Pro
   return (
     <>
       <PageHeader
-        title="Module Marketplace"
-        description="Choose focused HofAdmin modules for the workflows your organization actually runs."
+        title="Modules"
+        description="Choose the simple work areas your organization uses."
       />
       <Toast show={params.updated === "1"} title="Module settings updated" message="Organization module visibility was saved." />
       <Toast
@@ -57,13 +57,13 @@ export default async function ModulesPage({ searchParams }: { searchParams?: Pro
               <Badge>{`${plan.name} plan`}</Badge>
               {canManage ? <Badge>{disabledModules} disabled</Badge> : null}
             </div>
-            <h2 className="mt-3 text-xl font-semibold tracking-tight">A complete organization operations suite</h2>
+            <h2 className="mt-3 text-xl font-semibold tracking-tight">Start with the modules you actually need</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               {canManage ? `You are using ${enabledModuleCount} of ${formatLimit(moduleLimit)} modules on the ${plan.name} plan. Disabled modules stay hidden from the main navigation.` : "Open the modules enabled for your organization."}
             </p>
           </div>
           <div className="mx-5 mb-5 rounded-xl border bg-zinc-50 p-4 text-sm leading-6 text-muted-foreground dark:bg-zinc-900/60 md:mb-0 md:mr-5 md:max-w-sm">
-            Active modules respect organization scope, roles, and existing RLS. System modules such as Dashboard, Settings, Branding, Notifications, and Activity Feed stay available.
+            Dashboard, Settings, Branding, Notifications, and Activity Feed stay available so the workspace remains easy to manage.
           </div>
         </div>
       </section>

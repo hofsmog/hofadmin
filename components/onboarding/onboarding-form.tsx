@@ -22,12 +22,13 @@ const organizationTypes: Array<{ label: string; value: OrganizationType }> = [
 ];
 
 const starterModules = [
-  { label: "Attendance & Check-ins", value: "qr-checkins" },
   { label: "Members", value: "members" },
   { label: "Forms & surveys", value: "forms" },
   { label: "Inventory", value: "inventory" },
-  { label: "Documents", value: "documents" },
+  { label: "Loans", value: "loans" },
+  { label: "Attendance & Check-ins", value: "qr-checkins" },
   { label: "Bookings", value: "bookings" },
+  { label: "Sponsors", value: "sponsors" },
 ];
 
 const checklist = ["Create first check-in point", "Add first member", "Invite team member", "Customize organization branding"];
@@ -37,7 +38,7 @@ export function OnboardingForm({ defaultOrganizationName }: { defaultOrganizatio
   const [step, setStep] = useState(0);
   const [organizationType, setOrganizationType] = useState<OrganizationType>("business");
   const [organizationName, setOrganizationName] = useState(defaultOrganizationName);
-  const [selectedModules, setSelectedModules] = useState(["qr-checkins", "members"]);
+  const [selectedModules, setSelectedModules] = useState(["members", "forms"]);
   const progress = useMemo(() => ((step + 1) / 4) * 100, [step]);
   const canContinue =
     step === 0 ||
