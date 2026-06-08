@@ -22,10 +22,10 @@ export default async function QrItemsPage() {
   return (
     <>
       <ModuleHeader
-        title="QR Items"
-        description="Manage generated QR cards and reusable scan targets."
+        title="Check-in Points"
+        description="Create QR codes for real attendance moments like Football Training, Summer Camp, Main Entrance, or School Event."
         items={qrNavItems}
-        action={{ href: "#create-qr", label: "Create QR" }}
+        action={{ href: "#create-qr", label: "Create Check-in Point" }}
       />
 
       <div className="space-y-4">
@@ -33,8 +33,8 @@ export default async function QrItemsPage() {
           <CardHeader>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <CardTitle>Create QR item</CardTitle>
-                <CardDescription>Create reusable QR targets for events, assets, members, or locations.</CardDescription>
+                <CardTitle>Create Check-in Point</CardTitle>
+                <CardDescription>Create a QR code people can scan to record attendance for an event, activity, or entrance.</CardDescription>
               </div>
               <Plus className="h-5 w-5 text-muted-foreground" />
             </div>
@@ -42,25 +42,25 @@ export default async function QrItemsPage() {
           <form action={createQrItemAction} className="grid gap-4 p-5 pt-0 md:grid-cols-2">
             <label className="block space-y-2">
               <span className="text-sm font-medium">Name</span>
-              <Input name="name" placeholder="Main entrance" disabled={!canCreateQr} required />
+              <Input name="name" placeholder="Football Training" disabled={!canCreateQr} required />
             </label>
             <label className="block space-y-2">
-              <span className="text-sm font-medium">Type</span>
+              <span className="text-sm font-medium">Check-in type</span>
               <select name="type" disabled={!canCreateQr} defaultValue="general" className="h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 disabled:opacity-60 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800">
-                <option value="general">General</option>
-                <option value="event">Event</option>
-                <option value="member">Member</option>
-                <option value="asset">Asset</option>
-                <option value="location">Location</option>
+                <option value="general">General check-in</option>
+                <option value="event">Event or activity</option>
+                <option value="location">Entrance or location</option>
+                <option value="member">Member check-in</option>
+                <option value="asset">Asset scan</option>
               </select>
             </label>
             <label className="block space-y-2 md:col-span-2">
               <span className="text-sm font-medium">Description</span>
-              <Input name="description" placeholder="Used for arrival check-ins" disabled={!canCreateQr} />
+              <Input name="description" placeholder="Used for Tuesday evening attendance" disabled={!canCreateQr} />
             </label>
             <div className="md:col-span-2">
               <ActionSubmitButton pendingLabel="Generating" disabled={!canCreateQr}>
-                Generate QR value
+                Create Check-in Point
               </ActionSubmitButton>
             </div>
           </form>
@@ -70,8 +70,8 @@ export default async function QrItemsPage() {
           <CardHeader>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <CardTitle>QR list</CardTitle>
-                <CardDescription>Downloadable cards with stable organization-scoped values.</CardDescription>
+                <CardTitle>Check-in Point List</CardTitle>
+                <CardDescription>Download or print QR cards for your attendance points.</CardDescription>
               </div>
               <QrCode className="h-5 w-5 text-muted-foreground" />
             </div>
@@ -82,8 +82,8 @@ export default async function QrItemsPage() {
             ) : (
               <div className="rounded-xl border border-dashed p-8 text-center">
                 <QrCode className="mx-auto h-9 w-9 text-muted-foreground" />
-                <p className="mt-3 font-medium">No QR items yet</p>
-                <p className="mt-1 text-sm text-muted-foreground">Create the first item to generate a QR card.</p>
+                <p className="mt-3 font-medium">No check-in points yet</p>
+                <p className="mt-1 text-sm text-muted-foreground">Create one for Football Training, Summer Camp, Main Entrance, or School Event.</p>
               </div>
             )}
           </div>

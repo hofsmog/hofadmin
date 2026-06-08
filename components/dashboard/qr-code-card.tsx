@@ -115,7 +115,7 @@ export function QrCodeCard({ item, organizationName }: { item: QrCardItem; organ
       <!doctype html>
       <html>
         <head>
-          <title>${escapeHtml(item.name)} QR card</title>
+          <title>${escapeHtml(item.name)} check-in card</title>
           <style>
             * { box-sizing: border-box; }
             body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f4f4f5; font-family: Arial, sans-serif; color: #111827; }
@@ -192,7 +192,7 @@ export function QrCodeCard({ item, organizationName }: { item: QrCardItem; organ
             </Button>
             <Button type="button" variant="ghost" className="h-9 px-3" onClick={copyValue}>
               {status === "copied" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              Copy
+              Copy value
             </Button>
           </div>
         </div>
@@ -200,7 +200,7 @@ export function QrCodeCard({ item, organizationName }: { item: QrCardItem; organ
 
       {status !== "idle" ? (
         <div className="border-t bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-          {status === "copied" ? "QR value copied." : "Download started."}
+          {status === "copied" ? "Check-in value copied." : "Download started."}
         </div>
       ) : null}
     </article>

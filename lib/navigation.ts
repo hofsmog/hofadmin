@@ -38,7 +38,7 @@ import type { DashboardNavItem, Organization } from "@/types";
 
 export const dashboardNavItems: Array<DashboardNavItem & { moduleId?: string; system?: boolean }> = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, moduleId: "dashboard", system: true },
-  { title: "Access & Attendance", href: "/dashboard/qr", icon: QrCode, moduleId: "qr-checkins" },
+  { title: "Attendance & Check-ins", href: "/dashboard/qr", icon: QrCode, moduleId: "qr-checkins" },
   { title: "Forms", href: "/dashboard/forms", icon: ClipboardList, moduleId: "forms" },
   { title: "Members", href: "/dashboard/members", icon: UsersRound, moduleId: "members" },
   { title: "Inventory", href: "/dashboard/inventory", icon: Package, moduleId: "inventory" },

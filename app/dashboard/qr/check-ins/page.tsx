@@ -18,18 +18,18 @@ export default async function QrCheckInsPage() {
 
   return (
     <>
-      <ModuleHeader title="Check-ins" description="Review check-in history and register manual entries." items={qrNavItems} />
+      <ModuleHeader title="Attendance" description="View scanned attendance and register manual check-ins." items={qrNavItems} />
       <div className="grid gap-4 lg:grid-cols-[24rem_1fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Manual check-in</CardTitle>
-            <CardDescription>Register a check-in without scanning.</CardDescription>
+            <CardTitle>Manual Attendance</CardTitle>
+            <CardDescription>Add someone to attendance without scanning.</CardDescription>
           </CardHeader>
           <form action={manualCheckinAction} className="space-y-4 p-5 pt-0">
             <label className="block space-y-2">
-              <span className="text-sm font-medium">QR item</span>
+              <span className="text-sm font-medium">Check-in point</span>
               <select name="qrItemId" className="h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800" required>
-                <option value="">Select item</option>
+                <option value="">Select check-in point</option>
                 {(qrItems ?? []).map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.name}
@@ -38,7 +38,7 @@ export default async function QrCheckInsPage() {
               </select>
             </label>
             <label className="block space-y-2">
-              <span className="text-sm font-medium">Attendee or note label</span>
+              <span className="text-sm font-medium">Attendee</span>
               <Input name="attendeeName" placeholder="Alex Morgan" />
             </label>
             <label className="block space-y-2">
@@ -46,7 +46,7 @@ export default async function QrCheckInsPage() {
               <Input name="notes" placeholder="Manual front desk entry" />
             </label>
             <ActionSubmitButton className="h-11 w-full" pendingLabel="Registering">
-              Register check-in
+              Add Attendance
             </ActionSubmitButton>
           </form>
         </Card>
@@ -55,8 +55,8 @@ export default async function QrCheckInsPage() {
           <CardHeader>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <CardTitle>Check-in history</CardTitle>
-                <CardDescription>Latest organization-scoped entries.</CardDescription>
+                <CardTitle>Attendance History</CardTitle>
+                <CardDescription>Latest scanned and manual attendance entries.</CardDescription>
               </div>
               <Clock3 className="h-5 w-5 text-muted-foreground" />
             </div>
@@ -68,17 +68,17 @@ export default async function QrCheckInsPage() {
                 return (
                   <div key={checkin.id} className="py-3">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-medium">{qrItem?.name ?? "Unknown QR item"}</p>
+                      <p className="text-sm font-medium">{qrItem?.name ?? "Unknown check-in point"}</p>
                       <span className="text-xs text-muted-foreground">{new Date(checkin.created_at).toLocaleString()}</span>
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {checkin.attendee_name ?? "Manual check-in"} {checkin.notes ? `- ${checkin.notes}` : ""}
+                      {checkin.attendee_name ?? "Manual attendance"} {checkin.notes ? `- ${checkin.notes}` : ""}
                     </p>
                   </div>
                 );
               })
             ) : (
-              <p className="py-6 text-center text-sm text-muted-foreground">No check-ins recorded yet.</p>
+              <p className="py-6 text-center text-sm text-muted-foreground">No attendance recorded yet.</p>
             )}
           </div>
         </Card>

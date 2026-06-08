@@ -1,8 +1,8 @@
 export const qrNavItems = [
   { title: "Overview", href: "/dashboard/qr" },
-  { title: "Items", href: "/dashboard/qr/items" },
+  { title: "Check-in Points", href: "/dashboard/qr/items" },
   { title: "Scanner", href: "/dashboard/qr/scanner" },
-  { title: "Check-ins", href: "/dashboard/qr/check-ins" },
+  { title: "Attendance", href: "/dashboard/qr/check-ins" },
   { title: "Activity", href: "/dashboard/qr/activity" },
 ];
 

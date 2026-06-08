@@ -22,7 +22,7 @@ const organizationTypes: Array<{ label: string; value: OrganizationType }> = [
 ];
 
 const starterModules = [
-  { label: "Access & Attendance", value: "qr-checkins" },
+  { label: "Attendance & Check-ins", value: "qr-checkins" },
   { label: "Members", value: "members" },
   { label: "Forms", value: "forms" },
   { label: "Surveys", value: "surveys" },
@@ -31,7 +31,7 @@ const starterModules = [
   { label: "Bookings", value: "bookings" },
 ];
 
-const checklist = ["Create first QR item", "Add first member", "Invite team member", "Customize organization branding"];
+const checklist = ["Create first check-in point", "Add first member", "Invite team member", "Customize organization branding"];
 
 export function OnboardingForm({ defaultOrganizationName }: { defaultOrganizationName: string }) {
   const [state, action, pending] = useActionState(completeOnboardingAction, initialState);

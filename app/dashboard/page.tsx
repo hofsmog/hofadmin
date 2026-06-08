@@ -376,7 +376,7 @@ export default async function DashboardPage() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="New responses" value={`${newSubmissionsCount ?? 0}`} detail={`${submissionsNeedingHandling ?? 0} need handling`} icon={Inbox} />
-        <StatCard label="Check-ins today" value={`${todayCheckins ?? 0}`} detail="Attendance and access scans" icon={CheckCircle2} />
+        <StatCard label="Attendance today" value={`${todayCheckins ?? 0}`} detail="QR check-ins recorded today" icon={CheckCircle2} />
         <StatCard label="Members" value={`${totalMembers ?? 0}`} detail="People in this organization" icon={UsersRound} />
         <StatCard label="Active loans" value={`${activeInventoryLoans ?? 0}`} detail={`${dueSoonInventoryLoans ?? 0} due soon`} icon={Package} />
         <StatCard label="Overdue loans" value={`${overdueInventoryLoans ?? 0}`} detail={`${inventoryNeedsAttention ?? 0} inventory alerts`} icon={AlertTriangle} />

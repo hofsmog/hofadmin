@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 const initialState: ScannerActionState = {
   status: "idle",
-  message: "Point the camera at a Hofadmin QR code.",
+  message: "Point the camera at a HofAdmin check-in QR code.",
 };
 
 export function QrScanner({ organizationName }: { organizationName: string }) {
@@ -128,7 +128,7 @@ export function QrScanner({ organizationName }: { organizationName: string }) {
           </div>
           <div className="absolute bottom-4 left-4 right-4 rounded-2xl bg-zinc-950/70 p-4 text-white shadow-2xl backdrop-blur">
             <p className="text-sm font-semibold">Scan mode</p>
-            <p className="mt-1 text-sm text-white/75">Keep the QR centered. HofAdmin submits the check-in automatically.</p>
+            <p className="mt-1 text-sm text-white/75">Keep the code centered. HofAdmin records attendance automatically.</p>
           </div>
         </div>
       </section>
@@ -172,12 +172,12 @@ export function QrScanner({ organizationName }: { organizationName: string }) {
           {manualOpen ? (
             <form action={formAction} className="mt-4">
               <label className="block space-y-2">
-                <span className="text-sm font-medium">Manual QR value</span>
+                <span className="text-sm font-medium">Manual check-in code</span>
                 <Input name="qrValue" placeholder="hofadmin:qr:..." autoComplete="off" />
               </label>
               <Button type="submit" className="mt-4 h-11 w-full" disabled={isPending}>
                 {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                Submit check-in
+                Submit attendance
               </Button>
             </form>
           ) : null}

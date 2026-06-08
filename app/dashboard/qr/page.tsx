@@ -36,15 +36,30 @@ export default async function QrOverviewPage() {
   return (
     <>
       <ModuleHeader
-        title="Access & Attendance"
-        description="Reusable QR and check-in workflows for attendance, access points, visitors, forms, members, and assets."
+        title="Attendance & Check-ins"
+        description="Create QR check-in points for training sessions, events, entrances, and activities. Scan them to track attendance."
         items={qrNavItems}
-        action={{ href: "/dashboard/qr/items#create-qr", label: "Create QR" }}
+        action={{ href: "/dashboard/qr/items#create-qr", label: "Create Check-in Point" }}
       />
 
+      <div className="mb-6 grid gap-3 md:grid-cols-3">
+        <ButtonLink href="/dashboard/qr/items#create-qr">
+          <Plus className="h-4 w-4" />
+          Create Check-in Point
+        </ButtonLink>
+        <ButtonLink href="/dashboard/qr/scanner" variant="secondary">
+          <ScanLine className="h-4 w-4" />
+          Open Scanner
+        </ButtonLink>
+        <ButtonLink href="/dashboard/qr/check-ins" variant="secondary">
+          <CheckCircle2 className="h-4 w-4" />
+          View Attendance
+        </ButtonLink>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
-        <StatCard label="Access points" value={`${totalQrItems ?? 0}`} detail="Reusable scan targets" icon={QrCode} />
-        <StatCard label="Check-ins today" value={`${todayCheckins ?? 0}`} detail="Since local midnight" icon={CheckCircle2} />
+        <StatCard label="Active Check-in Points" value={`${totalQrItems ?? 0}`} detail="Events, entrances, and activities" icon={QrCode} />
+        <StatCard label="Today's Attendance" value={`${todayCheckins ?? 0}`} detail="Check-ins since local midnight" icon={CheckCircle2} />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
@@ -52,8 +67,8 @@ export default async function QrOverviewPage() {
           <CardHeader>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <CardTitle>Recent QR items</CardTitle>
-                <CardDescription>Newest generated QR targets.</CardDescription>
+                <CardTitle>Recent Check-in Points</CardTitle>
+                <CardDescription>Places or activities people can scan to check in.</CardDescription>
               </div>
               <QrCode className="h-5 w-5 text-muted-foreground" />
             </div>
@@ -70,7 +85,7 @@ export default async function QrOverviewPage() {
                 </div>
               ))
             ) : (
-              <EmptyCopy title="No QR items yet" description="Create your first QR item to start scanning." />
+              <EmptyCopy title="No check-in points yet" description="Create one for Football Training, Summer Camp, Main Entrance, or School Event." />
             )}
           </div>
         </Card>
@@ -79,8 +94,8 @@ export default async function QrOverviewPage() {
           <CardHeader>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <CardTitle>Recent check-ins</CardTitle>
-                <CardDescription>Latest scan and manual entries.</CardDescription>
+                <CardTitle>Recent Attendance</CardTitle>
+                <CardDescription>Latest scanned and manual check-ins.</CardDescription>
               </div>
               <Clock3 className="h-5 w-5 text-muted-foreground" />
             </div>
@@ -91,28 +106,18 @@ export default async function QrOverviewPage() {
                 const item = checkin.qr_item_id ? qrItemsById.get(checkin.qr_item_id) : null;
                 return (
                   <div key={checkin.id} className="py-3">
-                    <p className="text-sm font-medium">{item?.name ?? "Unknown QR item"}</p>
+                    <p className="text-sm font-medium">{item?.name ?? "Unknown check-in point"}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{new Date(checkin.created_at).toLocaleString()}</p>
                   </div>
                 );
               })
             ) : (
-              <EmptyCopy title="No check-ins yet" description="Open the scanner or register a manual check-in." />
+              <EmptyCopy title="No attendance yet" description="Open the scanner or register a manual check-in." />
             )}
           </div>
         </Card>
       </div>
 
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <ButtonLink href="/dashboard/qr/items#create-qr">
-          <Plus className="h-4 w-4" />
-          Create QR
-        </ButtonLink>
-        <ButtonLink href="/dashboard/qr/scanner" variant="secondary">
-          <ScanLine className="h-4 w-4" />
-          Open scanner
-        </ButtonLink>
-      </div>
     </>
   );
 }

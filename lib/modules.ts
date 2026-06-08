@@ -140,8 +140,8 @@ export const modules: ModuleDefinition[] = [
   },
   {
     id: "qr-checkins",
-    name: "Access & Attendance",
-    description: "Reusable QR access points for attendance, visitors, forms, members, and assets.",
+    name: "Attendance & Check-ins",
+    description: "Create QR check-in points for attendance at training sessions, events, entrances, and activities.",
     category: "Operations",
     status: "enabled",
     icon: "qr",

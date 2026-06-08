@@ -10,8 +10,8 @@ export default async function QrScannerNewPage() {
   return (
     <>
       <ModuleHeader
-        title="QR Scanner"
-        description={`Scan organization QR codes and submit check-ins for ${organizationContext.activeOrganization.name}.`}
+        title="Attendance Scanner"
+        description={`Scan a check-in point QR code to record attendance for ${organizationContext.activeOrganization.name}.`}
         items={qrNavItems}
       />
       <div className="mb-4 rounded-xl border bg-white p-4 shadow-sm dark:bg-zinc-950">
@@ -20,8 +20,8 @@ export default async function QrScannerNewPage() {
             <ScanLine className="h-5 w-5" />
           </div>
           <div>
-            <p className="font-medium">Hold the QR code inside the frame</p>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">Check-ins submit automatically after a valid organization QR code is detected.</p>
+            <p className="font-medium">Hold the check-in QR code inside the frame</p>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">Attendance is recorded automatically after a valid check-in point is detected.</p>
           </div>
         </div>
       </div>

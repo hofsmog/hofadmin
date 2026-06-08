@@ -18,7 +18,7 @@ export async function createQrItemAction(formData: FormData) {
   const { user, supabase, organizationContext } = await requireOrganizationContext();
 
   if (!canManageOrganization(organizationContext.activeMembership.role)) {
-    throw new Error("Only owners and admins can create QR items.");
+    throw new Error("Only owners and admins can create check-in points.");
   }
 
   const name = String(formData.get("name") || "").trim();
@@ -26,11 +26,11 @@ export async function createQrItemAction(formData: FormData) {
   const description = String(formData.get("description") || "").trim() || null;
 
   if (name.length < 2 || name.length > 120) {
-    throw new Error("QR item name must be between 2 and 120 characters.");
+    throw new Error("Check-in point name must be between 2 and 120 characters.");
   }
 
   if (!validQrTypes.has(type)) {
-    throw new Error("Invalid QR item type.");
+    throw new Error("Invalid check-in type.");
   }
 
   const qrValue = createQrValue(organizationContext.activeOrganization.id);
@@ -48,7 +48,7 @@ export async function createQrItemAction(formData: FormData) {
     .single();
 
   if (error || !qrItem) {
-    throw new Error(error?.message ?? "QR item could not be created.");
+    throw new Error(error?.message ?? "Check-in point could not be created.");
   }
 
   await recordActivityEvent({
@@ -56,7 +56,7 @@ export async function createQrItemAction(formData: FormData) {
     organizationId: organizationContext.activeOrganization.id,
     type: "qr_created",
     title: "QR created",
-    description: `${qrItem.name} was created as a ${qrItem.type} QR item.`,
+    description: `${qrItem.name} was created as a ${qrItem.type} check-in point.`,
     actorId: user.id,
     metadata: { qrItemId: qrItem.id, qrValue },
   });
@@ -73,7 +73,7 @@ export async function manualCheckinAction(formData: FormData) {
   const notes = String(formData.get("notes") || "").trim() || null;
 
   if (!qrItemId) {
-    throw new Error("Select a QR item.");
+    throw new Error("Select a check-in point.");
   }
 
   const { data: qrItem, error: qrItemError } = await supabase
@@ -84,7 +84,7 @@ export async function manualCheckinAction(formData: FormData) {
     .single();
 
   if (qrItemError || !qrItem) {
-    throw new Error("QR item could not be found for this organization.");
+    throw new Error("Check-in point could not be found for this organization.");
   }
 
   const { data: checkin, error } = await supabase
@@ -142,7 +142,7 @@ export async function scanCheckinAction(
   }
 
   if (!qrItem.is_active) {
-    return { status: "error", message: "This QR item is inactive." };
+    return { status: "error", message: "This check-in point is inactive." };
   }
 
   const { data: checkin, error } = await supabase

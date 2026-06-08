@@ -15,8 +15,8 @@ export default async function QrActivityPage() {
 
   return (
     <>
-      <ModuleHeader title="QR Activity" description="QR creation and check-in events for this organization." items={qrNavItems} />
-      <ActivityFeed events={activityEvents ?? []} title="QR activity" description="Organization-scoped QR and check-in events." />
+      <ModuleHeader title="Check-in Activity" description="Check-in point creation and attendance events for this organization." items={qrNavItems} />
+      <ActivityFeed events={activityEvents ?? []} title="Check-in activity" description="Check-in point and attendance events." />
     </>
   );
 }

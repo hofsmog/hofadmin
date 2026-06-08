@@ -115,7 +115,7 @@ export function ActivityFeed({
             </div>
             <p className="mt-3 font-medium">No activity yet</p>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Create a QR item, scan a check-in, invite a member, or update settings to populate this feed.
+              Create a check-in point, scan attendance, invite a member, or update settings to populate this feed.
             </p>
           </div>
         )}
