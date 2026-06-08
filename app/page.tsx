@@ -138,26 +138,26 @@ const featureCards = [
   },
 ];
 
-const socialProofCards = [
+const pilotCards = [
   {
-    title: "School case study",
-    detail: "Forms and equipment",
+    title: "Early adopter program",
+    detail: "Help shape the workflows.",
   },
   {
-    title: "Club testimonial",
-    detail: "Registrations and attendance",
+    title: "Pilot organizations",
+    detail: "Schools, clubs and associations.",
   },
   {
-    title: "Association rollout",
-    detail: "Members and agreements",
+    title: "Real product feedback",
+    detail: "Built around daily admin.",
   },
 ];
 
 const trustItems = ["Roles", "Secure login", "Protected data", "Activity history"];
 
 const pricing = [
-  { name: "Starter", price: "$49", detail: "For small organizations getting organized." },
-  { name: "Scale", price: "$149", detail: "For teams that need more workflows." },
+  { name: "Starter", price: "From $49/mo", detail: "Start with the essentials." },
+  { name: "Scale", price: "Flexible", detail: "For growing teams and workflows." },
   { name: "Enterprise", price: "Custom", detail: "For larger organizations." },
 ];
 
@@ -171,11 +171,8 @@ export default function Home() {
             <a href="#platform" className="transition hover:text-zinc-950 dark:hover:text-white">
               Platform
             </a>
-            <a href="#product-preview" className="transition hover:text-zinc-950 dark:hover:text-white">
-              Preview
-            </a>
-            <a href="#proof" className="transition hover:text-zinc-950 dark:hover:text-white">
-              Proof
+            <a href="#features" className="transition hover:text-zinc-950 dark:hover:text-white">
+              Features
             </a>
             <a href="#pricing" className="transition hover:text-zinc-950 dark:hover:text-white">
               Pricing
@@ -398,21 +395,20 @@ export default function Home() {
         <div className="rounded-2xl border bg-white p-6 shadow-sm dark:bg-zinc-950 sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Built for real organizations</p>
+              <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Built for schools, clubs and organizations</p>
               <h2 className="mt-2 text-3xl font-semibold tracking-tight">
-                Trusted by schools, clubs and organizations.
+                Early adopters are helping shape HofAdmin.
               </h2>
             </div>
             <p className="max-w-sm text-sm leading-6 text-muted-foreground">
-              Customer stories and logos can be added here as HofAdmin rolls out.
+              Looking for pilot organizations that want simpler admin.
             </p>
           </div>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {socialProofCards.map((card) => (
+            {pilotCards.map((card) => (
               <div key={card.title} className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
                 <p className="text-sm font-semibold">{card.title}</p>
                 <p className="mt-2 text-sm text-muted-foreground">{card.detail}</p>
-                <p className="mt-5 text-xs font-medium text-zinc-500 dark:text-zinc-400">Coming soon</p>
               </div>
             ))}
           </div>
@@ -440,7 +436,10 @@ export default function Home() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Pricing</p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-tight">Simple plans for growing organizations.</h2>
+              <h2 className="mt-2 text-3xl font-semibold tracking-tight">Starting at $49/month.</h2>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+                Simple pricing for organizations replacing spreadsheets, paper and scattered tools.
+              </p>
             </div>
             <ButtonLink href="/signup" variant="secondary">Start free</ButtonLink>
           </div>
