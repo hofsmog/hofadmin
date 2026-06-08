@@ -157,7 +157,7 @@ const trustItems = ["Roles", "Secure login", "Protected data", "Activity history
 
 const pricing = [
   { name: "Starter", price: "From $49/mo", detail: "Start with the essentials." },
-  { name: "Scale", price: "Flexible", detail: "For growing teams and workflows." },
+  { name: "Growth", price: "Custom pricing", detail: "For growing teams that need more workflows." },
   { name: "Enterprise", price: "Custom", detail: "For larger organizations." },
 ];
 
@@ -436,7 +436,9 @@ export default function Home() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Pricing</p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-tight">Starting at $49/month.</h2>
+              <h2 className="mt-2 text-3xl font-semibold tracking-tight">
+                Replace spreadsheets, forms and paper admin from $49/month.
+              </h2>
               <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
                 Simple pricing for organizations replacing spreadsheets, paper and scattered tools.
               </p>
