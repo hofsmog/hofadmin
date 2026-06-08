@@ -208,7 +208,7 @@ export default async function FormsSubmissionsPage({
                     <Clock3 className="h-4 w-4" />
                     <span>{submittedAt.toLocaleDateString()} {submittedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                   </Link>
-                  <div className="flex flex-wrap items-center gap-2 lg:justify-end" onClick={(event) => event.stopPropagation()}>
+                  <div className="flex flex-wrap items-center gap-2 lg:justify-end">
                     <ReadStatusBadge status={submission.read_status} />
                     <HandlingStatusBadge status={submission.handling_status} />
                     <form action={updateSubmissionStatusAction} className="flex flex-wrap gap-2">
