@@ -40,14 +40,13 @@ export default async function FormsSubmissionsPage({
   const query = String(params.q ?? "").trim();
   const readStatus = sanitizeReadStatus(params.readStatus);
   const handlingStatus = sanitizeHandlingStatus(params.handlingStatus);
-  const dateFrom = String(params.dateFrom ?? "");
-  const dateTo = String(params.dateTo ?? "");
+  const dateFrom = sanitizeDateParam(params.dateFrom);
+  const dateTo = sanitizeDateParam(params.dateTo);
   const includeArchived = params.includeArchived === "1";
   let formsQuery = supabase
     .from("forms")
-    .select("id, title")
+    .select("id, title, status")
     .eq("organization_id", organizationId)
-    .eq("form_type", "form")
     .order("title", { ascending: true });
 
   if (!includeArchived) {
@@ -69,6 +68,18 @@ export default async function FormsSubmissionsPage({
         .eq("organization_id", organizationId)
         .in("submission_id", submissionIds)
     : { data: [] };
+  const pageError = formsError || submissionsError || valuesError;
+
+  if (pageError) {
+    console.error("[forms/submissions] Failed to load submissions page", {
+      organizationId,
+      formsError,
+      submissionsError,
+      valuesError,
+      filters: { formId, readStatus, handlingStatus, dateFrom, dateTo, includeArchived },
+    });
+  }
+
   const formsById = new Map((forms ?? []).map((form) => [form.id, form]));
   const valuesBySubmissionId = groupSubmissionValues(submissionValues ?? []);
   const filteredSubmissions = submissions.filter((submission) => {
@@ -91,15 +102,13 @@ export default async function FormsSubmissionsPage({
   return (
     <>
       <ModuleHeader title="All responses" description="Advanced view for responses across every form." items={formsNavItems} />
-      {formsError || submissionsError || valuesError ? (
+      {pageError ? (
         <Card className="mb-4 border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
           <CardContent className="flex gap-3 p-4">
             <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
             <div>
               <p className="text-sm font-semibold">Responses could not fully load.</p>
-              <p className="mt-1 text-sm opacity-80">
-                {formsError?.message ?? submissionsError?.message ?? valuesError?.message ?? "Please refresh the page or check the database policies for this organization."}
-              </p>
+              <p className="mt-1 text-sm opacity-80">Please refresh the page. If this continues, ask an administrator to check the Forms database setup.</p>
             </div>
           </CardContent>
         </Card>
@@ -223,8 +232,12 @@ export default async function FormsSubmissionsPage({
           ) : (
             <div className="px-5 py-10 text-center">
               <Inbox className="mx-auto h-9 w-9 text-muted-foreground" />
-              <p className="mt-3 text-sm font-medium">No responses found</p>
-              <p className="mt-1 text-sm text-muted-foreground">Try a different filter, or wait for public form responses to arrive.</p>
+              <p className="mt-3 text-sm font-medium">{query || readStatus !== "all" || handlingStatus !== "all" || formId !== "all" || dateFrom || dateTo ? "No responses found" : "No form responses yet"}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {query || readStatus !== "all" || handlingStatus !== "all" || formId !== "all" || dateFrom || dateTo
+                  ? "Try a different filter, or wait for public form responses to arrive."
+                  : "Responses will appear here when someone submits a published form."}
+              </p>
             </div>
           )}
         </div>
@@ -241,6 +254,11 @@ function sanitizeHandlingStatus(status: string | undefined): "all" | FormSubmiss
   return status === "unhandled" || status === "partially_handled" || status === "handled" || status === "archived"
     ? status
     : "all";
+}
+
+function sanitizeDateParam(value: string | undefined) {
+  const date = String(value ?? "").trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : "";
 }
 
 function buildSubmissionsQuery(
@@ -277,11 +295,11 @@ function buildSubmissionsQuery(
   }
 
   if (filters.dateFrom) {
-    query = query.gte("created_at", new Date(filters.dateFrom).toISOString());
+    query = query.gte("created_at", `${filters.dateFrom}T00:00:00.000Z`);
   }
 
   if (filters.dateTo) {
-    query = query.lte("created_at", new Date(`${filters.dateTo}T23:59:59.999Z`).toISOString());
+    query = query.lte("created_at", `${filters.dateTo}T23:59:59.999Z`);
   }
 
   return query;

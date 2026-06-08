@@ -36,6 +36,11 @@ export async function updateSubmissionHandlingAction(formData: FormData) {
     .single();
 
   if (existingError || !existing) {
+    console.error("[forms/submissions] Submission not found for handling update", {
+      submissionId,
+      organizationId,
+      existingError,
+    });
     redirect("/dashboard/forms/submissions?error=not-found");
   }
 
@@ -54,6 +59,11 @@ export async function updateSubmissionHandlingAction(formData: FormData) {
     .eq("organization_id", organizationId);
 
   if (updateError) {
+    console.error("[forms/submissions] Failed to update submission handling", {
+      submissionId,
+      organizationId,
+      updateError,
+    });
     redirect(`/dashboard/forms/submissions/${submissionId}?error=update`);
   }
 
@@ -88,14 +98,19 @@ export async function updateSubmissionStatusAction(formData: FormData) {
 
   const { supabase, organizationContext, user } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from("form_submissions")
     .select("id, form_id, read_status, handling_status")
     .eq("id", submissionId)
     .eq("organization_id", organizationId)
     .single();
 
-  if (!existing) {
+  if (existingError || !existing) {
+    console.error("[forms/submissions] Submission not found for status update", {
+      submissionId,
+      organizationId,
+      existingError,
+    });
     redirect("/dashboard/forms/submissions?error=not-found");
   }
 
@@ -112,6 +127,11 @@ export async function updateSubmissionStatusAction(formData: FormData) {
     .eq("organization_id", organizationId);
 
   if (error) {
+    console.error("[forms/submissions] Failed to update submission status", {
+      submissionId,
+      organizationId,
+      error,
+    });
     redirect("/dashboard/forms/submissions?error=update");
   }
 
@@ -144,14 +164,19 @@ export async function addSubmissionNoteAction(formData: FormData) {
 
   const { supabase, organizationContext, user } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
-  const { data: submission } = await supabase
+  const { data: submission, error: submissionError } = await supabase
     .from("form_submissions")
     .select("id")
     .eq("id", submissionId)
     .eq("organization_id", organizationId)
     .single();
 
-  if (!submission) {
+  if (submissionError || !submission) {
+    console.error("[forms/submissions] Submission not found for note", {
+      submissionId,
+      organizationId,
+      submissionError,
+    });
     redirect("/dashboard/forms/submissions?error=not-found");
   }
 
@@ -163,6 +188,11 @@ export async function addSubmissionNoteAction(formData: FormData) {
   });
 
   if (error) {
+    console.error("[forms/submissions] Failed to add submission note", {
+      submissionId,
+      organizationId,
+      error,
+    });
     redirect(`/dashboard/forms/submissions/${submissionId}?error=note`);
   }
 
