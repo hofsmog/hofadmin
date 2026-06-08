@@ -1,10 +1,12 @@
 import {
   ArrowRight,
   BarChart3,
+  Building2,
   CheckCircle2,
   ClipboardList,
   FileText,
   FolderKanban,
+  GraduationCap,
   LockKeyhole,
   PackageCheck,
   QrCode,
@@ -82,26 +84,42 @@ const productPreviews = [
   },
 ];
 
-const audienceCards = [
+const organizationUseCases = [
   {
-    title: "Schools",
-    description: "Students, forms and attendance.",
-    icon: Users,
+    title: "School",
+    icon: GraduationCap,
+    useCases: [
+      "Student forms",
+      "Attendance tracking",
+      "QR check-ins",
+      "Equipment loans",
+      "Digital agreements",
+      "Student records",
+    ],
   },
   {
-    title: "Sports clubs",
-    description: "Members, registrations and loans.",
+    title: "Club / Association",
     icon: ShieldCheck,
+    useCases: [
+      "Member management",
+      "Registrations",
+      "Attendance tracking",
+      "Equipment loans",
+      "Digital signatures",
+      "Activities",
+    ],
   },
   {
-    title: "Associations",
-    description: "Memberships, forms and activities.",
-    icon: ClipboardList,
-  },
-  {
-    title: "Small organizations",
-    description: "Everything in one place.",
-    icon: FolderKanban,
+    title: "Business",
+    icon: Building2,
+    useCases: [
+      "Employee records",
+      "Visitor check-ins",
+      "Forms & approvals",
+      "Asset tracking",
+      "Equipment loans",
+      "Digital agreements",
+    ],
   },
 ];
 
@@ -271,6 +289,44 @@ export default function Home() {
         </div>
       </section>
 
+      <section id="organization-fit" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="max-w-2xl">
+          <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Find your fit</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+            Which best describes your organization?
+          </h2>
+        </div>
+        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+          {organizationUseCases.map((organization) => {
+            const Icon = organization.icon;
+            return (
+              <a
+                key={organization.title}
+                href="#product-preview"
+                className="group rounded-2xl border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06] dark:bg-zinc-950"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="grid h-12 w-12 place-items-center rounded-xl bg-zinc-100 dark:bg-zinc-900">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-zinc-400 transition group-hover:translate-x-0.5 group-hover:text-zinc-700 dark:group-hover:text-zinc-200" />
+                </div>
+                <h3 className="mt-5 text-xl font-semibold tracking-tight">{organization.title}</h3>
+                <p className="mt-4 text-sm font-medium text-zinc-500 dark:text-zinc-400">Common use cases</p>
+                <div className="mt-3 grid gap-2">
+                  {organization.useCases.map((useCase) => (
+                    <div key={useCase} className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                      <span>{useCase}</span>
+                    </div>
+                  ))}
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      </section>
+
       <section id="what-is" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-6 rounded-2xl border bg-white p-6 shadow-sm dark:bg-zinc-950 sm:p-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
@@ -336,33 +392,6 @@ export default function Home() {
               </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      <section id="perfect-for" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-2xl">
-            <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Perfect for</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-              Schools, clubs and small teams.
-            </h2>
-          </div>
-        </div>
-        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {audienceCards.map((audience) => {
-            const Icon = audience.icon;
-            return (
-              <Card key={audience.title} className="transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06]">
-                <CardHeader>
-                  <div className="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-zinc-100 dark:bg-zinc-900">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <CardTitle>{audience.title}</CardTitle>
-                  <CardDescription>{audience.description}</CardDescription>
-                </CardHeader>
-              </Card>
-            );
-          })}
         </div>
       </section>
 
