@@ -17,8 +17,10 @@ export const inventoryNavItems = [
 ];
 
 export const formsNavItems = [
-  { title: "Forms", href: "/dashboard/forms" },
-  { title: "All responses", href: "/dashboard/forms/submissions" },
+  { title: "Overview", href: "/dashboard/forms" },
+  { title: "Create form", href: "/dashboard/forms/new?type=form" },
+  { title: "Create survey", href: "/dashboard/forms/new?type=survey" },
+  { title: "Responses", href: "/dashboard/forms/submissions" },
 ];
 
 export const membersNavItems = [

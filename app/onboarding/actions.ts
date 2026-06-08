@@ -21,7 +21,6 @@ const starterModules = new Set([
   "qr-checkins",
   "members",
   "forms",
-  "surveys",
   "inventory",
   "documents",
   "bookings",

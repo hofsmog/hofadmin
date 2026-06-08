@@ -16,20 +16,11 @@ export const modules: ModuleDefinition[] = [
   {
     id: "forms",
     name: "Forms",
-    description: "Create forms, collect responses, and manage an inbox-style workflow.",
+    description: "Create forms and surveys, collect responses, and review results.",
     category: "Workspace",
     status: "enabled",
     icon: "forms",
     href: "/dashboard/forms",
-  },
-  {
-    id: "surveys",
-    name: "Surveys",
-    description: "Create surveys and review response summaries inside Forms.",
-    category: "Workspace",
-    status: "enabled",
-    icon: "surveys",
-    href: "/dashboard/forms/new?type=survey",
   },
   {
     id: "inventory",
@@ -395,10 +386,11 @@ export function getEnabledModuleIds(
     ? organization.enabledModules
     : getDefaultEnabledModuleIdsForOrganization(organization);
   const moduleLimit = getEffectiveModuleLimit(organization);
+  const selectableConfiguredModuleIds = configuredModuleIds.filter((moduleId) => userManagedModuleIds.includes(moduleId));
 
   return moduleLimit === null
-    ? configuredModuleIds
-    : configuredModuleIds.filter((moduleId) => userManagedModuleIds.includes(moduleId)).slice(0, moduleLimit);
+    ? selectableConfiguredModuleIds
+    : selectableConfiguredModuleIds.slice(0, moduleLimit);
 }
 
 export function getSelectableEnabledModuleIds(

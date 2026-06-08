@@ -24,8 +24,7 @@ const organizationTypes: Array<{ label: string; value: OrganizationType }> = [
 const starterModules = [
   { label: "Attendance & Check-ins", value: "qr-checkins" },
   { label: "Members", value: "members" },
-  { label: "Forms", value: "forms" },
-  { label: "Surveys", value: "surveys" },
+  { label: "Forms & surveys", value: "forms" },
   { label: "Inventory", value: "inventory" },
   { label: "Documents", value: "documents" },
   { label: "Bookings", value: "bookings" },

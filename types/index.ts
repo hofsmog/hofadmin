@@ -60,7 +60,6 @@ export type ModuleStatus = "enabled" | "disabled";
 export type ModuleIconKey =
   | "qr"
   | "forms"
-  | "surveys"
   | "bookings"
   | "inventory"
   | "loans"

@@ -7,7 +7,6 @@ import {
   CalendarCheck,
   CalendarRange,
   Car,
-  ChartBar,
   CheckSquare,
   ClipboardList,
   Coffee,
@@ -48,7 +47,6 @@ import type { ModuleDefinition, ModuleIconKey } from "@/types";
 const icons: Record<ModuleIconKey, ComponentType<{ className?: string }>> = {
   qr: QrCode,
   forms: ClipboardList,
-  surveys: ChartBar,
   bookings: CalendarCheck,
   inventory: Package,
   loans: ScanLine,
