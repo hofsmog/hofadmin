@@ -393,9 +393,7 @@ export function getEnabledModuleIds(
 ) {
   const configuredModuleIds = organization.enabledModules.length
     ? organization.enabledModules
-    : organization.starterModules.length
-      ? organization.starterModules
-      : getDefaultEnabledModuleIdsForOrganization(organization);
+    : getDefaultEnabledModuleIdsForOrganization(organization);
   const moduleLimit = getEffectiveModuleLimit(organization);
 
   return moduleLimit === null

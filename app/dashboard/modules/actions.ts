@@ -36,6 +36,7 @@ export async function toggleModuleAction(formData: FormData) {
   const { user, supabase, organizationContext } = await requireOrganizationContext();
   const moduleId = String(formData.get("moduleId") || "");
   const shouldEnable = String(formData.get("enabled") || "") === "true";
+  const returnTo = sanitizeModuleReturnTo(String(formData.get("returnTo") || ""));
   const targetModule = modules.find((item) => item.id === moduleId);
 
   if (!targetModule || systemModuleIds.includes(moduleId as (typeof systemModuleIds)[number])) {
@@ -79,5 +80,9 @@ export async function toggleModuleAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/modules");
-  redirect("/dashboard/modules?updated=1");
+  redirect(returnTo || "/dashboard/modules?updated=1");
+}
+
+function sanitizeModuleReturnTo(value: string) {
+  return value.startsWith("/dashboard/") ? value : "";
 }
