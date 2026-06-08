@@ -106,13 +106,14 @@
   },
   "pricing": {
     "eyebrow": "Pricing",
-    "title": "Replace spreadsheets, forms and paper admin from $49/month.",
-    "description": "Simple pricing for organizations replacing spreadsheets, paper and scattered tools.",
+    "title": "Plan-based pricing for simpler admin.",
+    "description": "Start free, then upgrade when your organization needs more members or modules.",
     "cta": "Start free",
     "plans": [
-      { "name": "Starter", "price": "From $49/mo", "detail": "Start with the essentials." },
-      { "name": "Growth", "price": "Custom pricing", "detail": "For growing teams that need more workflows." },
-      { "name": "Enterprise", "price": "Custom", "detail": "For larger organizations." }
+      { "name": "Free", "price": "$0/mo", "detail": "1 organization, 50 members and 2 modules." },
+      { "name": "Starter", "price": "$49/mo", "detail": "500 members, 5 modules and email notifications." },
+      { "name": "Growth", "price": "$99/mo", "detail": "2,500 members, all modules and custom branding." },
+      { "name": "Enterprise", "price": "Contact us", "detail": "Unlimited members, multiple organizations and custom limits." }
     ]
   }
 }

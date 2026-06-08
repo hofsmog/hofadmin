@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { recordActivityEvent } from "@/lib/activity";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { sendNotificationEmail } from "@/lib/notifications/send-notification-email";
+import { getEffectiveMemberLimit, getMemberLimitMessage } from "@/lib/plans";
 import type { MemberStatus, MemberType } from "@/types/database";
 
 const memberTypes = new Set<MemberType>([
@@ -56,6 +57,26 @@ export async function createMemberAction(
 
   if (email && !email.includes("@")) {
     return { status: "error", message: "Enter a valid email address." };
+  }
+
+  const memberLimit = getEffectiveMemberLimit(organizationContext.activeOrganization);
+
+  if (memberLimit !== null) {
+    const { count, error: countError } = await supabase
+      .from("members")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", organizationContext.activeOrganization.id);
+
+    if (countError) {
+      return { status: "error", message: countError.message };
+    }
+
+    if ((count ?? 0) >= memberLimit) {
+      return {
+        status: "error",
+        message: getMemberLimitMessage(organizationContext.activeOrganization) ?? "You have reached the member limit for your current plan.",
+      };
+    }
   }
 
   const { data: member, error } = await supabase

@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { recordActivityEvent } from "@/lib/activity";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { canManageOrganization } from "@/lib/organizations";
-import { defaultEnabledModuleIds, modules, systemModuleIds } from "@/lib/modules";
+import { getEffectiveModuleLimit } from "@/lib/plans";
+import { getSelectableEnabledModuleIds, modules, systemModuleIds } from "@/lib/modules";
 
 export async function openModuleAction(formData: FormData) {
   const { user, supabase, organizationContext } = await requireOrganizationContext();
@@ -45,16 +46,21 @@ export async function toggleModuleAction(formData: FormData) {
     redirect("/dashboard/modules?error=permission");
   }
 
-  const currentEnabled = organizationContext.activeOrganization.starterModules.length
-    ? organizationContext.activeOrganization.starterModules
-    : defaultEnabledModuleIds;
+  const currentEnabled = getSelectableEnabledModuleIds(organizationContext.activeOrganization);
+  const moduleLimit = getEffectiveModuleLimit(organizationContext.activeOrganization);
+  const isAlreadyEnabled = currentEnabled.includes(moduleId);
+
+  if (shouldEnable && !isAlreadyEnabled && moduleLimit !== null && currentEnabled.length >= moduleLimit) {
+    redirect("/dashboard/modules?error=limit");
+  }
+
   const nextEnabled = shouldEnable
     ? Array.from(new Set([...currentEnabled, moduleId]))
     : currentEnabled.filter((id) => id !== moduleId);
 
   const { error } = await supabase
     .from("organizations")
-    .update({ starter_modules: nextEnabled, updated_at: new Date().toISOString() })
+    .update({ enabled_modules: nextEnabled, starter_modules: nextEnabled, updated_at: new Date().toISOString() })
     .eq("id", organizationContext.activeOrganization.id);
 
   if (error) {

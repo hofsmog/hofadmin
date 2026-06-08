@@ -1,14 +1,17 @@
-import { MailPlus, Plus, UserRoundCheck, UsersRound } from "lucide-react";
+import { CreditCard, MailPlus, Plus, UserRoundCheck, UsersRound } from "lucide-react";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { membersNavItems } from "@/lib/module-nav";
+import { formatUsage, getEffectiveMemberLimit, getOrganizationPlan } from "@/lib/plans";
 
 export default async function MembersOverviewPage() {
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
+  const plan = getOrganizationPlan(organizationContext.activeOrganization);
+  const memberLimit = getEffectiveMemberLimit(organizationContext.activeOrganization);
   const [{ data: members }, { count: totalMembers }, { count: activeMembers }] = await Promise.all([
     supabase.from("members").select("id, name, type, status, created_at").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(6),
     supabase.from("members").select("*", { count: "exact", head: true }).eq("organization_id", organizationId),
@@ -18,9 +21,10 @@ export default async function MembersOverviewPage() {
   return (
     <>
       <ModuleHeader title="Members" description="Manage people, profiles, member types, and future member QR links." items={membersNavItems} action={{ href: "/dashboard/members/create", label: "Add member" }} />
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <StatCard label="Total members" value={`${totalMembers ?? 0}`} detail="Member records" icon={UsersRound} />
         <StatCard label="Active members" value={`${activeMembers ?? 0}`} detail="Ready for workflows" icon={UserRoundCheck} />
+        <StatCard label="Member limit" value={formatUsage(totalMembers ?? 0, memberLimit)} detail={`${plan.name} plan`} icon={CreditCard} />
       </div>
       <Card className="mt-6">
         <CardHeader>

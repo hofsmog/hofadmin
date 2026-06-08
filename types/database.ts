@@ -1,5 +1,7 @@
 export type OrganizationRole = "owner" | "admin" | "member";
 export type OrganizationSidebarStyle = "light" | "dark" | "system";
+export type OrganizationPlan = "free" | "starter" | "growth" | "enterprise";
+export type BillingStatus = "active" | "trialing" | "past_due" | "canceled" | "none";
 export type QrItemType = "general" | "event" | "member" | "asset" | "location";
 export type OrganizationType = "school" | "club" | "business" | "restaurant" | "cafe" | "event" | "other";
 export type MemberStatus = "active" | "inactive";
@@ -107,6 +109,14 @@ export type Database = {
           default_loan_agreement_text: string;
           organization_type: OrganizationType | null;
           starter_modules: string[];
+          plan: OrganizationPlan;
+          member_limit: number | null;
+          module_limit: number | null;
+          enabled_modules: string[];
+          billing_status: BillingStatus;
+          trial_ends_at: string | null;
+          custom_branding_enabled: boolean;
+          email_notifications_enabled: boolean;
           onboarding_checklist: Json;
           onboarding_completed_at: string | null;
           created_by: string;
@@ -131,6 +141,14 @@ export type Database = {
           default_loan_agreement_text?: string;
           organization_type?: OrganizationType | null;
           starter_modules?: string[];
+          plan?: OrganizationPlan;
+          member_limit?: number | null;
+          module_limit?: number | null;
+          enabled_modules?: string[];
+          billing_status?: BillingStatus;
+          trial_ends_at?: string | null;
+          custom_branding_enabled?: boolean;
+          email_notifications_enabled?: boolean;
           onboarding_checklist?: Json;
           onboarding_completed_at?: string | null;
           created_by: string;
@@ -155,6 +173,14 @@ export type Database = {
           default_loan_agreement_text?: string;
           organization_type?: OrganizationType | null;
           starter_modules?: string[];
+          plan?: OrganizationPlan;
+          member_limit?: number | null;
+          module_limit?: number | null;
+          enabled_modules?: string[];
+          billing_status?: BillingStatus;
+          trial_ends_at?: string | null;
+          custom_branding_enabled?: boolean;
+          email_notifications_enabled?: boolean;
           onboarding_checklist?: Json;
           onboarding_completed_at?: string | null;
           created_by?: string;
@@ -1347,6 +1373,8 @@ export type Database = {
     Enums: {
       organization_role: OrganizationRole;
       organization_sidebar_style: OrganizationSidebarStyle;
+      organization_plan: OrganizationPlan;
+      billing_status: BillingStatus;
       invitation_status: "pending" | "accepted" | "revoked";
       qr_item_type: QrItemType;
       activity_event_type: ActivityEventType;

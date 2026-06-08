@@ -79,6 +79,8 @@ export const dashboardNavItems: Array<DashboardNavItem & { moduleId?: string; sy
   { title: "Activity Feed", href: "/dashboard/audit-logs", icon: Activity, moduleId: "activity-feed", system: true },
 ];
 
-export function getDashboardNavItems(organization: Pick<Organization, "starterModules">) {
+export function getDashboardNavItems(
+  organization: Pick<Organization, "plan" | "moduleLimit" | "enabledModules" | "starterModules">,
+) {
   return dashboardNavItems.filter((item) => item.system || !item.moduleId || isModuleEnabled(item.moduleId, organization));
 }

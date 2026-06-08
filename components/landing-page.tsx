@@ -364,7 +364,7 @@ export function LandingPage({ initialLanguage }: { initialLanguage: Language }) 
             </div>
             <ButtonLink href="/signup" variant="secondary">{t.pricing.cta}</ButtonLink>
           </div>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {t.pricing.plans.map((plan) => (
               <div key={plan.name} className="rounded-xl border bg-zinc-50 p-5 dark:bg-zinc-900">
                 <div className="flex items-center justify-between">

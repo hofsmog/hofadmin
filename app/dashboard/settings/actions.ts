@@ -24,9 +24,10 @@ export async function updateNotificationPreferencesAction(formData: FormData) {
     redirect("/dashboard/settings?notifications=invalid-email");
   }
 
+  const emailNotificationsEnabled = formData.get("enableEmailNotifications") === "on";
   const { error } = await supabase.from("organization_notification_preferences").upsert({
     organization_id: activeOrganization.id,
-    enable_email_notifications: formData.get("enableEmailNotifications") === "on",
+    enable_email_notifications: emailNotificationsEnabled,
     notify_new_form_response: formData.get("notifyNewFormResponse") === "on",
     notify_loan_due_tomorrow: formData.get("notifyLoanDueTomorrow") === "on",
     notify_loan_overdue: formData.get("notifyLoanOverdue") === "on",
@@ -41,6 +42,18 @@ export async function updateNotificationPreferencesAction(formData: FormData) {
   });
 
   if (error) {
+    redirect("/dashboard/settings?notifications=error");
+  }
+
+  const { error: organizationError } = await supabase
+    .from("organizations")
+    .update({
+      email_notifications_enabled: emailNotificationsEnabled,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", activeOrganization.id);
+
+  if (organizationError) {
     redirect("/dashboard/settings?notifications=error");
   }
 

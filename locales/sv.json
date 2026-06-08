@@ -106,13 +106,14 @@
   },
   "pricing": {
     "eyebrow": "Priser",
-    "title": "Ersätt kalkylark, formulär och pappersadmin från $49/månad.",
-    "description": "Enkla priser för organisationer som vill ersätta kalkylark, papper och utspridda verktyg.",
+    "title": "Planbaserade priser för enklare administration.",
+    "description": "Börja gratis och uppgradera när organisationen behöver fler medlemmar eller moduler.",
     "cta": "Kom igång gratis",
     "plans": [
-      { "name": "Starter", "price": "Från $49/mån", "detail": "Börja med det viktigaste." },
-      { "name": "Growth", "price": "Anpassat pris", "detail": "För växande team som behöver fler arbetsflöden." },
-      { "name": "Enterprise", "price": "Anpassat", "detail": "För större organisationer." }
+      { "name": "Free", "price": "$0/mån", "detail": "1 organisation, 50 medlemmar och 2 moduler." },
+      { "name": "Starter", "price": "$49/mån", "detail": "500 medlemmar, 5 moduler och e-postnotiser." },
+      { "name": "Growth", "price": "$99/mån", "detail": "2 500 medlemmar, alla moduler och egen branding." },
+      { "name": "Enterprise", "price": "Kontakta oss", "detail": "Obegränsat antal medlemmar, flera organisationer och anpassade gränser." }
     ]
   }
 }

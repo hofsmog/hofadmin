@@ -1,14 +1,15 @@
 import type { ComponentType } from "react";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AlertCircle, AlertTriangle, BarChart3, CalendarDays, CalendarRange, Car, CheckCircle2, CheckSquare, ClipboardList, FileCheck2, FileSignature, GraduationCap, Handshake, Inbox, KeyRound, Lightbulb, MapPin, Megaphone, Network, Package, PackageCheck, PiggyBank, Plus, ScanLine, ShieldAlert, UserCheck, UserMinus, UserPlus, UsersRound, Vote } from "lucide-react";
+import { AlertCircle, AlertTriangle, BarChart3, CalendarDays, CalendarRange, Car, CheckCircle2, CheckSquare, ClipboardList, CreditCard, FileCheck2, FileSignature, GraduationCap, Handshake, Inbox, KeyRound, Lightbulb, MapPin, Megaphone, Network, Package, PackageCheck, PiggyBank, Plus, ScanLine, ShieldAlert, UserCheck, UserMinus, UserPlus, UsersRound, Vote } from "lucide-react";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getModulesForOrganization } from "@/lib/modules";
+import { getModulesForOrganization, getSelectableEnabledModuleIds } from "@/lib/modules";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { getResponseTitle, groupSubmissionValues } from "@/lib/forms/submissions";
+import { formatUsage, getEffectiveMemberLimit, getEffectiveModuleLimit, getOrganizationPlan } from "@/lib/plans";
 
 export default async function DashboardPage() {
   const { supabase, organizationContext } = await requireOrganizationContext();
@@ -230,6 +231,10 @@ export default async function DashboardPage() {
   const hoursThisWeek = (dashboardTimeEntries ?? []).reduce((sum: number, row: any) => sum + Number(row.hours ?? 0), 0);
   const highRiskItems = (dashboardRisks ?? []).filter((risk: any) => risk.impact_level === "high" || risk.probability_level === "high").length;
   const organizationModules = getModulesForOrganization(organizationContext.activeOrganization);
+  const plan = getOrganizationPlan(organizationContext.activeOrganization);
+  const memberLimit = getEffectiveMemberLimit(organizationContext.activeOrganization);
+  const moduleLimit = getEffectiveModuleLimit(organizationContext.activeOrganization);
+  const enabledPlanModules = getSelectableEnabledModuleIds(organizationContext.activeOrganization).length;
   const enabledModuleIds = new Set(organizationModules.filter((module) => module.status === "enabled").map((module) => module.id));
   const hasModule = (moduleId: string) => enabledModuleIds.has(moduleId);
   const checklistItems = [
@@ -510,6 +515,23 @@ export default async function DashboardPage() {
         <div className="space-y-5">
           <Card>
             <CardHeader className="pb-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <CardTitle>Current plan</CardTitle>
+                  <CardDescription>Simple limits for this organization.</CardDescription>
+                </div>
+                <CreditCard className="h-5 w-5 text-muted-foreground" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <PlanUsageRow label="Current plan" value={plan.name} />
+              <PlanUsageRow label="Modules" value={formatUsage(enabledPlanModules, moduleLimit)} />
+              <PlanUsageRow label="Members" value={formatUsage(totalMembers ?? 0, memberLimit)} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
               <CardTitle>Quick actions</CardTitle>
               <CardDescription>Common things to do next.</CardDescription>
             </CardHeader>
@@ -554,6 +576,15 @@ export default async function DashboardPage() {
         </div>
       </div>
     </>
+  );
+}
+
+function PlanUsageRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl bg-zinc-50 px-3 py-2 text-sm dark:bg-zinc-900/60">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium">{value}</span>
+    </div>
   );
 }
 

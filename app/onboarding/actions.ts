@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { recordActivityEvent } from "@/lib/activity";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
+import { getEffectiveModuleLimit } from "@/lib/plans";
 import type { OrganizationType } from "@/types/database";
 
 const organizationTypes = new Set<OrganizationType>([
@@ -55,6 +56,12 @@ export async function completeOnboardingAction(
     return { status: "error", message: "Choose at least one starter module." };
   }
 
+  const moduleLimit = getEffectiveModuleLimit(organizationContext.activeOrganization);
+
+  if (moduleLimit !== null && selectedModules.length > moduleLimit) {
+    return { status: "error", message: `Your current plan includes ${moduleLimit} modules. Choose fewer modules to finish setup.` };
+  }
+
   const checklist = {
     createFirstQrItem: false,
     addFirstMember: false,
@@ -69,6 +76,7 @@ export async function completeOnboardingAction(
       display_name: organizationName,
       organization_type: organizationType,
       starter_modules: selectedModules,
+      enabled_modules: selectedModules,
       onboarding_checklist: checklist,
       onboarding_completed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

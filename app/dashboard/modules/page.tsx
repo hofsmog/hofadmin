@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Toast } from "@/components/ui/toast";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { canManageOrganization } from "@/lib/organizations";
-import { getModulesForOrganization } from "@/lib/modules";
+import { getModulesForOrganization, getSelectableEnabledModuleIds } from "@/lib/modules";
+import { formatLimit, getEffectiveModuleLimit, getModuleLimitMessage, getOrganizationPlan } from "@/lib/plans";
 
 const categories = ["Overview", "Workspace", "Operations", "Engagement", "Facilities", "Finance", "Administration"] as const;
 
@@ -13,6 +14,10 @@ export default async function ModulesPage({ searchParams }: { searchParams?: Pro
   const { organizationContext } = await requireOrganizationContext();
   const organizationModules = getModulesForOrganization(organizationContext.activeOrganization);
   const canManage = canManageOrganization(organizationContext.activeMembership.role);
+  const plan = getOrganizationPlan(organizationContext.activeOrganization);
+  const moduleLimit = getEffectiveModuleLimit(organizationContext.activeOrganization);
+  const enabledModuleCount = getSelectableEnabledModuleIds(organizationContext.activeOrganization).length;
+  const moduleLimitMessage = getModuleLimitMessage(organizationContext.activeOrganization);
   const visibleModules = canManage ? organizationModules : organizationModules.filter((module) => module.status === "enabled");
   const activeModules = visibleModules.filter((module) => module.status === "enabled").length;
   const disabledModules = canManage ? organizationModules.length - organizationModules.filter((module) => module.status === "enabled").length : 0;
@@ -24,7 +29,18 @@ export default async function ModulesPage({ searchParams }: { searchParams?: Pro
         description="Choose focused HofAdmin modules for the workflows your organization actually runs."
       />
       <Toast show={params.updated === "1"} title="Module settings updated" message="Organization module visibility was saved." />
-      <Toast show={Boolean(params.error)} tone="error" title="Module settings not saved" message={params.error === "permission" ? "Only owners and admins can manage modules." : "Check the module settings and try again."} />
+      <Toast
+        show={Boolean(params.error)}
+        tone="error"
+        title="Module settings not saved"
+        message={
+          params.error === "permission"
+            ? "Only owners and admins can manage modules."
+            : params.error === "limit"
+              ? moduleLimitMessage ?? "Your current plan includes fewer modules. Upgrade to enable more."
+              : "Check the module settings and try again."
+        }
+      />
       <section className="mb-6 overflow-hidden rounded-2xl border bg-white shadow-sm dark:bg-zinc-950">
         <div className="border-b bg-zinc-50 px-5 py-3 dark:bg-zinc-900/60">
           <div className="flex flex-wrap gap-2">
@@ -37,11 +53,13 @@ export default async function ModulesPage({ searchParams }: { searchParams?: Pro
           <div className="p-5">
             <div className="flex flex-wrap gap-2">
               <Badge>{activeModules} active</Badge>
+              <Badge>{`Using ${enabledModuleCount} of ${formatLimit(moduleLimit)} modules`}</Badge>
+              <Badge>{`${plan.name} plan`}</Badge>
               {canManage ? <Badge>{disabledModules} disabled</Badge> : null}
             </div>
             <h2 className="mt-3 text-xl font-semibold tracking-tight">A complete organization operations suite</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              {canManage ? "Enable the modules your organization uses. Disabled modules are hidden from the main navigation but remain available here for owners and admins." : "Open the modules enabled for your organization."}
+              {canManage ? `You are using ${enabledModuleCount} of ${formatLimit(moduleLimit)} modules on the ${plan.name} plan. Disabled modules stay hidden from the main navigation.` : "Open the modules enabled for your organization."}
             </p>
           </div>
           <div className="mx-5 mb-5 rounded-xl border bg-zinc-50 p-4 text-sm leading-6 text-muted-foreground dark:bg-zinc-900/60 md:mb-0 md:mr-5 md:max-w-sm">

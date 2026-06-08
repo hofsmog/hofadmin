@@ -24,7 +24,13 @@ const memberTypes = [
   ["other", "Other"],
 ] as const;
 
-export function MemberCreateForm() {
+export function MemberCreateForm({
+  disabled = false,
+  limitMessage,
+}: {
+  disabled?: boolean;
+  limitMessage?: string | null;
+}) {
   const [state, action] = useActionState(createMemberAction, initialState);
 
   return (
@@ -43,6 +49,11 @@ export function MemberCreateForm() {
           </div>
           <Plus className="h-5 w-5 text-muted-foreground" />
         </div>
+        {disabled && limitMessage ? (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
+            {limitMessage}
+          </div>
+        ) : null}
       </CardHeader>
       <form action={action} className="grid gap-4 p-5 pt-0 md:grid-cols-2">
         <label className="block space-y-2 md:col-span-2">
@@ -88,7 +99,7 @@ export function MemberCreateForm() {
           <Input name="notes" placeholder="Team, class, preference, or internal note" />
         </label>
         <div className="md:col-span-2">
-          <ActionSubmitButton pendingLabel="Adding member" className="h-11">
+          <ActionSubmitButton pendingLabel="Adding member" className="h-11" disabled={disabled}>
             Add member
           </ActionSubmitButton>
         </div>

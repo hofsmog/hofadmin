@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import type { OrganizationRole, OrganizationSidebarStyle, OrganizationType } from "@/types/database";
+import type { BillingStatus, OrganizationPlan, OrganizationRole, OrganizationSidebarStyle, OrganizationType } from "@/types/database";
 
 export type Role = OrganizationRole;
 
@@ -29,6 +29,14 @@ export type Organization = {
   defaultLoanAgreementText: string;
   organizationType: OrganizationType | null;
   starterModules: string[];
+  enabledModules: string[];
+  plan: OrganizationPlan;
+  memberLimit: number | null;
+  moduleLimit: number | null;
+  billingStatus: BillingStatus;
+  trialEndsAt: string | null;
+  customBrandingEnabled: boolean;
+  emailNotificationsEnabled: boolean;
   onboardingChecklist: unknown;
   onboardingCompletedAt: string | null;
   createdAt?: string;

@@ -1,4 +1,5 @@
 import type { ModuleDefinition, Organization } from "@/types";
+import { defaultEnabledModuleIdsByPlan, getEffectiveModuleLimit } from "@/lib/plans";
 
 export const systemModuleIds = ["dashboard", "activity-feed", "branding", "notifications", "settings"] as const;
 
@@ -375,16 +376,46 @@ export const modules: ModuleDefinition[] = [
 ];
 
 export const defaultEnabledModuleIds = modules.filter((module) => module.status === "enabled").map((module) => module.id);
+export const userManagedModuleIds = modules
+  .filter((module) => !systemModuleIds.includes(module.id as (typeof systemModuleIds)[number]))
+  .map((module) => module.id);
 
-export function getEnabledModuleIds(organization: Pick<Organization, "starterModules">) {
-  return organization.starterModules.length ? organization.starterModules : defaultEnabledModuleIds;
+export function getDefaultEnabledModuleIdsForOrganization(
+  organization: Pick<Organization, "plan" | "moduleLimit">,
+) {
+  return organization.plan === "growth" || organization.plan === "enterprise"
+    ? userManagedModuleIds
+    : defaultEnabledModuleIdsByPlan[organization.plan];
 }
 
-export function isModuleEnabled(moduleId: string, organization: Pick<Organization, "starterModules">) {
+export function getEnabledModuleIds(
+  organization: Pick<Organization, "plan" | "moduleLimit" | "enabledModules" | "starterModules">,
+) {
+  const configuredModuleIds = organization.enabledModules.length
+    ? organization.enabledModules
+    : organization.starterModules.length
+      ? organization.starterModules
+      : getDefaultEnabledModuleIdsForOrganization(organization);
+  const moduleLimit = getEffectiveModuleLimit(organization);
+
+  return moduleLimit === null
+    ? configuredModuleIds
+    : configuredModuleIds.filter((moduleId) => userManagedModuleIds.includes(moduleId)).slice(0, moduleLimit);
+}
+
+export function getSelectableEnabledModuleIds(
+  organization: Pick<Organization, "plan" | "moduleLimit" | "enabledModules" | "starterModules">,
+) {
+  return getEnabledModuleIds(organization).filter((moduleId) =>
+    userManagedModuleIds.includes(moduleId),
+  );
+}
+
+export function isModuleEnabled(moduleId: string, organization: Pick<Organization, "plan" | "moduleLimit" | "enabledModules" | "starterModules">) {
   return systemModuleIds.includes(moduleId as (typeof systemModuleIds)[number]) || getEnabledModuleIds(organization).includes(moduleId);
 }
 
-export function getModulesForOrganization(organization: Pick<Organization, "starterModules">) {
+export function getModulesForOrganization(organization: Pick<Organization, "plan" | "moduleLimit" | "enabledModules" | "starterModules">) {
   const enabledIds = getEnabledModuleIds(organization);
 
   return modules.map((module) => ({

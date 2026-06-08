@@ -119,7 +119,7 @@ export function ModuleCard({ module, canManage = false }: { module: ModuleDefini
                 : "bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400",
             )}
           >
-            {active ? "Active" : "Coming soon"}
+            {active ? "Active" : "Disabled"}
           </Badge>
         </div>
         <div>

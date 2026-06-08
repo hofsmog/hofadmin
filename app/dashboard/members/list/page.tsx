@@ -1,11 +1,12 @@
 import type { ComponentType } from "react";
-import { Search, UserRoundCheck, UsersRound } from "lucide-react";
+import { CreditCard, Search, UserRoundCheck, UsersRound } from "lucide-react";
 import { ModuleHeader } from "@/components/dashboard/module-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { membersNavItems } from "@/lib/module-nav";
+import { formatUsage, getEffectiveMemberLimit, getOrganizationPlan } from "@/lib/plans";
 import type { MemberStatus, MemberType } from "@/types/database";
 
 const memberTypes: Array<{ label: string; value: MemberType | "all" }> = [
@@ -20,6 +21,8 @@ export default async function MembersListPage({ searchParams }: { searchParams?:
   const searchTerm = q.replace(/[%,()]/g, "").trim();
   const status = params.status ?? "all";
   const type = params.type ?? "all";
+  const plan = getOrganizationPlan(organizationContext.activeOrganization);
+  const memberLimit = getEffectiveMemberLimit(organizationContext.activeOrganization);
   let membersQuery = supabase
     .from("members")
     .select("id, name, member_number, type, status, email, phone, tags, notes, created_at")
@@ -38,9 +41,10 @@ export default async function MembersListPage({ searchParams }: { searchParams?:
   return (
     <>
       <ModuleHeader title="Member List" description="Search and filter organization member records." items={membersNavItems} action={{ href: "/dashboard/members/create", label: "Add member" }} />
-      <div className="mb-4 grid gap-4 sm:grid-cols-2">
+      <div className="mb-4 grid gap-4 sm:grid-cols-3">
         <MetricCard icon={UsersRound} label="Total members" value={totalMembers ?? 0} />
         <MetricCard icon={UserRoundCheck} label="Active members" value={activeMembers ?? 0} />
+        <MetricCard icon={CreditCard} label={`${plan.name} limit`} value={formatUsage(totalMembers ?? 0, memberLimit)} />
       </div>
       <Card>
         <CardHeader>
@@ -66,6 +70,6 @@ export default async function MembersListPage({ searchParams }: { searchParams?:
   );
 }
 
-function MetricCard({ icon: Icon, label, value }: { icon: ComponentType<{ className?: string }>; label: string; value: number }) {
+function MetricCard({ icon: Icon, label, value }: { icon: ComponentType<{ className?: string }>; label: string; value: number | string }) {
   return <Card className="p-5"><div className="flex items-start justify-between gap-4"><div><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-3xl font-semibold tracking-tight">{value}</p></div><div className="grid h-10 w-10 place-items-center rounded-xl bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"><Icon className="h-5 w-5" /></div></div></Card>;
 }
