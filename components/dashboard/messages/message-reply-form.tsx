@@ -1,35 +1,25 @@
 "use client";
 
 import { useActionState, useMemo, useRef, useState } from "react";
-import { sendInternalMessageAction, type MessageActionState } from "@/app/dashboard/messages/actions";
+import { replyToInternalMessageAction, type MessageActionState } from "@/app/dashboard/messages/actions";
 import { ActionSubmitButton } from "@/components/dashboard/action-submit-button";
 import { Input } from "@/components/ui/input";
 import { formatFileSize } from "@/lib/messages";
 
-type TeamMember = {
-  user_id: string;
-  email: string;
-  role: string;
-};
-
 const initialState: MessageActionState = { status: "idle", message: "" };
 
-export function MessageComposeForm({ recipients }: { recipients: TeamMember[] }) {
+export function MessageReplyForm({ parentMessageId }: { parentMessageId: string }) {
   const formRef = useRef<HTMLFormElement>(null);
-  const [recipientUserId, setRecipientUserId] = useState("");
-  const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [validationMessage, setValidationMessage] = useState("");
   const [hideSuccessMessage, setHideSuccessMessage] = useState(false);
 
-  async function submitMessage(previousState: MessageActionState, formData: FormData) {
-    const result = await sendInternalMessageAction(previousState, formData);
+  async function submitReply(previousState: MessageActionState, formData: FormData) {
+    const result = await replyToInternalMessageAction(previousState, formData);
 
     if (result.status === "success") {
       formRef.current?.reset();
-      setRecipientUserId("");
-      setSubject("");
       setBody("");
       setSelectedFiles([]);
       setValidationMessage("");
@@ -39,8 +29,8 @@ export function MessageComposeForm({ recipients }: { recipients: TeamMember[] })
     return result;
   }
 
-  const [state, action] = useActionState(submitMessage, initialState);
-  const canSend = recipientUserId.trim().length > 0 && subject.trim().length > 0 && body.trim().length > 0;
+  const [state, action] = useActionState(submitReply, initialState);
+  const canSend = body.trim().length > 0;
 
   const helperMessage = useMemo(() => {
     if (state.status === "success") {
@@ -51,32 +41,14 @@ export function MessageComposeForm({ recipients }: { recipients: TeamMember[] })
       return validationMessage;
     }
 
-    if (!recipientUserId) {
-      return "Please select a recipient.";
-    }
-
-    if (!subject.trim()) {
-      return "Please enter a subject.";
-    }
-
     if (!body.trim()) {
       return "Please enter a message.";
     }
 
     return "";
-  }, [body, recipientUserId, state.status, subject, validationMessage]);
+  }, [body, state.status, validationMessage]);
 
   function validateBeforeSubmit() {
-    if (!recipientUserId) {
-      setValidationMessage("Please select a recipient.");
-      return;
-    }
-
-    if (!subject.trim()) {
-      setValidationMessage("Please enter a subject.");
-      return;
-    }
-
     if (!body.trim()) {
       setValidationMessage("Please enter a message.");
       return;
@@ -87,43 +59,9 @@ export function MessageComposeForm({ recipients }: { recipients: TeamMember[] })
 
   return (
     <form ref={formRef} action={action} className="space-y-4 rounded-2xl border bg-white p-5 shadow-sm dark:bg-zinc-950">
+      <input type="hidden" name="parentMessageId" value={parentMessageId} />
       <label className="block space-y-2">
-        <span className="text-sm font-medium">To</span>
-        <select
-          name="recipientUserId"
-          value={recipientUserId}
-          onChange={(event) => {
-            setRecipientUserId(event.target.value);
-            setValidationMessage("");
-            setHideSuccessMessage(true);
-          }}
-          required
-          className="h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
-        >
-          <option value="">Choose recipient</option>
-          {recipients.map((recipient) => (
-            <option key={recipient.user_id} value={recipient.user_id}>
-              {recipient.email} ({recipient.role})
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="block space-y-2">
-        <span className="text-sm font-medium">Subject</span>
-        <Input
-          name="subject"
-          value={subject}
-          onChange={(event) => {
-            setSubject(event.target.value);
-            setValidationMessage("");
-            setHideSuccessMessage(true);
-          }}
-          maxLength={160}
-          required
-        />
-      </label>
-      <label className="block space-y-2">
-        <span className="text-sm font-medium">Message</span>
+        <span className="text-sm font-medium">Reply</span>
         <textarea
           name="body"
           value={body}
@@ -134,7 +72,7 @@ export function MessageComposeForm({ recipients }: { recipients: TeamMember[] })
           }}
           required
           maxLength={5000}
-          rows={8}
+          rows={5}
           className="w-full rounded-xl border bg-white px-3 py-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
         />
       </label>
@@ -174,7 +112,7 @@ export function MessageComposeForm({ recipients }: { recipients: TeamMember[] })
       ) : null}
       {helperMessage ? <p className="text-sm text-muted-foreground">{helperMessage}</p> : null}
       <ActionSubmitButton pendingLabel="Sending" disabled={!canSend} onClick={validateBeforeSubmit}>
-        Send
+        Send reply
       </ActionSubmitButton>
     </form>
   );

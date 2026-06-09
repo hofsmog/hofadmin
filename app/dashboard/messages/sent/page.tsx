@@ -4,7 +4,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Toast } from "@/components/ui/toast";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
-import type { InternalMessage } from "@/lib/messages";
+import { latestMessageByConversation, type InternalMessage } from "@/lib/messages";
 import { MessageList, MessagesTabs } from "@/app/dashboard/messages/page";
 
 export default async function SentMessagesPage({ searchParams }: { searchParams?: Promise<{ sent?: string }> }) {
@@ -12,11 +12,11 @@ export default async function SentMessagesPage({ searchParams }: { searchParams?
   const { user, supabase, organizationContext } = await requireOrganizationContext();
   const { data: messages, error } = await supabase
     .from("internal_messages")
-    .select("id, organization_id, sender_user_id, recipient_user_id, sender_email, recipient_email, subject, body, read_at, created_at")
+    .select("id, organization_id, conversation_id, parent_message_id, sender_user_id, recipient_user_id, sender_email, recipient_email, subject, body, read_at, created_at")
     .eq("organization_id", organizationContext.activeOrganization.id)
     .eq("sender_user_id", user.id)
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(200);
 
   if (error) {
     console.error("[messages] Could not load sent messages", { organizationId: organizationContext.activeOrganization.id, error });
@@ -42,7 +42,7 @@ export default async function SentMessagesPage({ searchParams }: { searchParams?
           </div>
         </CardHeader>
         <CardContent>
-          <MessageList messages={(messages ?? []) as InternalMessage[]} emptyTitle="No sent messages yet" emptyDescription="Messages you send will appear here." />
+          <MessageList messages={latestMessageByConversation((messages ?? []) as InternalMessage[], user.id)} userId={user.id} emptyTitle="No sent messages yet" emptyDescription="Messages you send will appear here." />
         </CardContent>
       </Card>
     </>

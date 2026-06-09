@@ -266,6 +266,8 @@ export type Database = {
         Row: {
           id: string;
           organization_id: string;
+          conversation_id: string;
+          parent_message_id: string | null;
           sender_user_id: string;
           recipient_user_id: string;
           sender_email: string;
@@ -278,6 +280,8 @@ export type Database = {
         Insert: {
           id?: string;
           organization_id: string;
+          conversation_id?: string;
+          parent_message_id?: string | null;
           sender_user_id: string;
           recipient_user_id: string;
           sender_email: string;
@@ -290,6 +294,8 @@ export type Database = {
         Update: {
           id?: string;
           organization_id?: string;
+          conversation_id?: string;
+          parent_message_id?: string | null;
           sender_user_id?: string;
           recipient_user_id?: string;
           sender_email?: string;
@@ -302,6 +308,57 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "internal_messages_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      internal_message_attachments: {
+        Row: {
+          id: string;
+          message_id: string;
+          organization_id: string;
+          file_name: string;
+          file_path: string;
+          file_size: number;
+          mime_type: string | null;
+          uploaded_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          message_id: string;
+          organization_id: string;
+          file_name: string;
+          file_path: string;
+          file_size: number;
+          mime_type?: string | null;
+          uploaded_by: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          message_id?: string;
+          organization_id?: string;
+          file_name?: string;
+          file_path?: string;
+          file_size?: number;
+          mime_type?: string | null;
+          uploaded_by?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "internal_message_attachments_message_id_fkey";
+            columns: ["message_id"];
+            isOneToOne: false;
+            referencedRelation: "internal_messages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "internal_message_attachments_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";

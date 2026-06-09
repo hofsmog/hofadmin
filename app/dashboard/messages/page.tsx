@@ -5,18 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
-import { messagesNavItems, type InternalMessage } from "@/lib/messages";
+import { latestMessageByConversation, messagesNavItems, type InternalMessage, type MessageConversation } from "@/lib/messages";
 import { cn } from "@/lib/utils";
 
 export default async function MessagesInboxPage() {
   const { user, supabase, organizationContext } = await requireOrganizationContext();
   const { data: messages, error } = await supabase
     .from("internal_messages")
-    .select("id, organization_id, sender_user_id, recipient_user_id, sender_email, recipient_email, subject, body, read_at, created_at")
+    .select("id, organization_id, conversation_id, parent_message_id, sender_user_id, recipient_user_id, sender_email, recipient_email, subject, body, read_at, created_at")
     .eq("organization_id", organizationContext.activeOrganization.id)
-    .eq("recipient_user_id", user.id)
+    .or(`sender_user_id.eq.${user.id},recipient_user_id.eq.${user.id}`)
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(200);
 
   if (error) {
     console.error("[messages] Could not load inbox", { organizationId: organizationContext.activeOrganization.id, error });
@@ -41,7 +41,7 @@ export default async function MessagesInboxPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <MessageList messages={(messages ?? []) as InternalMessage[]} emptyTitle="No messages yet" emptyDescription="Messages from your team will appear here." />
+          <MessageList messages={latestMessageByConversation((messages ?? []) as InternalMessage[], user.id)} userId={user.id} emptyTitle="No messages yet" emptyDescription="Messages from your team will appear here." />
         </CardContent>
       </Card>
     </>
@@ -71,10 +71,12 @@ export function MessagesTabs({ active }: { active: string }) {
 
 export function MessageList({
   messages,
+  userId,
   emptyTitle,
   emptyDescription,
 }: {
-  messages: InternalMessage[];
+  messages: MessageConversation[];
+  userId: string;
   emptyTitle: string;
   emptyDescription: string;
 }) {
@@ -94,10 +96,10 @@ export function MessageList({
           <span className="min-w-0 flex-1">
             <span className="flex flex-wrap items-center gap-2">
               <span className={cn("truncate text-sm", message.read_at ? "font-medium" : "font-semibold")}>{message.subject}</span>
-              {!message.read_at ? <Badge>Unread</Badge> : null}
+              {message.unread_count > 0 ? <Badge>{message.unread_count} unread</Badge> : null}
             </span>
             <span className="mt-1 block truncate text-xs text-muted-foreground">
-              From {message.sender_email} - {new Date(message.created_at).toLocaleString()}
+              {message.sender_user_id === userId ? `To ${message.recipient_email}` : `From ${message.sender_email}`} - {new Date(message.created_at).toLocaleString()}
             </span>
           </span>
           <PenLine className="h-4 w-4 text-muted-foreground" />
