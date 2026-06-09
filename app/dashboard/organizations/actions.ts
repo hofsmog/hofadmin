@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { recordActivityEvent } from "@/lib/activity";
+import { getAppUrl } from "@/lib/app-url";
+import { sendEmail } from "@/lib/email/send-email";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import {
   canManageMembers,
@@ -20,6 +22,11 @@ const validSidebarStyles = new Set<OrganizationSidebarStyle>(["light", "dark", "
 
 export type OrganizationBrandingState = {
   status: "idle" | "success" | "error";
+  message: string;
+};
+
+export type InviteMemberState = {
+  status: "idle" | "success" | "warning" | "error";
   message: string;
 };
 
@@ -298,7 +305,10 @@ function sanitizeOrganizationType(value: string) {
   return trimmed;
 }
 
-export async function inviteMemberAction(formData: FormData) {
+export async function inviteMemberAction(
+  _state: InviteMemberState,
+  formData: FormData,
+): Promise<InviteMemberState> {
   const user = await getCurrentUser();
   const supabase = await createClient();
 
@@ -316,23 +326,49 @@ export async function inviteMemberAction(formData: FormData) {
   const role = String(formData.get("role") || "member") as OrganizationRole;
 
   if (!email.includes("@")) {
-    throw new Error("Enter a valid email address.");
+    return { status: "error", message: "Enter a valid email address." };
   }
 
-  if (!validRoles.has(role) || role === "owner") {
-    throw new Error("Invited members can be admin or member.");
+  if (!validRoles.has(role)) {
+    return { status: "error", message: "Choose a valid role." };
   }
 
-  const { error } = await supabase.from("organization_invitations").insert({
-    organization_id: context.activeOrganization.id,
-    email,
-    role,
-    invited_by: user.id,
-  });
+  if (role === "owner" && context.activeMembership.role !== "owner") {
+    return { status: "error", message: "Only owners can invite another owner." };
+  }
+
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString();
+  const { data: invitation, error } = await supabase
+    .from("organization_invitations")
+    .insert({
+      organization_id: context.activeOrganization.id,
+      email,
+      role,
+      invited_by: user.id,
+      expires_at: expiresAt,
+    })
+    .select("id, email, role")
+    .single();
 
   if (error) {
-    throw new Error(error.message);
+    const isDuplicate = error.code === "23505";
+    return {
+      status: "error",
+      message: isDuplicate
+        ? "There is already a pending invitation for that email."
+        : "Invitation could not be sent. Please check email settings or try again.",
+    };
   }
+
+  const emailResult = await sendTeamInvitationEmail({
+    supabase,
+    organizationId: context.activeOrganization.id,
+    organizationName: context.activeOrganization.displayName ?? context.activeOrganization.name,
+    invitationId: invitation.id,
+    email,
+    role,
+    invitedByEmail: user.email ?? null,
+  });
 
   await recordActivityEvent({
     supabase,
@@ -344,6 +380,141 @@ export async function inviteMemberAction(formData: FormData) {
     metadata: { email, role },
   });
 
-  revalidatePath("/dashboard/team");
+  revalidatePath("/dashboard/settings/team");
+  revalidatePath("/dashboard/settings/team");
   revalidatePath("/dashboard");
+
+  if (!emailResult.success) {
+    return {
+      status: "warning",
+      message: "Invitation was created, but the email could not be sent.",
+    };
+  }
+
+  return { status: "success", message: "Invitation email sent." };
+}
+
+export async function resendInvitationAction(formData: FormData) {
+  const user = await getCurrentUser();
+  const supabase = await createClient();
+
+  if (!user || !supabase) {
+    redirect("/login");
+  }
+
+  const context = await getOrganizationContext(supabase, user);
+
+  if (!canManageMembers(context.activeMembership.role)) {
+    redirect("/dashboard/settings/team?invitation=permission");
+  }
+
+  const invitationId = String(formData.get("invitationId") || "");
+  const { data: invitation, error } = await supabase
+    .from("organization_invitations")
+    .select("id, email, role, status")
+    .eq("id", invitationId)
+    .eq("organization_id", context.activeOrganization.id)
+    .eq("status", "pending")
+    .maybeSingle();
+
+  if (error || !invitation) {
+    redirect("/dashboard/settings/team?invitation=missing");
+  }
+
+  const emailResult = await sendTeamInvitationEmail({
+    supabase,
+    organizationId: context.activeOrganization.id,
+    organizationName: context.activeOrganization.displayName ?? context.activeOrganization.name,
+    invitationId: invitation.id,
+    email: invitation.email,
+    role: invitation.role,
+    invitedByEmail: user.email ?? null,
+  });
+
+  revalidatePath("/dashboard/settings/team");
+  redirect(emailResult.success ? "/dashboard/settings/team?invitation=resent" : "/dashboard/settings/team?invitation=email-failed");
+}
+
+export async function cancelInvitationAction(formData: FormData) {
+  const user = await getCurrentUser();
+  const supabase = await createClient();
+
+  if (!user || !supabase) {
+    redirect("/login");
+  }
+
+  const context = await getOrganizationContext(supabase, user);
+
+  if (!canManageMembers(context.activeMembership.role)) {
+    redirect("/dashboard/settings/team?invitation=permission");
+  }
+
+  const invitationId = String(formData.get("invitationId") || "");
+  const { error } = await supabase
+    .from("organization_invitations")
+    .update({ status: "revoked" })
+    .eq("id", invitationId)
+    .eq("organization_id", context.activeOrganization.id)
+    .eq("status", "pending");
+
+  revalidatePath("/dashboard/settings/team");
+  revalidatePath("/dashboard");
+  redirect(error ? "/dashboard/settings/team?invitation=cancel-failed" : "/dashboard/settings/team?invitation=cancelled");
+}
+
+async function sendTeamInvitationEmail({
+  supabase,
+  organizationId,
+  organizationName,
+  invitationId,
+  email,
+  role,
+  invitedByEmail,
+}: {
+  supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>;
+  organizationId: string;
+  organizationName: string;
+  invitationId: string;
+  email: string;
+  role: OrganizationRole;
+  invitedByEmail: string | null;
+}) {
+  const invitationUrl = `${getAppUrl()}/invitations/accept?invitation=${encodeURIComponent(invitationId)}`;
+  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+  const inviterLine = invitedByEmail ? `${invitedByEmail} invited you to join ${organizationName}.` : `You were invited to join ${organizationName}.`;
+
+  return sendEmail({
+    supabase,
+    organizationId,
+    to: [email],
+    eventType: "team_invitation",
+    subject: `Join ${organizationName} on HofAdmin`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#18181b">
+        <h1 style="margin:0 0 12px">You have been invited to HofAdmin</h1>
+        <p>${escapeHtml(inviterLine)}</p>
+        <p>Your role: <strong>${escapeHtml(roleLabel)}</strong></p>
+        <p><a href="${invitationUrl}" style="display:inline-block;border-radius:10px;background:#18181b;color:#ffffff;padding:12px 16px;text-decoration:none">Accept invitation</a></p>
+        <p style="color:#71717a;font-size:14px">This invitation link takes you to HofAdmin. Sign in or create an account with ${escapeHtml(email)} to join.</p>
+      </div>
+    `,
+    text: [
+      "You have been invited to HofAdmin.",
+      "",
+      inviterLine,
+      `Your role: ${roleLabel}`,
+      "",
+      `Accept invitation: ${invitationUrl}`,
+      "",
+      `Sign in or create an account with ${email} to join.`,
+    ].join("\n"),
+  });
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }

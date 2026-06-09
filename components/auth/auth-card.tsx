@@ -75,6 +75,7 @@ export function AuthCard({
       }
 
       if (mode === "signup") {
+        const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`;
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -82,7 +83,7 @@ export function AuthCard({
             data: {
               organization_name: organizationName,
             },
-            emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
+            emailRedirectTo,
           },
         });
 
@@ -92,18 +93,20 @@ export function AuthCard({
         }
 
         if (data.session) {
-          const bootstrapResponse = await fetch("/auth/bootstrap-organization", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ organizationName }),
-          });
+          if (!isInvitationRedirect(redirectTo)) {
+            const bootstrapResponse = await fetch("/auth/bootstrap-organization", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ organizationName }),
+            });
 
-          if (!bootstrapResponse.ok) {
-            setError("Account created, but the organization could not be prepared. Please try logging in.");
-            return;
+            if (!bootstrapResponse.ok) {
+              setError("Account created, but the organization could not be prepared. Please try logging in.");
+              return;
+            }
           }
 
-          router.replace("/dashboard");
+          router.replace(redirectTo);
           router.refresh();
           return;
         }
@@ -223,4 +226,8 @@ function getSafeRedirectPath(value: string | null) {
   }
 
   return value;
+}
+
+function isInvitationRedirect(value: string) {
+  return value.startsWith("/invitations/accept");
 }

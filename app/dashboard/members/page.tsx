@@ -45,7 +45,7 @@ export default async function MembersOverviewPage() {
       </Card>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <ButtonLink href="/dashboard/members/create"><Plus className="h-4 w-4" />Add member</ButtonLink>
-        <ButtonLink href="/dashboard/members/invitations" variant="secondary"><MailPlus className="h-4 w-4" />Invite team</ButtonLink>
+        <ButtonLink href="/dashboard/settings/team?tab=invitations" variant="secondary"><MailPlus className="h-4 w-4" />Invite team</ButtonLink>
       </div>
     </>
   );

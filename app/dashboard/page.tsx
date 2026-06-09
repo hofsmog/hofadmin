@@ -276,7 +276,7 @@ export default async function DashboardPage() {
     {
       label: "Pending invitations",
       value: pendingInvitations ?? 0,
-      href: "/dashboard/team",
+      href: "/dashboard/settings/team?tab=invitations",
       moduleId: "members",
     },
     { label: "Open issues", value: openIssues ?? 0, href: "/dashboard/issues", moduleId: "issue-management" },

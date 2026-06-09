@@ -2,6 +2,7 @@ import { InventorySettingsForm } from "@/components/dashboard/inventory/inventor
 import { NotificationPreferencesForm } from "@/components/dashboard/notification-preferences-form";
 import { OrganizationBrandingForm } from "@/components/dashboard/organization-branding-form";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { ButtonLink } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Toast } from "@/components/ui/toast";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
@@ -34,6 +35,15 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
       <Toast show={params.notifications === "saved"} title="Notification settings saved" message="Email notification preferences were updated." />
       <Toast show={["error", "invalid-email", "denied"].includes(params.notifications ?? "")} tone="error" title="Notification settings not saved" message={params.notifications === "invalid-email" ? "Check the email address format and try again." : "You do not have permission or the settings could not be saved."} />
       <div className="space-y-6">
+        <Card>
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Team</CardTitle>
+              <CardDescription>Manage people, invitations, and roles in one place.</CardDescription>
+            </div>
+            <ButtonLink href="/dashboard/settings/team">Open Team</ButtonLink>
+          </CardHeader>
+        </Card>
         <OrganizationBrandingForm
           values={{
             name: activeOrganization.name,

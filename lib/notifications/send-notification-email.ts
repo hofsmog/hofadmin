@@ -5,7 +5,7 @@ import { recordActivityEvent } from "@/lib/activity";
 import { sendEmail, type EmailEventType } from "@/lib/email/send-email";
 import type { ActivityEventType, Database, Json } from "@/types/database";
 
-type NotificationEventType = Exclude<EmailEventType, "test_email">;
+type NotificationEventType = Exclude<EmailEventType, "team_invitation" | "test_email">;
 
 const preferenceColumns: Record<NotificationEventType, string> = {
   new_form_response: "notify_new_form_response",

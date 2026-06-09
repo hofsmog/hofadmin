@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { data } = (await supabase?.auth.exchangeCodeForSession(code)) ?? {};
 
-    if (supabase && data?.user) {
+    if (supabase && data?.user && !next.startsWith("/invitations/accept")) {
       const { data: membership } = await supabase
         .from("organization_members")
         .select("organization_id")

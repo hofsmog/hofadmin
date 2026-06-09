@@ -29,6 +29,4 @@ export const membersNavItems = [
   { title: "Overview", href: "/dashboard/members" },
   { title: "Members", href: "/dashboard/members/list" },
   { title: "Create", href: "/dashboard/members/create" },
-  { title: "Invitations", href: "/dashboard/members/invitations" },
-  { title: "Roles", href: "/dashboard/members/roles" },
 ];

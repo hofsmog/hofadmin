@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 
 export type EmailEventType =
+  | "team_invitation"
   | "new_form_response"
   | "loan_due_tomorrow"
   | "loan_overdue"
