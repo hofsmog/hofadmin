@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 
 export type MessageActionState = {
-  status: "idle" | "error";
+  status: "idle" | "success" | "error";
   message: string;
 };
 
@@ -34,19 +34,27 @@ export async function sendInternalMessageAction(
   const body = String(formData.get("body") || "").trim();
 
   if (!recipientUserId) {
-    return { status: "error", message: "Choose a recipient." };
+    return { status: "error", message: "Please select a recipient." };
   }
 
   if (recipientUserId === user.id) {
     return { status: "error", message: "Choose another team member as the recipient." };
   }
 
-  if (!subject || subject.length > 160) {
-    return { status: "error", message: "Subject must be between 1 and 160 characters." };
+  if (!subject) {
+    return { status: "error", message: "Please enter a subject." };
   }
 
-  if (!body || body.length > 5000) {
-    return { status: "error", message: "Message must be between 1 and 5000 characters." };
+  if (subject.length > 160) {
+    return { status: "error", message: "Subject must be 160 characters or fewer." };
+  }
+
+  if (!body) {
+    return { status: "error", message: "Please enter a message." };
+  }
+
+  if (body.length > 5000) {
+    return { status: "error", message: "Message must be 5000 characters or fewer." };
   }
 
   const { data: teamMembers, error: teamError } = await (supabase as unknown as TeamMemberRpcClient).rpc(
@@ -55,17 +63,41 @@ export async function sendInternalMessageAction(
   );
 
   if (teamError) {
-    console.error("[messages] Could not load team members for message send", { organizationId, error: teamError });
-    return { status: "error", message: "Message could not be sent. Try again." };
+    console.error("[messages] Could not load team members for message send", {
+      organizationId,
+      senderUserId: user.id,
+      error: teamError,
+    });
+    return {
+      status: "error",
+      message: `Message could not be sent. Recipient lookup failed: ${teamError.message}`,
+    };
   }
 
-  const recipient = (teamMembers ?? []).find((member) => member.user_id === recipientUserId);
+  const members = teamMembers ?? [];
+  const senderMembership = members.find((member) => member.user_id === user.id);
+  const recipient = members.find((member) => member.user_id === recipientUserId);
+
+  if (!senderMembership) {
+    console.error("[messages] Sender is not in organization team member lookup", {
+      organizationId,
+      senderUserId: user.id,
+      availableUserIds: members.map((member) => member.user_id),
+    });
+    return { status: "error", message: "Message could not be sent. Sender is not a member of this organization." };
+  }
 
   if (!recipient) {
+    console.error("[messages] Recipient is not in organization team member lookup", {
+      organizationId,
+      senderUserId: user.id,
+      recipientUserId,
+      availableUserIds: members.map((member) => member.user_id),
+    });
     return { status: "error", message: "Recipient must be a member of this organization." };
   }
 
-  const { error } = await supabase.from("internal_messages").insert({
+  const messageRecord = {
     organization_id: organizationId,
     sender_user_id: user.id,
     recipient_user_id: recipient.user_id,
@@ -73,17 +105,35 @@ export async function sendInternalMessageAction(
     recipient_email: recipient.email,
     subject,
     body,
+  };
+
+  const { error } = await supabase.from("internal_messages").insert({
+    ...messageRecord,
   });
 
   if (error) {
-    console.error("[messages] Could not send message", { organizationId, recipientUserId, error });
-    return { status: "error", message: "Message could not be sent. Try again." };
+    console.error("[messages] Could not send message", {
+      organizationId,
+      senderUserId: user.id,
+      recipientUserId,
+      messageRecord: {
+        ...messageRecord,
+        body: `[${body.length} characters]`,
+      },
+      error: {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      },
+    });
+    return { status: "error", message: `Message could not be sent: ${error.message}` };
   }
 
   revalidatePath("/dashboard/messages");
   revalidatePath("/dashboard/messages/sent");
   revalidatePath("/dashboard");
-  redirect("/dashboard/messages/sent?sent=1");
+  return { status: "success", message: "Message sent" };
 }
 
 export async function markInternalMessageReadAction(formData: FormData) {

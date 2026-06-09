@@ -44,7 +44,7 @@ export default async function NewMessagePage() {
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <CardTitle>No teammates available</CardTitle>
+                  <CardTitle>No other members available to message.</CardTitle>
                   <CardDescription>Invite another user to this organization before sending messages.</CardDescription>
                 </div>
                 <MessageSquarePlus className="h-5 w-5 text-muted-foreground" />
