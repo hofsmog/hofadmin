@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { replyToInternalMessageAction, type MessageActionState } from "@/app/dashboard/messages/actions";
 import { ActionSubmitButton } from "@/components/dashboard/action-submit-button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { formatFileSize } from "@/lib/messages";
 const initialState: MessageActionState = { status: "idle", message: "" };
 
 export function MessageReplyForm({ parentMessageId }: { parentMessageId: string }) {
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [body, setBody] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -24,6 +26,7 @@ export function MessageReplyForm({ parentMessageId }: { parentMessageId: string 
       setSelectedFiles([]);
       setValidationMessage("");
       setHideSuccessMessage(false);
+      router.refresh();
     }
 
     return result;
