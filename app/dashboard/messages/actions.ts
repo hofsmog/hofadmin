@@ -8,6 +8,21 @@ import { requireOrganizationContext } from "@/lib/auth/require-organization-cont
 const attachmentBucket = "internal-message-attachments";
 const maxAttachmentSize = 10 * 1024 * 1024;
 const maxAttachmentCount = 5;
+const allowedAttachmentTypes = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "text/plain",
+  "text/csv",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+]);
 
 export type MessageActionState = {
   status: "idle" | "success" | "error";
@@ -37,6 +52,13 @@ type MessageLookup = {
   sender_email: string;
   recipient_email: string;
   subject: string;
+};
+
+type UploadedAttachment = {
+  fileName: string;
+  filePath: string;
+  fileSize: number;
+  mimeType: string | null;
 };
 
 export async function sendInternalMessageAction(
@@ -71,6 +93,13 @@ export async function sendInternalMessageAction(
 
   if (body.length > 5000) {
     return { status: "error", message: "Message must be 5000 characters or fewer." };
+  }
+
+  const attachments = getAttachmentFiles(formData);
+  const attachmentValidation = validateAttachmentFiles(attachments);
+
+  if (attachmentValidation.status === "error") {
+    return { status: "error", message: attachmentValidation.message };
   }
 
   const { data: teamMembers, error: teamError } = await (supabase as unknown as TeamMemberRpcClient).rpc(
@@ -128,6 +157,20 @@ export async function sendInternalMessageAction(
     body,
   };
 
+  const uploadedAttachments = await uploadMessageFiles({
+    supabase,
+    organizationId,
+    messageId,
+    files: attachments,
+  });
+
+  if (uploadedAttachments.status === "error") {
+    return {
+      status: "error",
+      message: `Message could not be sent because the attachment upload failed. ${uploadedAttachments.message}`,
+    };
+  }
+
   const { error } = await supabase.from("internal_messages").insert({
     ...messageRecord,
   });
@@ -151,20 +194,27 @@ export async function sendInternalMessageAction(
     return { status: "error", message: `Message could not be sent: ${error.message}` };
   }
 
-  const attachmentResult = await uploadMessageAttachments({
+  const attachmentResult = await createMessageAttachmentRecords({
     supabase,
     organizationId,
     messageId,
     userId: user.id,
-    files: formData.getAll("attachments"),
+    attachments: uploadedAttachments.attachments,
   });
+
+  if (attachmentResult.status === "error") {
+    return {
+      status: "error",
+      message: `Message was created, but the attachment could not be linked. ${attachmentResult.message}`,
+    };
+  }
 
   revalidatePath("/dashboard/messages");
   revalidatePath("/dashboard/messages/sent");
   revalidatePath("/dashboard");
   return {
     status: "success",
-    message: attachmentResult.status === "error" ? "Message sent, but some attachments could not be uploaded." : "Message sent",
+    message: "Message sent",
   };
 }
 
@@ -187,6 +237,13 @@ export async function replyToInternalMessageAction(
 
   if (body.length > 5000) {
     return { status: "error", message: "Message must be 5000 characters or fewer." };
+  }
+
+  const attachments = getAttachmentFiles(formData);
+  const attachmentValidation = validateAttachmentFiles(attachments);
+
+  if (attachmentValidation.status === "error") {
+    return { status: "error", message: attachmentValidation.message };
   }
 
   const { data: parent, error: parentError } = await supabase
@@ -226,6 +283,20 @@ export async function replyToInternalMessageAction(
     body,
   };
 
+  const uploadedAttachments = await uploadMessageFiles({
+    supabase,
+    organizationId,
+    messageId,
+    files: attachments,
+  });
+
+  if (uploadedAttachments.status === "error") {
+    return {
+      status: "error",
+      message: `Reply could not be sent because the attachment upload failed. ${uploadedAttachments.message}`,
+    };
+  }
+
   const { error } = await supabase.from("internal_messages").insert({
     ...messageRecord,
   });
@@ -250,13 +321,20 @@ export async function replyToInternalMessageAction(
     return { status: "error", message: `Reply could not be sent: ${error.message}` };
   }
 
-  const attachmentResult = await uploadMessageAttachments({
+  const attachmentResult = await createMessageAttachmentRecords({
     supabase,
     organizationId,
     messageId,
     userId: user.id,
-    files: formData.getAll("attachments"),
+    attachments: uploadedAttachments.attachments,
   });
+
+  if (attachmentResult.status === "error") {
+    return {
+      status: "error",
+      message: `Reply was created, but the attachment could not be linked. ${attachmentResult.message}`,
+    };
+  }
 
   revalidatePath("/dashboard/messages");
   revalidatePath("/dashboard/messages/sent");
@@ -264,7 +342,7 @@ export async function replyToInternalMessageAction(
   revalidatePath("/dashboard");
   return {
     status: "success",
-    message: attachmentResult.status === "error" ? "Reply sent, but some attachments could not be uploaded." : "Reply sent",
+    message: "Reply sent",
   };
 }
 
@@ -299,79 +377,138 @@ export async function markInternalMessageReadAction(formData: FormData) {
   redirect(`/dashboard/messages/${messageId}`);
 }
 
-async function uploadMessageAttachments({
+function getAttachmentFiles(formData: FormData) {
+  return formData.getAll("attachments").filter((file): file is File => file instanceof File && Boolean(file.name) && file.size > 0);
+}
+
+function validateAttachmentFiles(files: File[]) {
+  if (!files.length) {
+    return { status: "success" as const };
+  }
+
+  if (files.length > maxAttachmentCount) {
+    return { status: "error" as const, message: `You can attach up to ${maxAttachmentCount} files.` };
+  }
+
+  for (const file of files) {
+    if (file.size > maxAttachmentSize) {
+      console.error("[messages] Attachment is too large", {
+        fileName: file.name,
+        fileSize: file.size,
+        maxAttachmentSize,
+      });
+      return { status: "error" as const, message: `${file.name} is larger than 10 MB.` };
+    }
+
+    if (file.type && !allowedAttachmentTypes.has(file.type)) {
+      console.error("[messages] Attachment type is not allowed", {
+        fileName: file.name,
+        mimeType: file.type,
+      });
+      return { status: "error" as const, message: `${file.name} is not an allowed file type.` };
+    }
+  }
+
+  return { status: "success" as const };
+}
+
+async function uploadMessageFiles({
   supabase,
   organizationId,
   messageId,
-  userId,
   files,
 }: {
   supabase: Awaited<ReturnType<typeof requireOrganizationContext>>["supabase"];
   organizationId: string;
   messageId: string;
-  userId: string;
-  files: FormDataEntryValue[];
+  files: File[];
 }) {
-  const attachments = files.filter((file): file is File => file instanceof File && Boolean(file.name) && file.size > 0);
+  const uploaded: UploadedAttachment[] = [];
 
-  if (!attachments.length) {
-    return { status: "success" as const };
-  }
-
-  if (attachments.length > maxAttachmentCount) {
-    console.error("[messages] Too many attachments", { organizationId, messageId, count: attachments.length });
-    return { status: "error" as const };
-  }
-
-  for (const file of attachments) {
-    if (file.size > maxAttachmentSize) {
-      console.error("[messages] Attachment is too large", {
-        organizationId,
-        messageId,
-        fileName: file.name,
-        fileSize: file.size,
-      });
-      return { status: "error" as const };
-    }
-
+  for (const file of files) {
     const safeName = sanitizeFileName(file.name);
     const filePath = `organizations/${organizationId}/messages/${messageId}/${Date.now()}-${randomUUID()}-${safeName}`;
-    const { error: uploadError } = await supabase.storage.from(attachmentBucket).upload(filePath, file, {
-      contentType: file.type || "application/octet-stream",
-      upsert: false,
-    });
+    let uploadError: unknown = null;
+
+    try {
+      const result = await supabase.storage.from(attachmentBucket).upload(filePath, file, {
+        contentType: file.type || "application/octet-stream",
+        upsert: false,
+      });
+      uploadError = result.error;
+    } catch (error) {
+      uploadError = error;
+    }
 
     if (uploadError) {
       console.error("[messages] Could not upload attachment", {
         organizationId,
         messageId,
+        bucket: attachmentBucket,
+        filePath,
         fileName: file.name,
         fileSize: file.size,
-        error: uploadError,
+        error: serializeError(uploadError),
       });
-      return { status: "error" as const };
+      return { status: "error" as const, message: describeAttachmentFailure(uploadError) };
     }
 
-    const { error: attachmentError } = await supabase.from("internal_message_attachments").insert({
-      message_id: messageId,
-      organization_id: organizationId,
-      file_name: file.name,
-      file_path: filePath,
-      file_size: file.size,
-      mime_type: file.type || null,
-      uploaded_by: userId,
+    uploaded.push({
+      fileName: file.name,
+      filePath,
+      fileSize: file.size,
+      mimeType: file.type || null,
     });
+  }
 
-    if (attachmentError) {
-      console.error("[messages] Could not create attachment record", {
-        organizationId,
-        messageId,
-        fileName: file.name,
-        filePath,
-        error: attachmentError,
-      });
-      return { status: "error" as const };
-    }
+  return { status: "success" as const, attachments: uploaded };
+}
+
+async function createMessageAttachmentRecords({
+  supabase,
+  organizationId,
+  messageId,
+  userId,
+  attachments,
+}: {
+  supabase: Awaited<ReturnType<typeof requireOrganizationContext>>["supabase"];
+  organizationId: string;
+  messageId: string;
+  userId: string;
+  attachments: UploadedAttachment[];
+}) {
+  if (!attachments.length) {
+    return { status: "success" as const };
+  }
+
+  const records = attachments.map((attachment) => ({
+    message_id: messageId,
+    organization_id: organizationId,
+    file_name: attachment.fileName,
+    file_path: attachment.filePath,
+    file_size: attachment.fileSize,
+    mime_type: attachment.mimeType,
+    uploaded_by: userId,
+  }));
+
+  const { error: attachmentError } = await supabase.from("internal_message_attachments").insert(records);
+
+  if (attachmentError) {
+    console.error("[messages] Could not create attachment records", {
+      organizationId,
+      messageId,
+      records: records.map((record) => ({
+        ...record,
+        file_path: record.file_path,
+      })),
+      error: {
+        code: attachmentError.code,
+        message: attachmentError.message,
+        details: attachmentError.details,
+        hint: attachmentError.hint,
+      },
+    });
+    return { status: "error" as const, message: attachmentError.message };
   }
 
   return { status: "success" as const };
@@ -385,4 +522,31 @@ function sanitizeFileName(fileName: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "") || "file";
   return `${base}${extension}`;
+}
+
+function describeAttachmentFailure(error: unknown) {
+  const message = error instanceof Error ? error.message : typeof error === "object" && error && "message" in error ? String(error.message) : "";
+  const lowerMessage = message.toLowerCase();
+
+  if (lowerMessage.includes("bucket") && lowerMessage.includes("not found")) {
+    return "The attachment storage bucket is missing.";
+  }
+
+  if (lowerMessage.includes("row-level security") || lowerMessage.includes("permission") || lowerMessage.includes("unauthorized")) {
+    return "Storage permissions blocked the upload.";
+  }
+
+  return message || "Please try another file or try again.";
+}
+
+function serializeError(error: unknown) {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+
+  return error;
 }

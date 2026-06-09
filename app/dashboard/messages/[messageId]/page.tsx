@@ -75,9 +75,34 @@ export default async function MessageDetailPage({
   const attachmentsByMessage = new Map<string, AttachmentWithUrl[]>();
 
   for (const attachment of (attachmentData ?? []) as InternalMessageAttachment[]) {
-    const { data: signed } = await supabase.storage.from(attachmentBucket).createSignedUrl(attachment.file_path, 600);
+    let signedUrl: string | null = null;
+
+    try {
+      const { data: signed, error: signedError } = await supabase.storage.from(attachmentBucket).createSignedUrl(attachment.file_path, 600);
+
+      if (signedError) {
+        console.error("[messages] Could not create attachment download link", {
+          organizationId: organizationContext.activeOrganization.id,
+          messageId,
+          attachmentId: attachment.id,
+          filePath: attachment.file_path,
+          error: signedError,
+        });
+      }
+
+      signedUrl = signed?.signedUrl ?? null;
+    } catch (error) {
+      console.error("[messages] Attachment download link crashed", {
+        organizationId: organizationContext.activeOrganization.id,
+        messageId,
+        attachmentId: attachment.id,
+        filePath: attachment.file_path,
+        error,
+      });
+    }
+
     const attachments = attachmentsByMessage.get(attachment.message_id) ?? [];
-    attachments.push({ ...attachment, signedUrl: signed?.signedUrl ?? null });
+    attachments.push({ ...attachment, signedUrl });
     attachmentsByMessage.set(attachment.message_id, attachments);
   }
 
