@@ -37,7 +37,6 @@ export default async function DashboardPage() {
     { count: activeInventoryLoans },
     { count: overdueInventoryLoans },
     { count: dueSoonInventoryLoans },
-    { count: pendingInvitations },
     { data: activityEvents },
     { data: recentInventoryEvents },
     { count: openIssues },
@@ -143,11 +142,6 @@ export default async function DashboardPage() {
       .eq("status", "active")
       .gte("due_date", todayStart.toISOString().slice(0, 10))
       .lte("due_date", sevenDaysFromToday.toISOString().slice(0, 10)),
-    supabase
-      .from("organization_invitations")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", organizationId)
-      .eq("status", "pending"),
     supabase
       .from("activity_events")
       .select("id, type, title, description, created_at")
@@ -272,12 +266,6 @@ export default async function DashboardPage() {
       value: overdueInventoryLoans ?? 0,
       href: "/dashboard/inventory/items?status=overdue",
       moduleId: "inventory",
-    },
-    {
-      label: "Pending invitations",
-      value: pendingInvitations ?? 0,
-      href: "/dashboard/settings/team?tab=invitations",
-      moduleId: "members",
     },
     { label: "Open issues", value: openIssues ?? 0, href: "/dashboard/issues", moduleId: "issue-management" },
     { label: "New fault reports", value: newFaultReports ?? 0, href: "/dashboard/fault-reports", moduleId: "fault-reports" },

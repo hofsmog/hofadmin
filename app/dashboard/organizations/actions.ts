@@ -381,13 +381,21 @@ export async function inviteMemberAction(
   });
 
   revalidatePath("/dashboard/settings/team");
-  revalidatePath("/dashboard/settings/team");
   revalidatePath("/dashboard");
 
   if (!emailResult.success) {
+    console.error("[team-invitations] Invitation was created but email sending failed.", {
+      organizationId: context.activeOrganization.id,
+      invitationId: invitation.id,
+      email,
+      role,
+      emailError: emailResult.error,
+      emailMessage: emailResult.message,
+    });
+
     return {
       status: "warning",
-      message: "Invitation was created, but the email could not be sent.",
+      message: getInvitationEmailFailureMessage(emailResult),
     };
   }
 
@@ -517,4 +525,20 @@ function escapeHtml(value: string) {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
+}
+
+function getInvitationEmailFailureMessage(emailResult: Awaited<ReturnType<typeof sendEmail>>) {
+  if (emailResult.error === "missing_resend_api_key") {
+    return "Invitation was created, but email sending is not configured yet. Missing RESEND_API_KEY.";
+  }
+
+  if (emailResult.error === "invalid_from_address") {
+    return "Invitation was created, but email sending is not configured yet. Missing or invalid EMAIL_FROM_ADDRESS / FROM_EMAIL.";
+  }
+
+  if (emailResult.error === "provider_error") {
+    return `Invitation was created, but the email provider rejected it: ${emailResult.message}`;
+  }
+
+  return `Invitation was created, but the email could not be sent: ${emailResult.message}`;
 }

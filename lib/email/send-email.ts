@@ -39,21 +39,28 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
   const recipients = normalizeRecipients(input.to);
 
   if (!recipients.length) {
+    console.error("[email] No recipient email addresses were provided.", { eventType: input.eventType, organizationId: input.organizationId });
     return { success: false, message: "No recipient email addresses were provided.", error: "no_recipients" };
   }
 
   const apiKey = process.env.RESEND_API_KEY;
-  const fromAddress = process.env.EMAIL_FROM_ADDRESS;
+  const fromAddress = process.env.EMAIL_FROM_ADDRESS || process.env.FROM_EMAIL;
   const fromName = process.env.EMAIL_FROM_NAME || "HofAdmin";
 
   if (!apiKey) {
+    console.error("[email] Missing RESEND_API_KEY.", { eventType: input.eventType, organizationId: input.organizationId });
     await logMany(input, recipients, "failed", null, "RESEND_API_KEY is not configured.");
     return { success: false, message: "Email sending is not configured. Add RESEND_API_KEY in the server environment.", error: "missing_resend_api_key" };
   }
 
   if (!fromAddress || !fromAddress.includes("@")) {
-    await logMany(input, recipients, "failed", null, "EMAIL_FROM_ADDRESS is missing or invalid.");
-    return { success: false, message: "Email sender is not configured. Add a verified EMAIL_FROM_ADDRESS.", error: "invalid_from_address" };
+    console.error("[email] Missing or invalid EMAIL_FROM_ADDRESS / FROM_EMAIL.", {
+      eventType: input.eventType,
+      organizationId: input.organizationId,
+      fromAddressConfigured: Boolean(fromAddress),
+    });
+    await logMany(input, recipients, "failed", null, "EMAIL_FROM_ADDRESS / FROM_EMAIL is missing or invalid.");
+    return { success: false, message: "Email sender is not configured. Add a verified EMAIL_FROM_ADDRESS or FROM_EMAIL.", error: "invalid_from_address" };
   }
 
   try {
@@ -68,6 +75,11 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
 
     if (response.error) {
       const errorMessage = response.error.message || "Resend returned an error.";
+      console.error("[email] Resend rejected email.", {
+        eventType: input.eventType,
+        organizationId: input.organizationId,
+        error: errorMessage,
+      });
       await logMany(input, recipients, "failed", null, errorMessage);
       return { success: false, message: errorMessage, error: "provider_error" };
     }
@@ -81,6 +93,11 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Email provider request failed.";
+    console.error("[email] Email provider request failed.", {
+      eventType: input.eventType,
+      organizationId: input.organizationId,
+      error: message,
+    });
     await logMany(input, recipients, "failed", null, message);
     return { success: false, message, error: "send_failed" };
   }
@@ -88,7 +105,8 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
 
 export function getEmailEnvironmentStatus() {
   const hasApiKey = Boolean(process.env.RESEND_API_KEY);
-  const hasFromAddress = Boolean(process.env.EMAIL_FROM_ADDRESS && process.env.EMAIL_FROM_ADDRESS.includes("@"));
+  const fromAddress = process.env.EMAIL_FROM_ADDRESS || process.env.FROM_EMAIL;
+  const hasFromAddress = Boolean(fromAddress && fromAddress.includes("@"));
   const hasAppUrl = Boolean(process.env.APP_URL);
 
   return {
@@ -97,7 +115,7 @@ export function getEmailEnvironmentStatus() {
     appUrlConfigured: hasAppUrl,
     ready: hasApiKey && hasFromAddress && hasAppUrl,
     fromName: process.env.EMAIL_FROM_NAME || "HofAdmin",
-    fromAddress: process.env.EMAIL_FROM_ADDRESS || null,
+    fromAddress: fromAddress || null,
     appUrl: process.env.APP_URL || null,
   };
 }
