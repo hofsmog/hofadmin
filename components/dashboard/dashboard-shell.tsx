@@ -7,6 +7,7 @@ import { useState } from "react";
 import { BrandLockup } from "@/components/ui/brand";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
 import { OrganizationSwitcher } from "@/components/dashboard/organization-switcher";
+import { MessagesAutoRefresh } from "@/components/dashboard/messages-auto-refresh";
 import { createClient } from "@/lib/supabase/client";
 import { getDashboardNavItems } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
@@ -14,12 +15,14 @@ import type { OrganizationContext } from "@/types";
 
 export function DashboardShell({
   children,
+  userId,
   userEmail,
   organizationContext,
   newSubmissionsCount = 0,
   unreadMessagesCount = 0,
 }: {
   children: React.ReactNode;
+  userId: string;
   userEmail: string;
   organizationContext: OrganizationContext;
   newSubmissionsCount?: number;
@@ -48,6 +51,7 @@ export function DashboardShell({
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50" style={backgroundColor ? { backgroundColor } : undefined}>
+      <MessagesAutoRefresh organizationId={organizationContext.activeOrganization.id} userId={userId} />
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r bg-white/90 backdrop-blur-xl dark:bg-zinc-950/90 lg:flex lg:flex-col">
         <Sidebar pathname={pathname} organizationContext={organizationContext} newSubmissionsCount={newSubmissionsCount} unreadMessagesCount={unreadMessagesCount} />
       </aside>

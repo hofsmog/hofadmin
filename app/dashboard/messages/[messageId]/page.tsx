@@ -9,12 +9,25 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Toast } from "@/components/ui/toast";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
-import { formatFileSize, type InternalMessage, type InternalMessageAttachment } from "@/lib/messages";
+import {
+  createMessageNameMap,
+  formatFileSize,
+  type InternalMessage,
+  type InternalMessageAttachment,
+  type MessageTeamMember,
+} from "@/lib/messages";
 
 const attachmentBucket = "internal-message-attachments";
 
 type AttachmentWithUrl = InternalMessageAttachment & {
   signedUrl: string | null;
+};
+
+type TeamMemberRpcClient = {
+  rpc(
+    fn: "list_organization_team_members",
+    args: { p_organization_id: string },
+  ): Promise<{ data: MessageTeamMember[] | null; error: { message: string } | null }>;
 };
 
 export default async function MessageDetailPage({
@@ -57,6 +70,34 @@ export default async function MessageDetailPage({
   }
 
   const thread = ((threadData ?? [message]) as InternalMessage[]).length ? (threadData ?? [message]) as InternalMessage[] : [message];
+  const openedUnreadMessages = thread.filter((threadMessage) => threadMessage.recipient_user_id === user.id && !threadMessage.read_at);
+
+  if (openedUnreadMessages.length) {
+    const readAt = new Date().toISOString();
+    const { error: readError } = await supabase
+      .from("internal_messages")
+      .update({ read_at: readAt })
+      .eq("organization_id", organizationContext.activeOrganization.id)
+      .eq("conversation_id", message.conversation_id)
+      .eq("recipient_user_id", user.id)
+      .is("read_at", null);
+
+    if (readError) {
+      console.error("[messages] Could not auto-mark thread read", {
+        organizationId: organizationContext.activeOrganization.id,
+        messageId,
+        conversationId: message.conversation_id,
+        error: readError,
+      });
+    } else {
+      for (const threadMessage of thread) {
+        if (threadMessage.recipient_user_id === user.id && !threadMessage.read_at) {
+          threadMessage.read_at = readAt;
+        }
+      }
+    }
+  }
+
   const threadMessageIds = thread.map((threadMessage) => threadMessage.id);
   const unreadInThread = thread.some((threadMessage) => threadMessage.recipient_user_id === user.id && !threadMessage.read_at);
   const { data: attachmentData, error: attachmentError } = threadMessageIds.length
@@ -71,6 +112,17 @@ export default async function MessageDetailPage({
   if (attachmentError) {
     console.error("[messages] Could not load message attachments", { organizationId: organizationContext.activeOrganization.id, messageId, error: attachmentError });
   }
+
+  const { data: teamMembers, error: teamError } = await (supabase as unknown as TeamMemberRpcClient).rpc(
+    "list_organization_team_members",
+    { p_organization_id: organizationContext.activeOrganization.id },
+  );
+
+  if (teamError) {
+    console.error("[messages] Could not load team names for message detail", { organizationId: organizationContext.activeOrganization.id, messageId, error: teamError });
+  }
+
+  const nameByUserId = createMessageNameMap(teamMembers ?? []);
 
   const attachmentsByMessage = new Map<string, AttachmentWithUrl[]>();
 
@@ -130,8 +182,8 @@ export default async function MessageDetailPage({
               <article key={threadMessage.id} className="rounded-2xl border p-4">
                 <div className="flex flex-col gap-1 border-b pb-3 text-sm md:flex-row md:items-start md:justify-between">
                   <div>
-                    <p className="font-medium">{threadMessage.sender_email}</p>
-                    <p className="text-muted-foreground">To {threadMessage.recipient_email}</p>
+                    <p className="font-medium">{nameByUserId.get(threadMessage.sender_user_id) ?? "Team member"}</p>
+                    <p className="text-muted-foreground">To {nameByUserId.get(threadMessage.recipient_user_id) ?? "Team member"}</p>
                   </div>
                   <p className="text-xs text-muted-foreground">{new Date(threadMessage.created_at).toLocaleString()}</p>
                 </div>

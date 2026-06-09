@@ -1473,6 +1473,18 @@ export type Database = {
         };
         Returns: string;
       };
+      list_organization_team_members: {
+        Args: {
+          p_organization_id: string;
+        };
+        Returns: {
+          user_id: string;
+          email: string;
+          display_name: string | null;
+          role: OrganizationRole;
+          joined_at: string;
+        }[];
+      };
     };
     Enums: {
       organization_role: OrganizationRole;

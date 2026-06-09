@@ -32,6 +32,7 @@ export type MessageActionState = {
 type TeamMember = {
   user_id: string;
   email: string;
+  display_name: string | null;
   role: string;
   joined_at: string;
 };

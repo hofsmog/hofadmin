@@ -5,8 +5,23 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
-import { latestMessageByConversation, messagesNavItems, type InternalMessage, type MessageConversation } from "@/lib/messages";
+import {
+  createMessageNameMap,
+  getMessagePreview,
+  latestMessageByConversation,
+  messagesNavItems,
+  type InternalMessage,
+  type MessageConversation,
+  type MessageTeamMember,
+} from "@/lib/messages";
 import { cn } from "@/lib/utils";
+
+type TeamMemberRpcClient = {
+  rpc(
+    fn: "list_organization_team_members",
+    args: { p_organization_id: string },
+  ): Promise<{ data: MessageTeamMember[] | null; error: { message: string } | null }>;
+};
 
 export default async function MessagesInboxPage() {
   const { user, supabase, organizationContext } = await requireOrganizationContext();
@@ -21,6 +36,17 @@ export default async function MessagesInboxPage() {
   if (error) {
     console.error("[messages] Could not load inbox", { organizationId: organizationContext.activeOrganization.id, error });
   }
+
+  const { data: teamMembers, error: teamError } = await (supabase as unknown as TeamMemberRpcClient).rpc(
+    "list_organization_team_members",
+    { p_organization_id: organizationContext.activeOrganization.id },
+  );
+
+  if (teamError) {
+    console.error("[messages] Could not load team names for inbox", { organizationId: organizationContext.activeOrganization.id, error: teamError });
+  }
+
+  const nameByUserId = createMessageNameMap(teamMembers ?? []);
 
   return (
     <>
@@ -41,7 +67,7 @@ export default async function MessagesInboxPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <MessageList messages={latestMessageByConversation((messages ?? []) as InternalMessage[], user.id)} userId={user.id} emptyTitle="No messages yet" emptyDescription="Messages from your team will appear here." />
+          <MessageList messages={latestMessageByConversation((messages ?? []) as InternalMessage[], user.id)} userId={user.id} nameByUserId={nameByUserId} emptyTitle="No messages yet" emptyDescription="Messages from your team will appear here." />
         </CardContent>
       </Card>
     </>
@@ -72,11 +98,13 @@ export function MessagesTabs({ active }: { active: string }) {
 export function MessageList({
   messages,
   userId,
+  nameByUserId,
   emptyTitle,
   emptyDescription,
 }: {
   messages: MessageConversation[];
   userId: string;
+  nameByUserId: Map<string, string>;
   emptyTitle: string;
   emptyDescription: string;
 }) {
@@ -98,8 +126,9 @@ export function MessageList({
               <span className={cn("truncate text-sm", message.read_at ? "font-medium" : "font-semibold")}>{message.subject}</span>
               {message.unread_count > 0 ? <Badge>{message.unread_count} unread</Badge> : null}
             </span>
+            <span className="mt-1 block truncate text-sm text-muted-foreground">{getMessagePreview(message.body)}</span>
             <span className="mt-1 block truncate text-xs text-muted-foreground">
-              {message.sender_user_id === userId ? `To ${message.recipient_email}` : `From ${message.sender_email}`} - {new Date(message.created_at).toLocaleString()}
+              {message.sender_user_id === userId ? `To ${nameByUserId.get(message.recipient_user_id) ?? "Team member"}` : `From ${nameByUserId.get(message.sender_user_id) ?? "Team member"}`} - {new Date(message.created_at).toLocaleString()}
             </span>
           </span>
           <PenLine className="h-4 w-4 text-muted-foreground" />

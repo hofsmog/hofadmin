@@ -9,7 +9,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getModulesForOrganization, getSelectableEnabledModuleIds } from "@/lib/modules";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { getResponseTitle, groupSubmissionValues } from "@/lib/forms/submissions";
+import { createMessageNameMap, getMessagePreview, type MessageTeamMember } from "@/lib/messages";
 import { formatUsage, getEffectiveMemberLimit, getEffectiveModuleLimit, getOrganizationPlan } from "@/lib/plans";
+
+type TeamMemberRpcClient = {
+  rpc(
+    fn: "list_organization_team_members",
+    args: { p_organization_id: string },
+  ): Promise<{ data: MessageTeamMember[] | null; error: { message: string } | null }>;
+};
 
 export default async function DashboardPage() {
   const { supabase, organizationContext } = await requireOrganizationContext();
@@ -129,7 +137,7 @@ export default async function DashboardPage() {
       .is("read_at", null),
     supabase
       .from("internal_messages")
-      .select("id, sender_email, subject, created_at")
+      .select("id, sender_user_id, subject, body, created_at")
       .eq("organization_id", organizationId)
       .eq("recipient_user_id", organizationContext.activeMembership.userId)
       .is("read_at", null)
@@ -235,6 +243,16 @@ export default async function DashboardPage() {
           .in("id", formIds)
       : Promise.resolve({ data: [] }),
   ]);
+  const { data: teamMembers, error: teamMembersError } = await (supabase as unknown as TeamMemberRpcClient).rpc(
+    "list_organization_team_members",
+    { p_organization_id: organizationId },
+  );
+
+  if (teamMembersError) {
+    console.error("[dashboard] Could not load team names for messages", { organizationId, error: teamMembersError });
+  }
+
+  const messageNameByUserId = createMessageNameMap(teamMembers ?? []);
   const valuesBySubmissionId = groupSubmissionValues(latestSubmissionValues ?? []);
   const formsById = new Map((submissionForms ?? []).map((form) => [form.id, form.title]));
   const overBudgetCategories = (budgetRowsForDashboard ?? []).filter((row: any) => Number(row.actual_amount ?? 0) > Number(row.planned_amount ?? 0)).length;
@@ -507,8 +525,9 @@ export default async function DashboardPage() {
                     <MailOpen className="h-4 w-4 shrink-0 text-sky-700 dark:text-sky-300" />
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-semibold">{message.subject}</span>
+                      <span className="mt-1 block truncate text-xs text-muted-foreground">{getMessagePreview(message.body)}</span>
                       <span className="mt-1 block truncate text-xs text-muted-foreground">
-                        {message.sender_email} - {new Date(message.created_at).toLocaleString()}
+                        {messageNameByUserId.get(message.sender_user_id) ?? "Team member"} - {new Date(message.created_at).toLocaleString()}
                       </span>
                     </span>
                   </ButtonLink>

@@ -40,6 +40,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <DashboardShell
+      userId={user.id}
       userEmail={user.email ?? "Account"}
       organizationContext={organizationContext}
       newSubmissionsCount={newSubmissionsError ? 0 : newSubmissionsCount ?? 0}

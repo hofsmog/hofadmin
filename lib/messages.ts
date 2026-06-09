@@ -4,6 +4,14 @@ export const messagesNavItems = [
   { title: "New message", href: "/dashboard/messages/new" },
 ];
 
+export type MessageTeamMember = {
+  user_id: string;
+  email: string;
+  display_name: string | null;
+  role: string;
+  joined_at?: string;
+};
+
 export type InternalMessage = {
   id: string;
   organization_id: string;
@@ -35,6 +43,16 @@ export type MessageConversation = InternalMessage & {
   unread_count: number;
 };
 
+export function getMessageDisplayName(userId: string, teamMembers: MessageTeamMember[], fallback = "Team member") {
+  const member = teamMembers.find((teamMember) => teamMember.user_id === userId);
+  const name = member?.display_name?.trim();
+  return name || fallback;
+}
+
+export function createMessageNameMap(teamMembers: MessageTeamMember[]) {
+  return new Map(teamMembers.map((teamMember) => [teamMember.user_id, getMessageDisplayName(teamMember.user_id, teamMembers)]));
+}
+
 export function latestMessageByConversation(messages: InternalMessage[], userId: string, sentOnly = false) {
   const grouped = new Map<string, MessageConversation>();
 
@@ -58,6 +76,11 @@ export function latestMessageByConversation(messages: InternalMessage[], userId:
   return Array.from(grouped.values())
     .filter((message) => !sentOnly || message.sender_user_id === userId)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+}
+
+export function getMessagePreview(body: string) {
+  const text = body.replace(/\s+/g, " ").trim();
+  return text.length > 90 ? `${text.slice(0, 87)}...` : text;
 }
 
 export function formatFileSize(bytes: number) {

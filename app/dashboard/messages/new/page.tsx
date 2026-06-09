@@ -8,6 +8,7 @@ import { MessagesTabs } from "@/app/dashboard/messages/page";
 type TeamMember = {
   user_id: string;
   email: string;
+  display_name: string | null;
   role: string;
   joined_at: string;
 };
