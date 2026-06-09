@@ -44,5 +44,17 @@ function getReason(value?: string) {
     return "Supabase is not configured for this environment.";
   }
 
+  if (value === "not-found") {
+    return "This invitation was not found. Ask the organization admin to resend it.";
+  }
+
+  if (value === "not-pending") {
+    return "This invitation has already been used or cancelled.";
+  }
+
+  if (value === "expired") {
+    return "This invitation has expired. Ask the organization admin to resend it.";
+  }
+
   return value;
 }

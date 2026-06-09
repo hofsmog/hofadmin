@@ -39,6 +39,36 @@ create policy "Owners and admins can update invitations"
     )
   );
 
+create or replace function public.get_organization_invitation_acceptance_context(p_invitation_id uuid)
+returns table (
+  invitation_id uuid,
+  organization_name text,
+  invited_email text,
+  invited_role public.organization_role,
+  invitation_status public.invitation_status,
+  expires_at timestamptz,
+  invitation_expired boolean
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    invitations.id,
+    coalesce(organizations.display_name, organizations.name) as organization_name,
+    invitations.email as invited_email,
+    invitations.role as invited_role,
+    invitations.status as invitation_status,
+    invitations.expires_at,
+    invitations.expires_at is not null and invitations.expires_at <= now() as invitation_expired
+  from public.organization_invitations invitations
+  join public.organizations organizations on organizations.id = invitations.organization_id
+  where invitations.id = p_invitation_id
+  limit 1;
+$$;
+
+grant execute on function public.get_organization_invitation_acceptance_context(uuid) to anon, authenticated;
+
 create or replace function public.accept_organization_invitation(p_invitation_id uuid)
 returns uuid
 language plpgsql
