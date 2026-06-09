@@ -4,6 +4,7 @@ import {
   ClipboardList,
   Handshake,
   LayoutDashboard,
+  MessageSquare,
   Puzzle,
   QrCode,
   Settings,
@@ -15,6 +16,7 @@ import type { DashboardNavItem, Organization } from "@/types";
 
 export const dashboardNavItems: Array<DashboardNavItem & { moduleId?: string; system?: boolean }> = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, moduleId: "dashboard", system: true },
+  { title: "Messages", href: "/dashboard/messages", icon: MessageSquare, system: true },
   { title: "Members", href: "/dashboard/members", icon: UsersRound, moduleId: "members" },
   { title: "Forms", href: "/dashboard/forms", icon: ClipboardList, moduleId: "forms" },
   { title: "Inventory", href: "/dashboard/inventory", icon: Package, moduleId: "inventory" },

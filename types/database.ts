@@ -262,6 +262,53 @@ export type Database = {
           },
         ];
       };
+      internal_messages: {
+        Row: {
+          id: string;
+          organization_id: string;
+          sender_user_id: string;
+          recipient_user_id: string;
+          sender_email: string;
+          recipient_email: string;
+          subject: string;
+          body: string;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          sender_user_id: string;
+          recipient_user_id: string;
+          sender_email: string;
+          recipient_email: string;
+          subject: string;
+          body: string;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          sender_user_id?: string;
+          recipient_user_id?: string;
+          sender_email?: string;
+          recipient_email?: string;
+          subject?: string;
+          body?: string;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "internal_messages_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       qr_items: {
         Row: {
           id: string;

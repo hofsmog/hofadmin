@@ -17,11 +17,13 @@ export function DashboardShell({
   userEmail,
   organizationContext,
   newSubmissionsCount = 0,
+  unreadMessagesCount = 0,
 }: {
   children: React.ReactNode;
   userEmail: string;
   organizationContext: OrganizationContext;
   newSubmissionsCount?: number;
+  unreadMessagesCount?: number;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -47,7 +49,7 @@ export function DashboardShell({
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50" style={backgroundColor ? { backgroundColor } : undefined}>
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r bg-white/90 backdrop-blur-xl dark:bg-zinc-950/90 lg:flex lg:flex-col">
-        <Sidebar pathname={pathname} organizationContext={organizationContext} newSubmissionsCount={newSubmissionsCount} />
+        <Sidebar pathname={pathname} organizationContext={organizationContext} newSubmissionsCount={newSubmissionsCount} unreadMessagesCount={unreadMessagesCount} />
       </aside>
 
       {mobileOpen ? (
@@ -71,6 +73,7 @@ export function DashboardShell({
               pathname={pathname}
               organizationContext={organizationContext}
               newSubmissionsCount={newSubmissionsCount}
+              unreadMessagesCount={unreadMessagesCount}
               onNavigate={() => setMobileOpen(false)}
             />
           </aside>
@@ -98,7 +101,7 @@ export function DashboardShell({
               className="relative rounded-xl border bg-white p-2 shadow-sm transition hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800"
             >
               <Bell className="h-5 w-5" />
-              {newSubmissionsCount > 0 ? (
+              {newSubmissionsCount + unreadMessagesCount > 0 ? (
                 <span className="absolute right-2 top-2 h-2 w-2 rounded-full ring-2 ring-white dark:ring-zinc-900" style={{ backgroundColor: accentColor }} />
               ) : null}
             </button>
@@ -148,11 +151,13 @@ function Sidebar({
   pathname,
   organizationContext,
   newSubmissionsCount,
+  unreadMessagesCount,
   onNavigate,
 }: {
   pathname: string;
   organizationContext: OrganizationContext;
   newSubmissionsCount: number;
+  unreadMessagesCount: number;
   onNavigate?: () => void;
 }) {
   return (
@@ -204,6 +209,14 @@ function Sidebar({
                   active ? "bg-white/20 text-current dark:bg-zinc-950/15" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
                 )}>
                   {newSubmissionsCount > 99 ? "99+" : newSubmissionsCount}
+                </span>
+              ) : null}
+              {item.title === "Messages" && unreadMessagesCount > 0 ? (
+                <span className={cn(
+                  "ml-auto rounded-full px-2 py-0.5 text-xs font-semibold",
+                  active ? "bg-white/20 text-current dark:bg-zinc-950/15" : "bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300",
+                )}>
+                  {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
                 </span>
               ) : null}
             </Link>

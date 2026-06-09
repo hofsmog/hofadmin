@@ -24,11 +24,26 @@ export default async function DashboardLayout({ children }: { children: React.Re
     });
   }
 
+  const { count: unreadMessagesCount, error: unreadMessagesError } = await supabase
+    .from("internal_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", organizationContext.activeOrganization.id)
+    .eq("recipient_user_id", user.id)
+    .is("read_at", null);
+
+  if (unreadMessagesError) {
+    console.error("[dashboard/layout] Could not load unread message count", {
+      organizationId: organizationContext.activeOrganization.id,
+      error: unreadMessagesError,
+    });
+  }
+
   return (
     <DashboardShell
       userEmail={user.email ?? "Account"}
       organizationContext={organizationContext}
       newSubmissionsCount={newSubmissionsError ? 0 : newSubmissionsCount ?? 0}
+      unreadMessagesCount={unreadMessagesError ? 0 : unreadMessagesCount ?? 0}
     >
       {children}
     </DashboardShell>

@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AlertCircle, AlertTriangle, BarChart3, CalendarDays, CalendarRange, Car, CheckCircle2, CheckSquare, ClipboardList, CreditCard, FileCheck2, FileSignature, GraduationCap, Handshake, Inbox, KeyRound, Lightbulb, MapPin, Megaphone, Network, Package, PackageCheck, PiggyBank, Plus, ScanLine, ShieldAlert, UserCheck, UserMinus, UserPlus, UsersRound, Vote } from "lucide-react";
+import { AlertCircle, AlertTriangle, BarChart3, CalendarDays, CalendarRange, Car, CheckCircle2, CheckSquare, ClipboardList, CreditCard, FileCheck2, FileSignature, GraduationCap, Handshake, Inbox, KeyRound, Lightbulb, MailOpen, MapPin, Megaphone, Network, Package, PackageCheck, PiggyBank, Plus, ScanLine, ShieldAlert, UserCheck, UserMinus, UserPlus, UsersRound, Vote } from "lucide-react";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,8 @@ export default async function DashboardPage() {
     { count: newSubmissionsCount },
     { count: submissionsNeedingHandling },
     { data: latestNewSubmissions },
+    { count: unreadMessagesCount },
+    { data: recentUnreadMessages },
     { count: inventoryNeedsAttention },
     { count: activeInventoryLoans },
     { count: overdueInventoryLoans },
@@ -117,6 +119,20 @@ export default async function DashboardPage() {
       .select("id, form_id, submitter_email, read_status, handling_status, created_at")
       .eq("organization_id", organizationId)
       .eq("read_status", "new")
+      .order("created_at", { ascending: false })
+      .limit(3),
+    supabase
+      .from("internal_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", organizationId)
+      .eq("recipient_user_id", organizationContext.activeMembership.userId)
+      .is("read_at", null),
+    supabase
+      .from("internal_messages")
+      .select("id, sender_email, subject, created_at")
+      .eq("organization_id", organizationId)
+      .eq("recipient_user_id", organizationContext.activeMembership.userId)
+      .is("read_at", null)
       .order("created_at", { ascending: false })
       .limit(3),
     supabase
@@ -254,6 +270,12 @@ export default async function DashboardPage() {
       value: submissionsNeedingHandling ?? 0,
       href: "/dashboard/forms/submissions?handlingStatus=unhandled",
       moduleId: "forms",
+    },
+    {
+      label: "Unread messages",
+      value: unreadMessagesCount ?? 0,
+      href: "/dashboard/messages",
+      moduleId: "dashboard",
     },
     {
       label: "Inventory alerts",
@@ -463,6 +485,38 @@ export default async function DashboardPage() {
                 <div className="rounded-xl border border-dashed p-6 text-center">
                   <p className="text-sm font-medium">No new submissions</p>
                   <p className="mt-1 text-sm text-muted-foreground">Unread responses will appear here.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-start justify-between gap-4 pb-3">
+              <div>
+                <CardTitle>Unread messages</CardTitle>
+                <CardDescription>Recent internal messages from your team.</CardDescription>
+              </div>
+              <ButtonLink href="/dashboard/messages" variant="ghost" className="h-8 px-2">
+                View inbox
+              </ButtonLink>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {(recentUnreadMessages ?? []).length ? (
+                recentUnreadMessages?.map((message) => (
+                  <ButtonLink key={message.id} href={`/dashboard/messages/${message.id}`} variant="ghost" className="h-auto w-full justify-start rounded-xl bg-sky-50/80 p-3 text-left dark:bg-sky-950/20">
+                    <MailOpen className="h-4 w-4 shrink-0 text-sky-700 dark:text-sky-300" />
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold">{message.subject}</span>
+                      <span className="mt-1 block truncate text-xs text-muted-foreground">
+                        {message.sender_email} - {new Date(message.created_at).toLocaleString()}
+                      </span>
+                    </span>
+                  </ButtonLink>
+                ))
+              ) : (
+                <div className="rounded-xl border border-dashed p-6 text-center">
+                  <p className="text-sm font-medium">No unread messages</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Messages from your team will appear here.</p>
                 </div>
               )}
             </CardContent>
