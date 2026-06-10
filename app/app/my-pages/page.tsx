@@ -35,7 +35,7 @@ const sections: MyPageSection[] = [
     description: "Messages and updates that may need your attention.",
     emptyTitle: "No important messages",
     emptyDescription: "New messages and organization news will appear here.",
-    href: "/dashboard/messages",
+    href: "/app/messages",
     actionLabel: "Open messages",
     icon: Inbox,
   },
@@ -79,25 +79,14 @@ const sections: MyPageSection[] = [
     actionLabel: "Open loans",
     icon: Package,
   },
-  {
-    moduleId: "bookings",
-    title: "My bookings",
-    description: "Reservations you created or are responsible for.",
-    emptyTitle: "No upcoming bookings",
-    emptyDescription: "Your reservations will appear here.",
-    href: "/dashboard/bookings",
-    actionLabel: "Open bookings",
-    icon: CalendarDays,
-  },
 ];
 
 const quickLinks = [
-  { moduleId: "messages", label: "Messages", href: "/dashboard/messages", icon: Inbox },
-  { moduleId: "forms", label: "Forms", href: "/dashboard/forms", icon: ClipboardList },
-  { moduleId: "documents", label: "Documents", href: "/dashboard/documents", icon: FileArchive },
-  { moduleId: "bookings", label: "Bookings", href: "/dashboard/bookings", icon: CalendarDays },
-  { moduleId: "issues", label: "Issues", href: "/dashboard/issues", icon: AlertCircle },
-  { moduleId: "inventory", label: "Inventory", href: "/dashboard/inventory", icon: Package },
+  { moduleId: "documents", label: "Read documents", href: "/dashboard/documents", icon: FileArchive },
+  { moduleId: "forms", label: "Fill a form", href: "/dashboard/forms", icon: ClipboardList },
+  { moduleId: "issues", label: "Create issue", href: "/dashboard/issues", icon: AlertCircle },
+  { moduleId: "bookings", label: "Book resource", href: "/dashboard/bookings", icon: CalendarDays },
+  { moduleId: "inventory", label: "Borrowed items", href: "/dashboard/inventory/loans", icon: Package },
 ] as const;
 
 export default async function MyPagesPage() {
@@ -196,7 +185,7 @@ export default async function MyPagesPage() {
     {
       label: "Unread messages",
       value: unreadMessages?.length ?? 0,
-      href: "/dashboard/messages",
+      href: "/app/messages",
       show: true,
       detail: "Messages waiting",
       icon: Inbox,
@@ -229,8 +218,7 @@ export default async function MyPagesPage() {
   const visibleQuickLinks = quickLinks.filter((link) => canAccess(link.moduleId));
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-4 py-5 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl space-y-5">
+    <div className="mx-auto max-w-6xl space-y-5">
         <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 dark:bg-zinc-950 dark:ring-white/10">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
@@ -264,9 +252,9 @@ export default async function MyPagesPage() {
           <section>
             <div className="mb-3">
               <h2 className="text-base font-semibold tracking-tight">Quick links</h2>
-              <p className="text-sm text-muted-foreground">Open the tools you use most.</p>
+              <p className="text-sm text-muted-foreground">Simple shortcuts for common actions.</p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               {visibleQuickLinks.map((link) => {
                 const Icon = link.icon;
 
@@ -332,8 +320,7 @@ export default async function MyPagesPage() {
           </Card>
         )}
 
-      </div>
-    </main>
+    </div>
   );
 }
 
@@ -443,7 +430,7 @@ function getSectionItems({
     return unreadMessages.map((message) => ({
       title: message.subject,
       detail: `${nameByUserId.get(message.sender_user_id) ?? "Team member"} - ${getMessagePreview(message.body)}`,
-      href: `/dashboard/messages/${message.id}`,
+      href: "/app/messages",
     }));
   }
 
@@ -471,7 +458,7 @@ function getSectionItems({
     }));
   }
 
-  if (sectionId === "My calendar" || sectionId === "My bookings") {
+  if (sectionId === "My calendar") {
     return bookings.map((booking) => ({
       title: booking.resource_name,
       detail: `${new Date(booking.start_at).toLocaleString()} - ${booking.status}`,

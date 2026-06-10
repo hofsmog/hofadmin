@@ -42,6 +42,10 @@ export function getDashboardNavItems(
   },
 ) {
   return dashboardNavItems.filter((item) => {
+    if (access?.role === "member" && item.system) {
+      return false;
+    }
+
     if (!item.moduleId) {
       return true;
     }
