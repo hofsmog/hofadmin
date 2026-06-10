@@ -15,6 +15,7 @@ import type { OrganizationContext } from "@/types";
 
 const userNavItems = [
   { title: "My Pages", href: "/app/my-pages", icon: Home, moduleId: "dashboard", system: true },
+  { title: "Calendar", href: "/app/calendar", icon: CalendarDays, system: true },
   { title: "Messages", href: "/app/messages", icon: MessageSquare, system: true },
   { title: "Forms", href: "/dashboard/forms", icon: ClipboardList, moduleId: "forms" },
   { title: "Documents", href: "/dashboard/documents", icon: FileArchive, moduleId: "documents" },

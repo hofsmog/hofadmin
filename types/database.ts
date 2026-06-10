@@ -31,6 +31,7 @@ export type InventoryEventType =
   | "agreement_accepted";
 export type InventoryLoanStatus = "active" | "returned" | "overdue" | "cancelled";
 export type DocumentRecordScope = "organization" | "member" | "inventory";
+export type CalendarEventVisibility = "assigned" | "organization";
 export type ActivityEventType =
   | "qr_created"
   | "checkin_created"
@@ -617,6 +618,65 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "activity_events_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          ];
+        };
+      calendar_events: {
+        Row: {
+          id: string;
+          organization_id: string;
+          title: string;
+          description: string | null;
+          start_at: string;
+          end_at: string | null;
+          event_type: string;
+          assigned_to: string | null;
+          created_by: string | null;
+          source_type: string | null;
+          source_id: string | null;
+          visibility: CalendarEventVisibility;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          title: string;
+          description?: string | null;
+          start_at: string;
+          end_at?: string | null;
+          event_type?: string;
+          assigned_to?: string | null;
+          created_by?: string | null;
+          source_type?: string | null;
+          source_id?: string | null;
+          visibility?: CalendarEventVisibility;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          title?: string;
+          description?: string | null;
+          start_at?: string;
+          end_at?: string | null;
+          event_type?: string;
+          assigned_to?: string | null;
+          created_by?: string | null;
+          source_type?: string | null;
+          source_id?: string | null;
+          visibility?: CalendarEventVisibility;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";

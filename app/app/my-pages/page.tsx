@@ -7,8 +7,11 @@ import { requireOrganizationContext } from "@/lib/auth/require-organization-cont
 import { canRoleAccessModule, getModulePermissionRows } from "@/lib/module-permissions";
 import { isModuleEnabled } from "@/lib/modules";
 import { createMessageNameMap, getMessagePreview, type MessageTeamMember } from "@/lib/messages";
+import type { Database } from "@/types/database";
 
 export const dynamic = "force-dynamic";
+
+type CalendarEvent = Database["public"]["Tables"]["calendar_events"]["Row"];
 
 type TeamMemberRpcClient = {
   rpc(
@@ -30,12 +33,12 @@ type MyPageSection = {
 
 const sections: MyPageSection[] = [
   {
-    moduleId: "bookings",
+    moduleId: "calendar",
     title: "My calendar",
-    description: "Upcoming bookings connected to you.",
+    description: "Upcoming calendar items connected to you.",
     emptyTitle: "No calendar items",
-    emptyDescription: "Bookings and events assigned to you will appear here.",
-    href: "/dashboard/bookings",
+    emptyDescription: "Events, reminders and due dates will appear here.",
+    href: "/app/calendar",
     actionLabel: "Open calendar",
     icon: CalendarDays,
   },
@@ -85,6 +88,7 @@ export default async function MyPagesPage() {
   const permissionRows = await getModulePermissionRows(supabase, organization.id);
   const canAccess = (moduleId: string) =>
     moduleId === "messages" ||
+    moduleId === "calendar" ||
     (
       isModuleEnabled(moduleId, organization) &&
       canRoleAccessModule({
@@ -105,7 +109,6 @@ export default async function MyPagesPage() {
     : { data: null };
 
   const now = new Date().toISOString();
-  const canUseBookings = canAccess("bookings");
   const canUseForms = canAccess("forms");
   const canUseDocuments = canAccess("documents");
   const canUseInventory = canAccess("inventory");
@@ -119,7 +122,7 @@ export default async function MyPagesPage() {
     { data: availableForms },
     { data: documents },
     { data: borrowedItems },
-    { data: bookings },
+    { data: calendarEvents },
   ] = await Promise.all([
     supabase
       .from("internal_messages")
@@ -166,15 +169,13 @@ export default async function MyPagesPage() {
           .order("due_date", { ascending: true, nullsFirst: false })
           .limit(3)
       : Promise.resolve({ data: [] }),
-    canUseBookings
-      ? getUserBookings({
-          supabase,
-          organizationId: organization.id,
-          userId: user.id,
-          memberId: linkedMember?.id ?? null,
-          now,
-        })
-      : Promise.resolve({ data: [] }),
+    supabase
+      .from("calendar_events")
+      .select("id, organization_id, title, description, start_at, end_at, event_type, assigned_to, created_by, source_type, source_id, visibility, created_at, updated_at")
+      .eq("organization_id", organization.id)
+      .gte("start_at", now)
+      .order("start_at", { ascending: true })
+      .limit(3),
   ]);
 
   const nameByUserId = createMessageNameMap(teamMembers ?? []);
@@ -204,10 +205,10 @@ export default async function MyPagesPage() {
       icon: ClipboardList,
     },
     {
-      label: "Upcoming bookings",
-      value: bookings?.length ?? 0,
-      href: "/dashboard/bookings",
-      show: canUseBookings,
+      label: "Calendar items",
+      value: calendarEvents?.length ?? 0,
+      href: "/app/calendar",
+      show: true,
       detail: "Coming up",
       icon: CalendarDays,
     },
@@ -218,7 +219,7 @@ export default async function MyPagesPage() {
       return false;
     }
 
-    if (section.title === "My calendar" && !bookings?.length) {
+    if (section.title === "My calendar" && !calendarEvents?.length) {
       return false;
     }
 
@@ -355,7 +356,7 @@ export default async function MyPagesPage() {
                 availableForms: availableForms ?? [],
                 documents: documents ?? [],
                 borrowedItems: borrowedItems ?? [],
-                bookings: bookings ?? [],
+                calendarEvents: (calendarEvents ?? []) as CalendarEvent[],
                 nameByUserId,
               });
 
@@ -375,34 +376,6 @@ export default async function MyPagesPage() {
 
     </div>
   );
-}
-
-async function getUserBookings({
-  supabase,
-  organizationId,
-  userId,
-  memberId,
-  now,
-}: {
-  supabase: Awaited<ReturnType<typeof requireOrganizationContext>>["supabase"];
-  organizationId: string;
-  userId: string;
-  memberId: string | null;
-  now: string;
-}) {
-  let query = supabase
-    .from("bookings")
-    .select("id, resource_name, start_at, end_at, status")
-    .eq("organization_id", organizationId)
-    .gte("start_at", now)
-    .order("start_at", { ascending: true })
-    .limit(3);
-
-  query = memberId
-    ? query.or(`created_by.eq.${userId},responsible_member_id.eq.${memberId}`)
-    : query.eq("created_by", userId);
-
-  return query;
 }
 
 function PersonalCard({
@@ -468,7 +441,7 @@ function getSectionItems({
   availableForms,
   documents,
   borrowedItems,
-  bookings,
+  calendarEvents,
   nameByUserId,
 }: {
   sectionId: string;
@@ -476,7 +449,7 @@ function getSectionItems({
   availableForms: Array<{ id: string; title: string; status: string; created_at: string }>;
   documents: Array<{ id: string; title: string; folder: string; created_at: string }>;
   borrowedItems: Array<{ id: string; due_date: string | null; status: string; inventory_items: { name: string } | null }>;
-  bookings: Array<{ id: string; resource_name: string; start_at: string; end_at: string; status: string }>;
+  calendarEvents: CalendarEvent[];
   nameByUserId: Map<string, string>;
 }) {
   if (sectionId === "Important messages / news") {
@@ -512,10 +485,10 @@ function getSectionItems({
   }
 
   if (sectionId === "My calendar") {
-    return bookings.map((booking) => ({
-      title: booking.resource_name,
-      detail: `${new Date(booking.start_at).toLocaleString()} - ${booking.status}`,
-      href: "/dashboard/bookings",
+    return calendarEvents.map((event) => ({
+      title: event.title,
+      detail: `${new Date(event.start_at).toLocaleString()} - ${event.visibility === "organization" ? "Organization" : "Assigned"}`,
+      href: "/app/calendar",
     }));
   }
 
