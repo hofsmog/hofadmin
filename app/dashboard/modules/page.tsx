@@ -3,6 +3,7 @@ import { ModuleCard } from "@/components/dashboard/module-card";
 import { Badge } from "@/components/ui/badge";
 import { Toast } from "@/components/ui/toast";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
+import { getModulePermissionRows } from "@/lib/module-permissions";
 import { canManageOrganization } from "@/lib/organizations";
 import { getModulesForOrganization, getSelectableEnabledModuleIds } from "@/lib/modules";
 import { formatLimit, getEffectiveModuleLimit, getModuleLimitMessage, getOrganizationPlan } from "@/lib/plans";
@@ -11,8 +12,9 @@ const categories = ["Workspace", "Operations", "Admin"] as const;
 
 export default async function ModulesPage({ searchParams }: { searchParams?: Promise<{ updated?: string; error?: string }> }) {
   const params = (await searchParams) ?? {};
-  const { organizationContext } = await requireOrganizationContext();
+  const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationModules = getModulesForOrganization(organizationContext.activeOrganization);
+  const permissionRows = await getModulePermissionRows(supabase, organizationContext.activeOrganization.id);
   const canManage = canManageOrganization(organizationContext.activeMembership.role);
   const plan = getOrganizationPlan(organizationContext.activeOrganization);
   const moduleLimit = getEffectiveModuleLimit(organizationContext.activeOrganization);
@@ -38,6 +40,8 @@ export default async function ModulesPage({ searchParams }: { searchParams?: Pro
             ? "Only owners and admins can manage modules."
             : params.error === "limit"
               ? moduleLimitMessage ?? "Your current plan includes fewer modules. Upgrade to enable more."
+              : params.error === "permissions"
+                ? "Module access rules could not be saved."
               : "Check the module settings and try again."
         }
       />
@@ -85,9 +89,16 @@ export default async function ModulesPage({ searchParams }: { searchParams?: Pro
                 <Badge>{categoryModules.filter((module) => module.status === "enabled").length} active</Badge>
               </div>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {categoryModules.map((module) => (
-                  <ModuleCard key={module.id} module={module} canManage={canManage} />
-                ))}
+                {categoryModules.map((module) => {
+                  const moduleRoleRows = permissionRows.filter((row) => row.module_id === module.id && row.group_id === null);
+                  const allowedRoles = moduleRoleRows.length
+                    ? moduleRoleRows.filter((row) => row.can_access && row.role).map((row) => row.role!)
+                    : ["owner" as const, "admin" as const, "member" as const];
+
+                  return (
+                    <ModuleCard key={module.id} module={module} canManage={canManage} allowedRoles={allowedRoles} />
+                  );
+                })}
               </div>
             </section>
           );

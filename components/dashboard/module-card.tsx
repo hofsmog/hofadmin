@@ -36,13 +36,14 @@ import {
   Vote,
   Wrench,
 } from "lucide-react";
-import { openModuleAction, toggleModuleAction } from "@/app/dashboard/modules/actions";
+import { openModuleAction, toggleModuleAction, updateModuleRolePermissionsAction } from "@/app/dashboard/modules/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { systemModuleIds } from "@/lib/modules";
 import { cn } from "@/lib/utils";
 import type { ModuleDefinition, ModuleIconKey } from "@/types";
+import type { OrganizationRole } from "@/types/database";
 
 const icons: Record<ModuleIconKey, ComponentType<{ className?: string }>> = {
   qr: QrCode,
@@ -91,7 +92,15 @@ const icons: Record<ModuleIconKey, ComponentType<{ className?: string }>> = {
   equipment: Wrench,
 };
 
-export function ModuleCard({ module, canManage = false }: { module: ModuleDefinition; canManage?: boolean }) {
+export function ModuleCard({
+  module,
+  canManage = false,
+  allowedRoles = ["owner", "admin", "member"],
+}: {
+  module: ModuleDefinition;
+  canManage?: boolean;
+  allowedRoles?: OrganizationRole[];
+}) {
   const Icon = icons[module.icon];
   const active = module.status === "enabled";
   const locked = systemModuleIds.includes(module.id as (typeof systemModuleIds)[number]);
@@ -126,8 +135,28 @@ export function ModuleCard({ module, canManage = false }: { module: ModuleDefini
         </div>
       </CardHeader>
       <CardContent className="mt-auto flex items-center justify-between gap-3">
-        <Badge>{module.category}</Badge>
-        <div className="flex gap-2">
+        <div className="min-w-0">
+          <Badge>{module.category}</Badge>
+          {canManage && active ? (
+            <form action={updateModuleRolePermissionsAction} className="mt-3 space-y-2">
+              <input type="hidden" name="moduleId" value={module.id} />
+              <input type="hidden" name="returnTo" value="/dashboard/modules?updated=1" />
+              <p className="text-xs font-medium text-muted-foreground">Allowed roles</p>
+              <div className="flex flex-wrap gap-2">
+                {(["owner", "admin", "member"] as OrganizationRole[]).map((role) => (
+                  <label key={role} className="flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs capitalize">
+                    <input type="checkbox" name={`role:${role}`} defaultChecked={allowedRoles.includes(role)} />
+                    {role}
+                  </label>
+                ))}
+              </div>
+              <Button type="submit" variant="secondary" className="h-8 px-3 text-xs">
+                Save access
+              </Button>
+            </form>
+          ) : null}
+        </div>
+        <div className="flex shrink-0 gap-2">
           {canManage && !locked ? (
             <form action={toggleModuleAction}>
               <input type="hidden" name="moduleId" value={module.id} />

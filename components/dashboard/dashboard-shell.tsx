@@ -10,6 +10,7 @@ import { OrganizationSwitcher } from "@/components/dashboard/organization-switch
 import { MessagesAutoRefresh } from "@/components/dashboard/messages-auto-refresh";
 import { createClient } from "@/lib/supabase/client";
 import { getDashboardNavItems } from "@/lib/navigation";
+import type { ModulePermissionRow } from "@/lib/module-permissions";
 import { cn } from "@/lib/utils";
 import type { OrganizationContext } from "@/types";
 
@@ -20,6 +21,7 @@ export function DashboardShell({
   organizationContext,
   newSubmissionsCount = 0,
   unreadMessagesCount = 0,
+  modulePermissionRows = [],
 }: {
   children: React.ReactNode;
   userId: string;
@@ -27,6 +29,7 @@ export function DashboardShell({
   organizationContext: OrganizationContext;
   newSubmissionsCount?: number;
   unreadMessagesCount?: number;
+  modulePermissionRows?: ModulePermissionRow[];
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -53,7 +56,7 @@ export function DashboardShell({
     <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50" style={backgroundColor ? { backgroundColor } : undefined}>
       <MessagesAutoRefresh organizationId={organizationContext.activeOrganization.id} userId={userId} />
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r bg-white/90 backdrop-blur-xl dark:bg-zinc-950/90 lg:flex lg:flex-col">
-        <Sidebar pathname={pathname} organizationContext={organizationContext} newSubmissionsCount={newSubmissionsCount} unreadMessagesCount={unreadMessagesCount} />
+        <Sidebar pathname={pathname} organizationContext={organizationContext} newSubmissionsCount={newSubmissionsCount} unreadMessagesCount={unreadMessagesCount} modulePermissionRows={modulePermissionRows} />
       </aside>
 
       {mobileOpen ? (
@@ -78,6 +81,7 @@ export function DashboardShell({
               organizationContext={organizationContext}
               newSubmissionsCount={newSubmissionsCount}
               unreadMessagesCount={unreadMessagesCount}
+              modulePermissionRows={modulePermissionRows}
               onNavigate={() => setMobileOpen(false)}
             />
           </aside>
@@ -156,12 +160,14 @@ function Sidebar({
   organizationContext,
   newSubmissionsCount,
   unreadMessagesCount,
+  modulePermissionRows,
   onNavigate,
 }: {
   pathname: string;
   organizationContext: OrganizationContext;
   newSubmissionsCount: number;
   unreadMessagesCount: number;
+  modulePermissionRows: ModulePermissionRow[];
   onNavigate?: () => void;
 }) {
   return (
@@ -186,7 +192,10 @@ function Sidebar({
       </div>
 
       <nav className="flex-1 space-y-1 p-4">
-        {getDashboardNavItems(organizationContext.activeOrganization).map((item) => {
+        {getDashboardNavItems(organizationContext.activeOrganization, {
+          role: organizationContext.activeMembership.role,
+          permissionRows: modulePermissionRows,
+        }).map((item) => {
           const Icon = item.icon;
           const active =
             pathname === item.href ||

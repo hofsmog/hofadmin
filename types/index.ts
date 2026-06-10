@@ -30,6 +30,8 @@ export type Organization = {
   organizationType: OrganizationType | null;
   starterModules: string[];
   enabledModules: string[];
+  publicRegistrationEnabled: boolean;
+  defaultRegistrationRole: OrganizationRole;
   plan: OrganizationPlan;
   memberLimit: number | null;
   moduleLimit: number | null;

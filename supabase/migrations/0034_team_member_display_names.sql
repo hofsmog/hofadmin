@@ -1,4 +1,6 @@
-create or replace function public.list_organization_team_members(p_organization_id uuid)
+drop function if exists public.list_organization_team_members(uuid);
+
+create function public.list_organization_team_members(p_organization_id uuid)
 returns table (
   user_id uuid,
   email text,

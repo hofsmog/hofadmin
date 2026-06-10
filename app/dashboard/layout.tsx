@@ -1,5 +1,6 @@
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
+import { getModulePermissionRows } from "@/lib/module-permissions";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
     });
   }
 
+  const modulePermissionRows = await getModulePermissionRows(supabase, organizationContext.activeOrganization.id);
+
   return (
     <DashboardShell
       userId={user.id}
@@ -45,6 +48,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       organizationContext={organizationContext}
       newSubmissionsCount={newSubmissionsError ? 0 : newSubmissionsCount ?? 0}
       unreadMessagesCount={unreadMessagesError ? 0 : unreadMessagesCount ?? 0}
+      modulePermissionRows={modulePermissionRows}
     >
       {children}
     </DashboardShell>

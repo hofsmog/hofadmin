@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { data } = (await supabase?.auth.exchangeCodeForSession(code)) ?? {};
 
-    if (supabase && data?.user && !next.startsWith("/invitations/accept")) {
+    if (supabase && data?.user && !next.startsWith("/invitations/accept") && !isOrganizationRegisterRedirect(next)) {
       const { data: membership } = await supabase
         .from("organization_members")
         .select("organization_id")
@@ -31,4 +31,8 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.redirect(new URL(next, request.url));
+}
+
+function isOrganizationRegisterRedirect(value: string) {
+  return /^\/[^/]+\/register\/complete$/.test(value);
 }

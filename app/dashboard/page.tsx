@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import { redirect } from "next/navigation";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AlertCircle, AlertTriangle, BarChart3, CalendarDays, CalendarRange, Car, CheckCircle2, CheckSquare, ClipboardList, CreditCard, FileCheck2, FileSignature, GraduationCap, Handshake, Inbox, KeyRound, Lightbulb, MailOpen, MapPin, Megaphone, Network, Package, PackageCheck, PiggyBank, Plus, ScanLine, ShieldAlert, UserCheck, UserMinus, UserPlus, UsersRound, Vote } from "lucide-react";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
@@ -21,6 +22,11 @@ type TeamMemberRpcClient = {
 
 export default async function DashboardPage() {
   const { supabase, organizationContext } = await requireOrganizationContext();
+
+  if (organizationContext.activeMembership.role === "member") {
+    redirect("/app/my-pages");
+  }
+
   const organizationId = organizationContext.activeOrganization.id;
   const db = supabase as any;
   const organizationName =

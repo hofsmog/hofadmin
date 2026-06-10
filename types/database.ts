@@ -109,6 +109,8 @@ export type Database = {
           default_loan_agreement_text: string;
           organization_type: OrganizationType | null;
           starter_modules: string[];
+          public_registration_enabled: boolean;
+          default_registration_role: OrganizationRole;
           plan: OrganizationPlan;
           member_limit: number | null;
           module_limit: number | null;
@@ -141,6 +143,8 @@ export type Database = {
           default_loan_agreement_text?: string;
           organization_type?: OrganizationType | null;
           starter_modules?: string[];
+          public_registration_enabled?: boolean;
+          default_registration_role?: OrganizationRole;
           plan?: OrganizationPlan;
           member_limit?: number | null;
           module_limit?: number | null;
@@ -173,6 +177,8 @@ export type Database = {
           default_loan_agreement_text?: string;
           organization_type?: OrganizationType | null;
           starter_modules?: string[];
+          public_registration_enabled?: boolean;
+          default_registration_role?: OrganizationRole;
           plan?: OrganizationPlan;
           member_limit?: number | null;
           module_limit?: number | null;
@@ -258,6 +264,122 @@ export type Database = {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      organization_groups: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          description: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          description?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          name?: string;
+          description?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_groups_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      organization_group_members: {
+        Row: {
+          organization_id: string;
+          group_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          group_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: {
+          organization_id?: string;
+          group_id?: string;
+          user_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_group_members_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "organization_group_members_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "organization_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      organization_module_permissions: {
+        Row: {
+          id: string;
+          organization_id: string;
+          module_id: string;
+          role: OrganizationRole | null;
+          group_id: string | null;
+          can_access: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          module_id: string;
+          role?: OrganizationRole | null;
+          group_id?: string | null;
+          can_access?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          module_id?: string;
+          role?: OrganizationRole | null;
+          group_id?: string | null;
+          can_access?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_module_permissions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "organization_module_permissions_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "organization_groups";
             referencedColumns: ["id"];
           },
         ];
@@ -1484,6 +1606,20 @@ export type Database = {
           role: OrganizationRole;
           joined_at: string;
         }[];
+      };
+      can_access_organization_module: {
+        Args: {
+          p_organization_id: string;
+          p_user_id: string;
+          p_module_id: string;
+        };
+        Returns: boolean;
+      };
+      join_public_organization_by_slug: {
+        Args: {
+          p_slug: string;
+        };
+        Returns: string;
       };
     };
     Enums: {

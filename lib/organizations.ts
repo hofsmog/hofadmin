@@ -30,6 +30,8 @@ export function mapOrganization(row: OrganizationRow): Organization {
     organizationType: row.organization_type,
     starterModules: row.starter_modules,
     enabledModules: row.enabled_modules ?? row.starter_modules ?? [],
+    publicRegistrationEnabled: row.public_registration_enabled ?? true,
+    defaultRegistrationRole: row.default_registration_role ?? "member",
     plan: row.plan ?? "free",
     memberLimit: row.member_limit ?? null,
     moduleLimit: row.module_limit ?? null,

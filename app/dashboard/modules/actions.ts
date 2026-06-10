@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { recordActivityEvent } from "@/lib/activity";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { canManageOrganization } from "@/lib/organizations";
+import type { OrganizationRole } from "@/types/database";
 import { getEffectiveModuleLimit } from "@/lib/plans";
 import { getSelectableEnabledModuleIds, modules, systemModuleIds } from "@/lib/modules";
 
@@ -80,6 +81,49 @@ export async function toggleModuleAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/modules");
+  redirect(returnTo || "/dashboard/modules?updated=1");
+}
+
+export async function updateModuleRolePermissionsAction(formData: FormData) {
+  const { supabase, organizationContext } = await requireOrganizationContext();
+  const moduleId = String(formData.get("moduleId") || "");
+  const returnTo = sanitizeModuleReturnTo(String(formData.get("returnTo") || ""));
+  const targetModule = modules.find((item) => item.id === moduleId);
+
+  if (!targetModule) {
+    redirect("/dashboard/modules?error=module");
+  }
+
+  if (!canManageOrganization(organizationContext.activeMembership.role)) {
+    redirect("/dashboard/modules?error=permission");
+  }
+
+  const roles: OrganizationRole[] = ["owner", "admin", "member"];
+  const rows = roles.map((role) => ({
+    organization_id: organizationContext.activeOrganization.id,
+    module_id: moduleId,
+    role,
+    group_id: null,
+    can_access: formData.get(`role:${role}`) === "on",
+    updated_at: new Date().toISOString(),
+  }));
+
+  const { error } = await supabase
+    .from("organization_module_permissions")
+    .upsert(rows, { onConflict: "organization_id,module_id,role,group_id" });
+
+  if (error) {
+    console.error("[modules] Could not update module permissions", {
+      organizationId: organizationContext.activeOrganization.id,
+      moduleId,
+      error,
+    });
+    redirect("/dashboard/modules?error=permissions");
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/modules");
+  revalidatePath("/app/my-pages");
   redirect(returnTo || "/dashboard/modules?updated=1");
 }
 
