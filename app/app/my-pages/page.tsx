@@ -30,16 +30,6 @@ type MyPageSection = {
 
 const sections: MyPageSection[] = [
   {
-    moduleId: "messages",
-    title: "Important messages / news",
-    description: "Messages and updates that may need your attention.",
-    emptyTitle: "No important messages",
-    emptyDescription: "New messages and organization news will appear here.",
-    href: "/app/messages",
-    actionLabel: "Open messages",
-    icon: Inbox,
-  },
-  {
     moduleId: "bookings",
     title: "My calendar",
     description: "Upcoming bookings connected to you.",
@@ -82,11 +72,11 @@ const sections: MyPageSection[] = [
 ];
 
 const quickLinks = [
-  { moduleId: "documents", label: "Read documents", href: "/dashboard/documents", icon: FileArchive },
-  { moduleId: "forms", label: "Fill a form", href: "/dashboard/forms", icon: ClipboardList },
+  { moduleId: "documents", label: "Documents", href: "/dashboard/documents", icon: FileArchive },
+  { moduleId: "forms", label: "Forms", href: "/dashboard/forms", icon: ClipboardList },
   { moduleId: "issues", label: "Create issue", href: "/dashboard/issues", icon: AlertCircle },
-  { moduleId: "bookings", label: "Book resource", href: "/dashboard/bookings", icon: CalendarDays },
-  { moduleId: "inventory", label: "Borrowed items", href: "/dashboard/inventory/loans", icon: Package },
+  { moduleId: "bookings", label: "Bookings", href: "/dashboard/bookings", icon: CalendarDays },
+  { moduleId: "inventory", label: "Inventory", href: "/dashboard/inventory", icon: Package },
 ] as const;
 
 export default async function MyPagesPage() {
@@ -115,16 +105,16 @@ export default async function MyPagesPage() {
     : { data: null };
 
   const now = new Date().toISOString();
-  const visibleSections = sections.filter((section) => canAccess(section.moduleId));
   const canUseBookings = canAccess("bookings");
   const canUseForms = canAccess("forms");
   const canUseDocuments = canAccess("documents");
   const canUseInventory = canAccess("inventory");
-  const canUseTasks = canAccess("tasks");
   const userName = getUserDisplayName(user, linkedMember?.name ?? null);
+  const organizationName = getOrganizationName(organization);
 
   const [
     { data: unreadMessages },
+    { data: latestMessages },
     { data: teamMembers },
     { data: availableForms },
     { data: documents },
@@ -137,6 +127,13 @@ export default async function MyPagesPage() {
       .eq("organization_id", organization.id)
       .eq("recipient_user_id", user.id)
       .is("read_at", null)
+      .order("created_at", { ascending: false })
+      .limit(3),
+    supabase
+      .from("internal_messages")
+      .select("id, subject, body, sender_user_id, created_at, read_at")
+      .eq("organization_id", organization.id)
+      .eq("recipient_user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(3),
     (supabase as unknown as TeamMemberRpcClient)
@@ -194,7 +191,7 @@ export default async function MyPagesPage() {
       label: "Pending tasks",
       value: 0,
       href: "#my-tasks",
-      show: canUseTasks,
+      show: true,
       detail: "You're all caught up",
       icon: SquareCheckBig,
     },
@@ -216,13 +213,24 @@ export default async function MyPagesPage() {
     },
   ].filter((item) => item.show);
   const visibleQuickLinks = quickLinks.filter((link) => canAccess(link.moduleId));
+  const visibleSections = sections.filter((section) => {
+    if (!canAccess(section.moduleId)) {
+      return false;
+    }
+
+    if (section.title === "My calendar" && !bookings?.length) {
+      return false;
+    }
+
+    return true;
+  });
 
   return (
     <div className="mx-auto max-w-6xl space-y-5">
         <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 dark:bg-zinc-950 dark:ring-white/10">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <Badge>{organization.displayName ?? organization.name}</Badge>
+              <Badge>{organizationName}</Badge>
               <h1 className="mt-3 text-2xl font-semibold tracking-tight">
                 {userName ? `Welcome back, ${userName}` : "Welcome back"}
               </h1>
@@ -248,6 +256,53 @@ export default async function MyPagesPage() {
           ))}
         </section>
 
+        <Card>
+          <CardHeader>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <CardTitle>Important messages / news</CardTitle>
+                <CardDescription>Latest updates from your organization.</CardDescription>
+              </div>
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                <Inbox className="h-5 w-5" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {latestMessages?.length ? (
+              <div className="space-y-2">
+                {latestMessages.map((message, index) => (
+                  <ButtonLink
+                    key={message.id}
+                    href="/app/messages"
+                    variant="ghost"
+                    className="h-auto w-full justify-start rounded-xl bg-zinc-50 p-3 text-left dark:bg-zinc-900/60"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="flex flex-wrap items-center gap-2">
+                        <span className="block truncate text-sm font-medium">{message.subject}</span>
+                        {!message.read_at ? <Badge>Unread</Badge> : null}
+                        {index === 0 ? <Badge>Latest</Badge> : null}
+                      </span>
+                      <span className="mt-1 block truncate text-xs text-muted-foreground">
+                        {nameByUserId.get(message.sender_user_id) ?? "Team member"} - {getMessagePreview(message.body)}
+                      </span>
+                    </span>
+                  </ButtonLink>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed p-4">
+                <p className="text-sm font-medium">No important messages</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">New messages and organization news will appear here.</p>
+              </div>
+            )}
+            <ButtonLink href="/app/messages" variant="secondary" className="w-full">
+              Open messages
+            </ButtonLink>
+          </CardContent>
+        </Card>
+
         {visibleQuickLinks.length ? (
           <section>
             <div className="mb-3">
@@ -271,27 +326,25 @@ export default async function MyPagesPage() {
           </section>
         ) : null}
 
-        {canUseTasks ? (
-          <Card id="my-tasks" className="scroll-mt-6">
-            <CardHeader>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <CardTitle>My tasks</CardTitle>
-                  <CardDescription>Assigned work and follow-ups for today.</CardDescription>
-                </div>
-                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
-                  <SquareCheckBig className="h-5 w-5" />
-                </div>
+        <Card id="my-tasks" className="scroll-mt-6">
+          <CardHeader>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <CardTitle>My tasks</CardTitle>
+                <CardDescription>Things assigned to you or waiting for your action.</CardDescription>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-xl border border-dashed p-4">
-                <p className="text-sm font-medium">No tasks right now</p>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">You&apos;re all caught up.</p>
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                <SquareCheckBig className="h-5 w-5" />
               </div>
-            </CardContent>
-          </Card>
-        ) : null}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-xl border border-dashed p-4">
+              <p className="text-sm font-medium">No tasks right now</p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">You&apos;re all caught up.</p>
+            </div>
+          </CardContent>
+        </Card>
 
         {visibleSections.length ? (
           <div className="grid gap-4 lg:grid-cols-2">
@@ -485,4 +538,10 @@ function getUserDisplayName(
   }
 
   return name.split(" ")[0] || name;
+}
+
+function getOrganizationName(organization: Awaited<ReturnType<typeof requireOrganizationContext>>["organizationContext"]["activeOrganization"]) {
+  const name = organization.displayName?.trim() || organization.name?.trim() || "";
+
+  return name || "Your organization";
 }

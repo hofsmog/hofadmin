@@ -7,7 +7,6 @@ import { useState } from "react";
 import { MessagesAutoRefresh } from "@/components/dashboard/messages-auto-refresh";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
 import { OrganizationSwitcher } from "@/components/dashboard/organization-switcher";
-import { BrandLockup } from "@/components/ui/brand";
 import { createClient } from "@/lib/supabase/client";
 import { canRoleAccessModule, type ModulePermissionRow } from "@/lib/module-permissions";
 import { isModuleEnabled } from "@/lib/modules";
@@ -45,6 +44,7 @@ export function AppShell({
   const initials = getInitials(userEmail);
   const accentColor = organizationContext.activeOrganization.accentColor ?? "#111827";
   const backgroundColor = organizationContext.activeOrganization.backgroundColor ?? undefined;
+  const organizationName = getOrganizationName(organizationContext.activeOrganization);
 
   async function handleSignOut() {
     setIsSigningOut(true);
@@ -109,7 +109,7 @@ export function AppShell({
             <Menu className="h-5 w-5" />
           </button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name}</p>
+            <p className="truncate text-sm font-semibold">{organizationName}</p>
             <p className="text-xs text-muted-foreground">Personal workspace</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
@@ -177,19 +177,19 @@ function AppSidebar({
       permissionRows: modulePermissionRows,
     });
   });
+  const organizationName = getOrganizationName(organizationContext.activeOrganization);
 
   return (
     <div className="flex h-full flex-col">
       <div className="border-b p-5">
-        <BrandLockup size="sm" onClick={onNavigate} />
-        <div className="mt-4 flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <OrganizationAvatar
-            name={organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name}
+            name={organizationName}
             avatarUrl={organizationContext.activeOrganization.logoUrl ?? organizationContext.activeOrganization.avatarUrl}
-            className="h-9 w-9"
+            className="h-10 w-10"
           />
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name}</p>
+            <p className="truncate text-sm font-semibold">{organizationName}</p>
             <p className="text-xs text-muted-foreground">Personal workspace</p>
           </div>
         </div>
@@ -247,4 +247,10 @@ function getInitials(email: string) {
   }
 
   return name.slice(0, 2).toUpperCase();
+}
+
+function getOrganizationName(organization: OrganizationContext["activeOrganization"]) {
+  const name = organization.displayName?.trim() || organization.name?.trim() || "";
+
+  return name || "Your organization";
 }

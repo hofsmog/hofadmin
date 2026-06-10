@@ -13,6 +13,7 @@ import type { OrganizationContext } from "@/types";
 export function OrganizationSwitcher({ context }: { context: OrganizationContext }) {
   const [open, setOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const activeOrganizationName = getOrganizationName(context.activeOrganization);
 
   return (
     <div className="relative">
@@ -23,12 +24,12 @@ export function OrganizationSwitcher({ context }: { context: OrganizationContext
       >
         <span className="flex min-w-0 items-center gap-3">
           <OrganizationAvatar
-            name={context.activeOrganization.displayName ?? context.activeOrganization.name}
+            name={activeOrganizationName}
             avatarUrl={context.activeOrganization.logoUrl ?? context.activeOrganization.avatarUrl}
             className="h-9 w-9"
           />
           <span className="min-w-0">
-            <span className="block truncate text-sm font-medium">{context.activeOrganization.displayName ?? context.activeOrganization.name}</span>
+            <span className="block truncate text-sm font-medium">{activeOrganizationName}</span>
             <span className="block text-xs capitalize text-muted-foreground">{context.activeMembership.role}</span>
           </span>
         </span>
@@ -47,12 +48,12 @@ export function OrganizationSwitcher({ context }: { context: OrganizationContext
                   onClick={() => setOpen(false)}
                 >
                   <OrganizationAvatar
-                    name={organization.displayName ?? organization.name}
+                    name={getOrganizationName(organization)}
                     avatarUrl={organization.logoUrl ?? organization.avatarUrl}
                     className="h-8 w-8"
                   />
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium">{organization.displayName ?? organization.name}</span>
+                    <span className="block truncate text-sm font-medium">{getOrganizationName(organization)}</span>
                     <span className="block text-xs capitalize text-muted-foreground">{organization.role}</span>
                   </span>
                 </button>
@@ -113,4 +114,10 @@ export function OrganizationSwitcher({ context }: { context: OrganizationContext
       ) : null}
     </div>
   );
+}
+
+function getOrganizationName(organization: OrganizationContext["activeOrganization"]) {
+  const name = organization.displayName?.trim() || organization.name?.trim() || "";
+
+  return name || "Your organization";
 }
