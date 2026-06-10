@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { CalendarDays, ClipboardList, FileArchive, Inbox, Package, SquareCheckBig } from "lucide-react";
+import { AlertCircle, CalendarDays, ClipboardList, FileArchive, Inbox, Package, SquareCheckBig } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,16 +50,6 @@ const sections: MyPageSection[] = [
     icon: CalendarDays,
   },
   {
-    moduleId: "tasks",
-    title: "My tasks",
-    description: "Assigned work and follow-ups.",
-    emptyTitle: "No tasks right now",
-    emptyDescription: "Tasks are not assigned to you yet.",
-    href: null,
-    actionLabel: "Open tasks",
-    icon: SquareCheckBig,
-  },
-  {
     moduleId: "forms",
     title: "Forms I can use",
     description: "Available forms and applications.",
@@ -101,6 +91,15 @@ const sections: MyPageSection[] = [
   },
 ];
 
+const quickLinks = [
+  { moduleId: "messages", label: "Messages", href: "/dashboard/messages", icon: Inbox },
+  { moduleId: "forms", label: "Forms", href: "/dashboard/forms", icon: ClipboardList },
+  { moduleId: "documents", label: "Documents", href: "/dashboard/documents", icon: FileArchive },
+  { moduleId: "bookings", label: "Bookings", href: "/dashboard/bookings", icon: CalendarDays },
+  { moduleId: "issues", label: "Issues", href: "/dashboard/issues", icon: AlertCircle },
+  { moduleId: "inventory", label: "Inventory", href: "/dashboard/inventory", icon: Package },
+] as const;
+
 export default async function MyPagesPage() {
   const { user, supabase, organizationContext } = await requireOrganizationContext();
   const organization = organizationContext.activeOrganization;
@@ -132,6 +131,8 @@ export default async function MyPagesPage() {
   const canUseForms = canAccess("forms");
   const canUseDocuments = canAccess("documents");
   const canUseInventory = canAccess("inventory");
+  const canUseTasks = canAccess("tasks");
+  const userName = getUserDisplayName(user, linkedMember?.name ?? null);
 
   const [
     { data: unreadMessages },
@@ -197,26 +198,35 @@ export default async function MyPagesPage() {
       value: unreadMessages?.length ?? 0,
       href: "/dashboard/messages",
       show: true,
+      detail: "Messages waiting",
+      icon: Inbox,
     },
     {
-      label: "Available forms",
+      label: "Pending tasks",
+      value: 0,
+      href: "#my-tasks",
+      show: canUseTasks,
+      detail: "You're all caught up",
+      icon: SquareCheckBig,
+    },
+    {
+      label: "Forms to complete",
       value: availableForms?.length ?? 0,
       href: "/dashboard/forms",
       show: canUseForms,
+      detail: "Available now",
+      icon: ClipboardList,
     },
     {
       label: "Upcoming bookings",
       value: bookings?.length ?? 0,
       href: "/dashboard/bookings",
       show: canUseBookings,
-    },
-    {
-      label: "Borrowed items",
-      value: borrowedItems?.length ?? 0,
-      href: "/dashboard/inventory/loans",
-      show: canUseInventory,
+      detail: "Coming up",
+      icon: CalendarDays,
     },
   ].filter((item) => item.show);
+  const visibleQuickLinks = quickLinks.filter((link) => canAccess(link.moduleId));
 
   return (
     <main className="min-h-screen bg-zinc-50 px-4 py-5 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 sm:px-6 lg:px-8">
@@ -225,25 +235,75 @@ export default async function MyPagesPage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <Badge>{organization.displayName ?? organization.name}</Badge>
-              <h1 className="mt-3 text-2xl font-semibold tracking-tight">My Pages</h1>
+              <h1 className="mt-3 text-2xl font-semibold tracking-tight">
+                {userName ? `Welcome back, ${userName}` : "Welcome back"}
+              </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                Your messages, forms, bookings and shortcuts in one simple place.
+                Here&apos;s what needs your attention today.
               </p>
             </div>
-            <Badge className="capitalize">{organizationContext.activeMembership.role}</Badge>
           </div>
         </section>
 
         <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {needsAttention.map((item) => (
             <ButtonLink key={item.label} href={item.href} variant="secondary" className="h-auto justify-start rounded-2xl p-4">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                <item.icon className="h-5 w-5" />
+              </span>
               <span className="min-w-0 flex-1 text-left">
                 <span className="block text-sm text-muted-foreground">{item.label}</span>
                 <span className="mt-1 block text-2xl font-semibold">{item.value}</span>
+                <span className="mt-1 block text-xs text-muted-foreground">{item.detail}</span>
               </span>
             </ButtonLink>
           ))}
         </section>
+
+        {visibleQuickLinks.length ? (
+          <section>
+            <div className="mb-3">
+              <h2 className="text-base font-semibold tracking-tight">Quick links</h2>
+              <p className="text-sm text-muted-foreground">Open the tools you use most.</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+              {visibleQuickLinks.map((link) => {
+                const Icon = link.icon;
+
+                return (
+                  <ButtonLink key={link.label} href={link.href} variant="secondary" className="h-24 flex-col rounded-2xl p-3 text-center">
+                    <span className="grid h-9 w-9 place-items-center rounded-xl bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span>{link.label}</span>
+                  </ButtonLink>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
+
+        {canUseTasks ? (
+          <Card id="my-tasks" className="scroll-mt-6">
+            <CardHeader>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <CardTitle>My tasks</CardTitle>
+                  <CardDescription>Assigned work and follow-ups for today.</CardDescription>
+                </div>
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                  <SquareCheckBig className="h-5 w-5" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-xl border border-dashed p-4">
+                <p className="text-sm font-medium">No tasks right now</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">You&apos;re all caught up.</p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
 
         {visibleSections.length ? (
           <div className="grid gap-4 lg:grid-cols-2">
@@ -272,22 +332,6 @@ export default async function MyPagesPage() {
           </Card>
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick links</CardTitle>
-            <CardDescription>Common places you can open from here.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {visibleSections
-              .filter((section) => section.href)
-              .slice(0, 6)
-              .map((section) => (
-                <ButtonLink key={section.title} href={section.href!} variant="secondary" className="justify-start">
-                  {section.actionLabel}
-                </ButtonLink>
-              ))}
-          </CardContent>
-        </Card>
       </div>
     </main>
   );
@@ -436,4 +480,22 @@ function getSectionItems({
   }
 
   return [];
+}
+
+function getUserDisplayName(
+  user: Awaited<ReturnType<typeof requireOrganizationContext>>["user"],
+  memberName: string | null,
+) {
+  const metadata = user.user_metadata ?? {};
+  const metadataName =
+    typeof metadata.full_name === "string" ? metadata.full_name :
+      typeof metadata.name === "string" ? metadata.name :
+        "";
+  const name = metadataName.trim() || memberName?.trim() || "";
+
+  if (!name) {
+    return "";
+  }
+
+  return name.split(" ")[0] || name;
 }
