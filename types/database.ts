@@ -275,21 +275,27 @@ export type Database = {
           organization_id: string;
           name: string;
           description: string | null;
+          created_by: string | null;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
           organization_id: string;
           name: string;
           description?: string | null;
+          created_by?: string | null;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
           organization_id?: string;
           name?: string;
           description?: string | null;
+          created_by?: string | null;
           created_at?: string;
+          updated_at?: string;
         };
         Relationships: [
           {
@@ -303,21 +309,27 @@ export type Database = {
       };
       organization_group_members: {
         Row: {
+          id: string;
           organization_id: string;
           group_id: string;
           user_id: string;
+          added_by: string | null;
           created_at: string;
         };
         Insert: {
+          id?: string;
           organization_id: string;
           group_id: string;
           user_id: string;
+          added_by?: string | null;
           created_at?: string;
         };
         Update: {
+          id?: string;
           organization_id?: string;
           group_id?: string;
           user_id?: string;
+          added_by?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -1680,6 +1692,21 @@ export type Database = {
           p_slug: string;
         };
         Returns: string;
+      };
+      is_organization_admin: {
+        Args: {
+          p_organization_id: string;
+          p_user_id: string;
+        };
+        Returns: boolean;
+      };
+      is_organization_group_member: {
+        Args: {
+          p_organization_id: string;
+          p_group_id: string;
+          p_user_id: string;
+        };
+        Returns: boolean;
       };
     };
     Enums: {

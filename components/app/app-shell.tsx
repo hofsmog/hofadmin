@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, CalendarDays, ClipboardList, FileArchive, Home, Loader2, LogOut, Menu, MessageSquare, Package, X } from "lucide-react";
+import { Bell, CalendarDays, ClipboardList, FileArchive, Home, Loader2, LogOut, Menu, MessageSquare, Package, UsersRound, X } from "lucide-react";
 import { useState } from "react";
 import { MessagesAutoRefresh } from "@/components/dashboard/messages-auto-refresh";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
@@ -17,6 +17,7 @@ const userNavItems = [
   { title: "My Pages", href: "/app/my-pages", icon: Home, moduleId: "dashboard", system: true },
   { title: "Calendar", href: "/app/calendar", icon: CalendarDays, system: true },
   { title: "Messages", href: "/app/messages", icon: MessageSquare, system: true },
+  { title: "Groups", href: "/app/groups", icon: UsersRound, system: true },
   { title: "Forms", href: "/dashboard/forms", icon: ClipboardList, moduleId: "forms" },
   { title: "Documents", href: "/dashboard/documents", icon: FileArchive, moduleId: "documents" },
   { title: "Bookings", href: "/dashboard/bookings", icon: CalendarDays, moduleId: "bookings" },
