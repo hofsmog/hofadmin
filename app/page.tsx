@@ -8,7 +8,7 @@ type Language = (typeof supportedLanguages)[number];
 export default async function Home() {
   const cookieStore = await cookies();
   const cookieLanguage = cookieStore.get(languageCookie)?.value;
-  const initialLanguage: Language = supportedLanguages.includes(cookieLanguage as Language) ? (cookieLanguage as Language) : "en";
+  const initialLanguage: Language = supportedLanguages.includes(cookieLanguage as Language) ? (cookieLanguage as Language) : "sv";
 
   return <LandingPage initialLanguage={initialLanguage} />;
 }

@@ -5,115 +5,118 @@
     "swedish": "Svenska"
   },
   "nav": {
-    "platform": "Platform",
+    "platform": "Product",
     "features": "Features",
     "pricing": "Pricing",
     "login": "Login",
     "startFree": "Start free"
   },
   "hero": {
-    "badge": "Built for schools, clubs and organizations",
-    "headline": "Stop managing your organization with spreadsheets, paper and scattered tools.",
-    "subheadline": "Simple administration for schools, clubs and organizations.",
-    "positioning": "The admin system that does not require a manual.",
+    "badge": "A digital workspace for organizations",
+    "headline": "One simple workspace for your whole organization.",
+    "subheadline": "HofAdmin gives companies, associations and schools one simple place for messages, documents, forms, bookings, tasks and issues.",
+    "positioning": "A simple digital workspace for everyday organizational work.",
     "primaryCta": "Start free",
     "secondaryCta": "View demo",
-    "benefits": ["Set up in minutes", "No training required", "Mobile-friendly", "Built for non-technical staff"]
+    "benefits": ["My Pages for every user", "The right information for the right people", "Mobile-friendly", "Built for daily work"]
   },
   "dashboardPreview": {
-    "title": "Organization overview",
-    "subtitle": "Everything in one place",
-    "badge": "Live preview",
+    "title": "My Pages",
+    "subtitle": "The most important things for the day, personalized for each user",
+    "badge": "Personal view",
     "stats": [
-      ["17", "New responses"],
-      ["12", "Active loans"],
-      ["37", "Check-ins"]
+      ["3", "Unread messages"],
+      ["2", "Tasks"],
+      ["1", "Upcoming booking"]
     ],
     "modules": [
-      { "name": "Members", "detail": "128 active", "icon": "users" },
-      { "name": "Forms", "detail": "9 published", "icon": "forms" },
-      { "name": "Responses", "detail": "17 new", "icon": "responses" },
-      { "name": "Inventory", "detail": "214 items", "icon": "inventory" },
-      { "name": "Attendance", "detail": "37 today", "icon": "attendance" },
-      { "name": "Loans", "detail": "12 active", "icon": "loans" }
+      { "name": "Welcome back", "detail": "Kim", "icon": "users" },
+      { "name": "Important messages", "detail": "Latest news", "icon": "messages" },
+      { "name": "My tasks", "detail": "2 left", "icon": "tasks" },
+      { "name": "Bookings", "detail": "Today 14:00", "icon": "bookings" },
+      { "name": "Documents", "detail": "3 new", "icon": "documents" },
+      { "name": "Quick links", "detail": "Forms, issues", "icon": "forms" }
     ]
   },
   "organizationFit": {
-    "eyebrow": "Find your fit",
-    "title": "Which best describes your organization?",
-    "commonUseCases": "Common use cases",
+    "eyebrow": "Flexible structure",
+    "title": "One platform. Adapted to your organization.",
+    "commonUseCases": "Common parts",
     "cards": [
+      {
+        "title": "Company",
+        "icon": "business",
+        "useCases": ["Staff", "Documents", "Issues", "Bookings", "Equipment"]
+      },
+      {
+        "title": "Association",
+        "icon": "club",
+        "useCases": ["Members", "News", "Forms", "Activities", "Loans"]
+      },
       {
         "title": "School",
         "icon": "school",
-        "useCases": ["Student forms", "Attendance tracking", "QR check-ins", "Equipment loans", "Digital agreements", "Student records"]
-      },
-      {
-        "title": "Club / Association",
-        "icon": "club",
-        "useCases": ["Member management", "Registrations", "Attendance tracking", "Equipment loans", "Digital signatures", "Activities"]
-      },
-      {
-        "title": "Business",
-        "icon": "business",
-        "useCases": ["Employee records", "Visitor check-ins", "Forms & approvals", "Asset tracking", "Equipment loans", "Digital agreements"]
+        "useCases": ["Staff groups", "Documents", "Fault reports", "Bookings", "Internal information"]
       }
     ]
   },
   "replace": {
-    "eyebrow": "Created to replace",
-    "title": "Spreadsheets, paper forms and complicated admin systems.",
+    "eyebrow": "From scattered to organized",
+    "title": "One place for information, responsibility and daily work.",
     "withoutTitle": "Without HofAdmin",
     "withTitle": "With HofAdmin",
-    "without": ["Excel spreadsheets", "Google Forms", "Paper agreements", "Attendance sheets", "Equipment lists", "Multiple logins"],
-    "with": ["One login", "One dashboard", "One member database", "One inventory system", "One form builder", "One attendance system"]
+    "without": ["Email threads", "Spreadsheets", "Paper notes", "Scattered documents", "Separate booking lists", "Unclear responsibilities"],
+    "with": ["One login", "My Pages", "Documents", "Messages", "Tasks", "Bookings", "Issues", "Inventory"]
   },
   "productPreview": {
-    "eyebrow": "Product preview",
-    "title": "Everything your organization needs. Nothing it doesn't.",
+    "eyebrow": "How HofAdmin feels",
+    "title": "A personal starting point for every workday.",
     "cards": [
-      { "title": "New form response", "status": "New", "label": "Forms inbox", "primary": "Camp registration", "rows": ["Emma Lind", "2 min ago", "Mark handled"] },
-      { "title": "Loan awaiting return", "status": "Due Friday", "label": "Equipment loan", "primary": "Projector #12", "rows": ["Borrower: Alex", "Signed", "Send reminder"] },
-      { "title": "Signature completed", "status": "Signed", "label": "Digital agreement", "primary": "Loan agreement", "rows": ["Signed on phone", "PDF saved", "Item updated"] },
-      { "title": "Attendance checked in", "status": "Live", "label": "QR attendance", "primary": "Training session", "rows": ["37 checked in", "5 absent", "Export ready"] }
+      { "title": "Welcome back", "status": "My Pages", "label": "Personal view", "primary": "The important things at the top", "rows": ["Unread message", "Task to handle", "Booking today"] },
+      { "title": "Important information", "status": "New", "label": "Messages", "primary": "Internal update from management", "rows": ["Visible to the right group", "Easy to find", "No email thread"] },
+      { "title": "Fast paths", "status": "Ready", "label": "Quick links", "primary": "Documents, forms and issues", "rows": ["Open documents", "Fill a form", "Create issue"] },
+      { "title": "Coming up", "status": "Today", "label": "Calendar", "primary": "Bookings and reminders", "rows": ["Room booked 14:00", "Equipment return", "Task this week"] }
     ]
   },
   "features": {
     "eyebrow": "Features",
-    "title": "Simple tools for daily admin.",
+    "title": "Everything that helps daily work run smoothly.",
     "cards": [
-      { "title": "Member Management", "description": "Keep members organized.", "icon": "users" },
-      { "title": "Forms & Applications", "description": "Collect and manage responses.", "icon": "forms" },
-      { "title": "Equipment & Loans", "description": "Track items and borrowers.", "icon": "inventory" },
-      { "title": "Check-ins & Attendance", "description": "QR-based attendance tracking.", "icon": "attendance" },
-      { "title": "Digital Agreements", "description": "Sign agreements on any device.", "icon": "agreements" },
-      { "title": "Secure Access", "description": "Simple roles and permissions.", "icon": "secure" }
+      { "title": "My Pages", "description": "Every user sees what is relevant to them.", "icon": "users" },
+      { "title": "Messages & news", "description": "Important information gathered in one place.", "icon": "messages" },
+      { "title": "Documents", "description": "Routines, templates and files that are easy to find.", "icon": "documents" },
+      { "title": "Forms", "description": "Collect and manage responses without friction.", "icon": "forms" },
+      { "title": "Tasks", "description": "Keep track of what needs to be done.", "icon": "tasks" },
+      { "title": "Bookings", "description": "Book rooms, resources and equipment.", "icon": "bookings" },
+      { "title": "Issues", "description": "Handle fault reports and internal questions.", "icon": "issues" },
+      { "title": "Inventory", "description": "Track equipment, loans and returns.", "icon": "inventory" },
+      { "title": "Groups & permissions", "description": "Show the right things to the right people.", "icon": "groups" }
     ]
   },
   "pilot": {
-    "eyebrow": "Built for schools, clubs and organizations",
-    "title": "Early adopters are helping shape HofAdmin.",
-    "description": "Looking for pilot organizations that want simpler admin.",
+    "eyebrow": "Pilot organizations",
+    "title": "We are looking for pilot organizations that want to simplify everyday work with us.",
+    "description": "HofAdmin is built close to real organizations. As a pilot, you can test early and help shape what matters most.",
     "cards": [
-      { "title": "Early adopter program", "detail": "Help shape the workflows." },
-      { "title": "Pilot organizations", "detail": "Schools, clubs and associations." },
-      { "title": "Real product feedback", "detail": "Built around daily admin." }
+      { "title": "Free pilot access", "detail": "Get started without cost while the product is shaped." },
+      { "title": "Real feedback", "detail": "Tell us what works day to day and what is missing." },
+      { "title": "Shape the product", "detail": "Help us build the right workflows for organizations." }
     ]
   },
   "trust": {
-    "title": "Private organization data stays protected.",
-    "items": ["Roles", "Secure login", "Protected data", "Activity history"]
+    "title": "Built for private organization data.",
+    "items": ["Roles and permissions", "Protected organization data", "Secure login", "Activity log", "GDPR-minded from the start"]
   },
   "pricing": {
     "eyebrow": "Pricing",
-    "title": "Plan-based pricing for simpler admin.",
-    "description": "Start free, then upgrade when your organization needs more members or modules.",
+    "title": "Simple pricing for a shared digital workspace.",
+    "description": "Start small, test calmly and grow as more people and workflows move into HofAdmin.",
     "cta": "Start free",
     "plans": [
-      { "name": "Free", "price": "$0/mo", "detail": "1 organization, 50 members and 2 modules." },
-      { "name": "Starter", "price": "$49/mo", "detail": "500 members, 5 modules and email notifications." },
-      { "name": "Growth", "price": "$99/mo", "detail": "2,500 members, all modules and custom branding." },
-      { "name": "Enterprise", "price": "Contact us", "detail": "Unlimited members, multiple organizations and custom limits." }
+      { "name": "Free", "price": "$0/mo", "detail": "For trying HofAdmin with a smaller organization." },
+      { "name": "Starter", "price": "$49/mo", "detail": "For teams that want to gather messages, documents and daily workflows." },
+      { "name": "Growth", "price": "$99/mo", "detail": "For growing organizations with more groups, modules and needs." },
+      { "name": "Enterprise", "price": "Contact us", "detail": "For larger organizations with custom requirements and multiple workspaces." }
     ]
   }
 }

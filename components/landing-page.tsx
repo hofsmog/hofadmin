@@ -5,17 +5,22 @@ import {
   ArrowRight,
   BarChart3,
   Building2,
+  CalendarDays,
   CheckCircle2,
   ClipboardList,
   FileText,
   FolderKanban,
   GraduationCap,
+  ListTodo,
   LockKeyhole,
+  MessageSquare,
   PackageCheck,
   QrCode,
   ShieldCheck,
   Sparkles,
   Users,
+  UsersRound,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 import en from "@/locales/en.json";
@@ -30,27 +35,39 @@ type Language = keyof typeof dictionaries;
 type IconKey =
   | "agreements"
   | "attendance"
+  | "bookings"
   | "business"
   | "club"
+  | "documents"
   | "forms"
+  | "groups"
   | "inventory"
+  | "issues"
   | "loans"
+  | "messages"
   | "responses"
   | "school"
   | "secure"
+  | "tasks"
   | "users";
 
 const iconMap: Record<IconKey, LucideIcon> = {
   agreements: Sparkles,
   attendance: QrCode,
+  bookings: CalendarDays,
   business: Building2,
   club: ShieldCheck,
+  documents: FileText,
   forms: FileText,
+  groups: UsersRound,
   inventory: PackageCheck,
+  issues: Wrench,
   loans: ClipboardList,
+  messages: MessageSquare,
   responses: BarChart3,
   school: GraduationCap,
   secure: LockKeyhole,
+  tasks: ListTodo,
   users: Users,
 };
 
@@ -107,7 +124,7 @@ export function LandingPage({ initialLanguage }: { initialLanguage: Language }) 
             >
               {languageOptions.map((option) => (
                 <option key={option.code} value={option.code}>
-                  {option.flag} {t.language[option.labelKey]}
+                  {t.language[option.labelKey]}
                 </option>
               ))}
             </select>

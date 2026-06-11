@@ -12,108 +12,111 @@
     "startFree": "Kom igång gratis"
   },
   "hero": {
-    "badge": "Byggt för skolor, föreningar och organisationer",
-    "headline": "Sluta administrera din organisation med kalkylark, papper och utspridda verktyg.",
-    "subheadline": "Enkel administration för skolor, föreningar och organisationer.",
-    "positioning": "Administrationssystemet som inte kräver en manual.",
+    "badge": "En digital arbetsplats för organisationer",
+    "headline": "Samla organisationens vardag på ett ställe.",
+    "subheadline": "HofAdmin ger företag, föreningar och skolor en enkel digital arbetsplats för meddelanden, dokument, formulär, bokningar, uppgifter och ärenden.",
+    "positioning": "En enkel digital arbetsplats för hela organisationen.",
     "primaryCta": "Kom igång gratis",
     "secondaryCta": "Visa demo",
-    "benefits": ["Kom igång på några minuter", "Ingen utbildning krävs", "Mobilvänligt", "Byggt för icke-teknisk personal"]
+    "benefits": ["Mina sidor för varje användare", "Rätt information till rätt personer", "Mobilvänligt", "Byggt för dagligt arbete"]
   },
   "dashboardPreview": {
-    "title": "Organisationsöversikt",
-    "subtitle": "Allt på ett ställe",
-    "badge": "Liveförhandsvisning",
+    "title": "Mina sidor",
+    "subtitle": "Det viktigaste för dagen, samlat för varje användare",
+    "badge": "Personlig vy",
     "stats": [
-      ["17", "Nya svar"],
-      ["12", "Aktiva lån"],
-      ["37", "Incheckningar"]
+      ["3", "Olästa meddelanden"],
+      ["2", "Uppgifter"],
+      ["1", "Kommande bokning"]
     ],
     "modules": [
-      { "name": "Medlemmar", "detail": "128 aktiva", "icon": "users" },
-      { "name": "Formulär", "detail": "9 publicerade", "icon": "forms" },
-      { "name": "Svar", "detail": "17 nya", "icon": "responses" },
-      { "name": "Inventarier", "detail": "214 objekt", "icon": "inventory" },
-      { "name": "Närvaro", "detail": "37 idag", "icon": "attendance" },
-      { "name": "Lån", "detail": "12 aktiva", "icon": "loans" }
+      { "name": "Välkommen tillbaka", "detail": "Kim", "icon": "users" },
+      { "name": "Viktiga meddelanden", "detail": "Senaste nytt", "icon": "messages" },
+      { "name": "Mina uppgifter", "detail": "2 kvar", "icon": "tasks" },
+      { "name": "Bokningar", "detail": "Idag 14:00", "icon": "bookings" },
+      { "name": "Dokument", "detail": "3 nya", "icon": "documents" },
+      { "name": "Snabblänkar", "detail": "Formulär, ärenden", "icon": "forms" }
     ]
   },
   "organizationFit": {
-    "eyebrow": "Hitta rätt",
-    "title": "Vilken typ av organisation beskriver er bäst?",
-    "commonUseCases": "Vanliga användningsområden",
+    "eyebrow": "Flexibel struktur",
+    "title": "Samma plattform. Anpassad efter er organisation.",
+    "commonUseCases": "Vanliga delar",
     "cards": [
-      {
-        "title": "Skola",
-        "icon": "school",
-        "useCases": ["Elevformulär", "Närvarohantering", "QR-incheckningar", "Utrustningslån", "Digitala avtal", "Elevregister"]
-      },
-      {
-        "title": "Klubb / Förening",
-        "icon": "club",
-        "useCases": ["Medlemshantering", "Anmälningar", "Närvarohantering", "Utrustningslån", "Digitala signaturer", "Aktiviteter"]
-      },
       {
         "title": "Företag",
         "icon": "business",
-        "useCases": ["Personalregister", "Besöksincheckningar", "Formulär & godkännanden", "Tillgångshantering", "Utrustningslån", "Digitala avtal"]
+        "useCases": ["Personal", "Dokument", "Ärenden", "Bokningar", "Utrustning"]
+      },
+      {
+        "title": "Förening",
+        "icon": "club",
+        "useCases": ["Medlemmar", "Nyheter", "Formulär", "Aktiviteter", "Utlåning"]
+      },
+      {
+        "title": "Skola",
+        "icon": "school",
+        "useCases": ["Personalgrupper", "Dokument", "Felanmälan", "Bokningar", "Intern information"]
       }
     ]
   },
   "replace": {
-    "eyebrow": "Skapat för att ersätta",
-    "title": "Kalkylark, pappersformulär och krångliga administrationssystem.",
+    "eyebrow": "Från utspritt till samlat",
+    "title": "En plats för information, ansvar och dagligt arbete.",
     "withoutTitle": "Utan HofAdmin",
     "withTitle": "Med HofAdmin",
-    "without": ["Excel-kalkylark", "Google Forms", "Pappersavtal", "Närvarolistor", "Utrustningslistor", "Flera inloggningar"],
-    "with": ["En inloggning", "En dashboard", "Ett medlemsregister", "Ett inventariesystem", "En formulärbyggare", "Ett närvarosystem"]
+    "without": ["E-posttrådar", "Kalkylark", "Papperslappar", "Utspridda dokument", "Separata bokningslistor", "Otydliga ansvarsområden"],
+    "with": ["En inloggning", "Mina sidor", "Dokument", "Meddelanden", "Uppgifter", "Bokningar", "Ärenden", "Inventarier"]
   },
   "productPreview": {
-    "eyebrow": "Produktförhandsvisning",
-    "title": "Allt organisationen behöver. Inget den inte behöver.",
+    "eyebrow": "Så känns HofAdmin",
+    "title": "En personlig startpunkt för varje arbetsdag.",
     "cards": [
-      { "title": "Nytt formulärsvar", "status": "Nytt", "label": "Formulärinkorg", "primary": "Lägeranmälan", "rows": ["Emma Lind", "2 min sedan", "Markera hanterad"] },
-      { "title": "Lån väntar på retur", "status": "Fredag", "label": "Utrustningslån", "primary": "Projektor #12", "rows": ["Låntagare: Alex", "Signerat", "Skicka påminnelse"] },
-      { "title": "Signatur klar", "status": "Signerat", "label": "Digitalt avtal", "primary": "Låneavtal", "rows": ["Signerat i mobilen", "PDF sparad", "Objekt uppdaterat"] },
-      { "title": "Närvaro registrerad", "status": "Live", "label": "QR-närvaro", "primary": "Träningspass", "rows": ["37 incheckade", "5 frånvarande", "Export klar"] }
+      { "title": "Välkommen tillbaka", "status": "Mina sidor", "label": "Personlig vy", "primary": "Det viktigaste högst upp", "rows": ["Oläst meddelande", "Uppgift att göra", "Bokning idag"] },
+      { "title": "Viktig information", "status": "Nytt", "label": "Meddelanden", "primary": "Intern nyhet från ledningen", "rows": ["Synlig för rätt grupp", "Lätt att hitta", "Ingen e-posttråd"] },
+      { "title": "Snabba vägar", "status": "Klart", "label": "Snabblänkar", "primary": "Dokument, formulär och ärenden", "rows": ["Öppna dokument", "Fyll i formulär", "Skapa ärende"] },
+      { "title": "Kommande", "status": "Idag", "label": "Kalender", "primary": "Bokningar och påminnelser", "rows": ["Rum bokat 14:00", "Utrustning ska tillbaka", "Uppgift för veckan"] }
     ]
   },
   "features": {
     "eyebrow": "Funktioner",
-    "title": "Enkla verktyg för daglig administration.",
+    "title": "Allt som hjälper vardagen att fungera.",
     "cards": [
-      { "title": "Medlemshantering", "description": "Håll ordning på medlemmar.", "icon": "users" },
-      { "title": "Formulär & ansökningar", "description": "Samla in och hantera svar.", "icon": "forms" },
-      { "title": "Utrustning & lån", "description": "Spåra objekt och låntagare.", "icon": "inventory" },
-      { "title": "Incheckningar & närvaro", "description": "QR-baserad närvarohantering.", "icon": "attendance" },
-      { "title": "Digitala avtal", "description": "Signera avtal på valfri enhet.", "icon": "agreements" },
-      { "title": "Säker åtkomst", "description": "Enkla roller och behörigheter.", "icon": "secure" }
+      { "title": "Mina sidor", "description": "Varje användare ser det som är relevant för dem.", "icon": "users" },
+      { "title": "Meddelanden & nyheter", "description": "Viktig information samlad på ett ställe.", "icon": "messages" },
+      { "title": "Dokument", "description": "Rutiner, mallar och filer som är lätta att hitta.", "icon": "documents" },
+      { "title": "Formulär", "description": "Samla in och hantera svar utan krångel.", "icon": "forms" },
+      { "title": "Uppgifter", "description": "Håll koll på vad som behöver göras.", "icon": "tasks" },
+      { "title": "Bokningar", "description": "Boka rum, resurser och utrustning.", "icon": "bookings" },
+      { "title": "Ärenden", "description": "Hantera felanmälningar och interna frågor.", "icon": "issues" },
+      { "title": "Inventarier", "description": "Spåra utrustning, lån och återlämning.", "icon": "inventory" },
+      { "title": "Grupper & behörigheter", "description": "Visa rätt saker för rätt personer.", "icon": "groups" }
     ]
   },
   "pilot": {
-    "eyebrow": "Byggt för skolor, föreningar och organisationer",
-    "title": "Tidiga användare hjälper till att forma HofAdmin.",
-    "description": "Vi söker pilotorganisationer som vill ha enklare administration.",
+    "eyebrow": "Pilotorganisationer",
+    "title": "Vi söker pilotorganisationer som vill förenkla sin vardag tillsammans med oss.",
+    "description": "HofAdmin byggs nära verkliga organisationer. Som pilot får ni testa tidigt och påverka vad som blir viktigast.",
     "cards": [
-      { "title": "Early adopter-program", "detail": "Var med och forma arbetsflödena." },
-      { "title": "Pilotorganisationer", "detail": "Skolor, klubbar och föreningar." },
-      { "title": "Riktig produktfeedback", "detail": "Byggt kring daglig administration." }
+      { "title": "Gratis pilotaccess", "detail": "Kom igång utan kostnad medan produkten formas." },
+      { "title": "Riktig feedback", "detail": "Berätta vad som fungerar i vardagen och vad som saknas." },
+      { "title": "Forma produkten", "detail": "Hjälp oss bygga rätt arbetsflöden för organisationer." }
     ]
   },
   "trust": {
-    "title": "Privat organisationsdata är skyddad.",
-    "items": ["Roller", "Säker inloggning", "Skyddad data", "Aktivitetshistorik"]
+    "title": "Byggt för privat organisationsdata.",
+    "items": ["Roller och behörigheter", "Skyddad organisationsdata", "Säker inloggning", "Aktivitetslogg", "GDPR-tänk från start"]
   },
   "pricing": {
     "eyebrow": "Priser",
-    "title": "Planbaserade priser för enklare administration.",
-    "description": "Börja gratis och uppgradera när organisationen behöver fler medlemmar eller moduler.",
+    "title": "Enkel prissättning för en samlad digital arbetsplats.",
+    "description": "Börja litet, testa i lugn takt och väx när fler personer och arbetsflöden flyttar in i HofAdmin.",
     "cta": "Kom igång gratis",
     "plans": [
-      { "name": "Free", "price": "$0/mån", "detail": "1 organisation, 50 medlemmar och 2 moduler." },
-      { "name": "Starter", "price": "$49/mån", "detail": "500 medlemmar, 5 moduler och e-postnotiser." },
-      { "name": "Growth", "price": "$99/mån", "detail": "2 500 medlemmar, alla moduler och egen branding." },
-      { "name": "Enterprise", "price": "Kontakta oss", "detail": "Obegränsat antal medlemmar, flera organisationer och anpassade gränser." }
+      { "name": "Free", "price": "$0/mån", "detail": "För att prova HofAdmin med en mindre organisation." },
+      { "name": "Starter", "price": "$49/mån", "detail": "För team som vill samla meddelanden, dokument och vardagsflöden." },
+      { "name": "Growth", "price": "$99/mån", "detail": "För växande organisationer med fler grupper, moduler och behov." },
+      { "name": "Enterprise", "price": "Kontakta oss", "detail": "För större organisationer med anpassade krav och flera arbetsytor." }
     ]
   }
 }
