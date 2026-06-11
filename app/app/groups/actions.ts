@@ -149,27 +149,30 @@ export async function addOrganizationGroupMemberAction(formData: FormData) {
 
   const organizationId = organizationContext.activeOrganization.id;
   const groupId = String(formData.get("groupId") || "");
-  const userId = String(formData.get("userId") || "");
+  const userIds = formData
+    .getAll("userIds")
+    .map((value) => String(value))
+    .filter(Boolean);
 
-  if (!groupId || !userId) {
+  if (!groupId || userIds.length === 0) {
     return;
   }
 
   const { error } = await supabase
     .from("organization_group_members")
-    .insert({
+    .insert(userIds.map((userId) => ({
       organization_id: organizationId,
       group_id: groupId,
       user_id: userId,
       added_by: user.id,
-    });
+    })));
 
   if (error) {
     console.error("[groups] Could not add group member", {
       organizationId,
       actorId: user.id,
       groupId,
-      userId,
+      userIds,
       error,
     });
     return;

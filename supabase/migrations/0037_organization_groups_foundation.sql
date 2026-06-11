@@ -19,8 +19,25 @@ alter table public.organization_group_members
 alter table public.organization_group_members
   add constraint organization_group_members_pkey primary key (id);
 
-alter table public.organization_group_members
-  add constraint organization_group_members_group_user_unique unique (group_id, user_id);
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'organization_group_members_group_user_unique'
+      and conrelid = 'public.organization_group_members'::regclass
+  )
+  and not exists (
+    select 1
+    from pg_class
+    join pg_namespace on pg_namespace.oid = pg_class.relnamespace
+    where pg_namespace.nspname = 'public'
+      and pg_class.relname = 'organization_group_members_group_user_unique'
+  ) then
+    alter table public.organization_group_members
+      add constraint organization_group_members_group_user_unique unique (group_id, user_id);
+  end if;
+end $$;
 
 create index if not exists organization_groups_org_name_idx
   on public.organization_groups(organization_id, name);

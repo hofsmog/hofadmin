@@ -107,7 +107,15 @@ export default async function GroupDetailPage({
               {group.description || "Group for team membership, assignments and permissions."}
             </p>
           </div>
-          <ButtonLink href="/app/groups" variant="secondary">Back to groups</ButtonLink>
+          <div className="flex flex-wrap gap-2">
+            {canManageGroups ? (
+              <ButtonLink href="#add-members">
+                <UserPlus className="h-4 w-4" />
+                Add members
+              </ButtonLink>
+            ) : null}
+            <ButtonLink href="/app/groups" variant="secondary">Back to groups</ButtonLink>
+          </div>
         </div>
       </section>
 
@@ -177,22 +185,27 @@ export default async function GroupDetailPage({
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card id="add-members">
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <CardTitle>Add member</CardTitle>
-                      <CardDescription>Select an existing organization user.</CardDescription>
+                      <CardTitle>Add members</CardTitle>
+                      <CardDescription>Select one or more existing organization members.</CardDescription>
                     </div>
                     <UserPlus className="h-5 w-5 text-muted-foreground" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {availableMembers.length ? (
+                  {team.length === 0 ? (
+                    <div className="rounded-xl border border-dashed p-4">
+                      <p className="text-sm font-medium">No organization members found. Add members first.</p>
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">Invite people to the organization before adding them to groups.</p>
+                    </div>
+                  ) : availableMembers.length ? (
                     <form action={addOrganizationGroupMemberAction} className="space-y-4">
                       <input type="hidden" name="groupId" value={group.id} />
                       <GroupMemberPicker members={availableMembers} />
-                      <ActionSubmitButton pendingLabel="Adding">Add member</ActionSubmitButton>
+                      <ActionSubmitButton pendingLabel="Adding">Add selected members</ActionSubmitButton>
                     </form>
                   ) : (
                     <div className="rounded-xl border border-dashed p-4">

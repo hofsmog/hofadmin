@@ -1,4 +1,4 @@
-import { UsersRound } from "lucide-react";
+import { ArrowRight, Plus, UsersRound } from "lucide-react";
 import { createOrganizationGroupAction } from "@/app/app/groups/actions";
 import { ActionSubmitButton } from "@/components/dashboard/action-submit-button";
 import { Badge } from "@/components/ui/badge";
@@ -53,11 +53,21 @@ export default async function GroupsPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-5">
       <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 dark:bg-zinc-950 dark:ring-white/10">
-        <Badge>{getOrganizationName(organizationContext.activeOrganization)}</Badge>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight">Groups</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Create teams like IT, Maintenance, Teachers or Management for permissions, assignments and future workflows.
-        </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <Badge>{getOrganizationName(organizationContext.activeOrganization)}</Badge>
+            <h1 className="mt-3 text-2xl font-semibold tracking-tight">Groups</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Create working teams like IT, Maintenance, Teachers or Management. Groups are separate from roles.
+            </p>
+          </div>
+          {canManageGroups ? (
+            <ButtonLink href="#create-group">
+              <Plus className="h-4 w-4" />
+              Create group
+            </ButtonLink>
+          ) : null}
+        </div>
       </section>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_22rem]">
@@ -73,6 +83,10 @@ export default async function GroupsPage() {
                   <span className="mt-1 block truncate text-sm text-muted-foreground">{group.description || "No description yet"}</span>
                 </span>
                 <Badge>{memberCounts.get(group.id) ?? 0} members</Badge>
+                <span className="hidden items-center gap-1 text-xs font-semibold text-muted-foreground sm:inline-flex">
+                  {canManageGroups ? "Manage" : "Open"}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </span>
               </ButtonLink>
             ))
           ) : (
@@ -89,7 +103,7 @@ export default async function GroupsPage() {
         </div>
 
         {canManageGroups ? (
-          <Card>
+          <Card id="create-group">
             <CardHeader>
               <CardTitle>Create group</CardTitle>
               <CardDescription>Add a team inside this organization.</CardDescription>

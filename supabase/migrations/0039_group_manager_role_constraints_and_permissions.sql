@@ -1,10 +1,14 @@
-alter type public.organization_role add value if not exists 'manager' after 'admin';
-
-alter table public.organization_groups
-  add constraint organization_groups_organization_id_id_unique unique (organization_id, id);
-
 do $$
 begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'organization_groups_organization_id_id_unique'
+  ) then
+    alter table public.organization_groups
+      add constraint organization_groups_organization_id_id_unique unique (organization_id, id);
+  end if;
+
   if not exists (
     select 1
     from pg_constraint
@@ -45,7 +49,7 @@ as $$
     from public.organization_members members
     where members.organization_id = p_organization_id
       and members.user_id = p_user_id
-      and members.role in ('owner', 'admin', 'manager')
+      and members.role::text in ('owner', 'admin', 'manager')
   );
 $$;
 
@@ -99,3 +103,32 @@ create policy "Owners admins and managers can manage group members"
     and public.can_manage_organization_groups(organization_id, auth.uid())
     and public.is_organization_member(organization_id, user_id)
   );
+
+insert into public.organization_module_permissions (organization_id, module_id, role, can_access)
+select organizations.id, module_ids.module_id, 'manager'::public.organization_role, true
+from public.organizations organizations
+cross join (
+  values
+    ('forms'),
+    ('inventory'),
+    ('documents'),
+    ('bookings'),
+    ('tasks'),
+    ('news'),
+    ('issues'),
+    ('members'),
+    ('loans'),
+    ('qr-checkins'),
+    ('sponsors'),
+    ('messages')
+) as module_ids(module_id)
+where exists (
+  select 1
+  from pg_enum
+  join pg_type on pg_type.oid = pg_enum.enumtypid
+  join pg_namespace on pg_namespace.oid = pg_type.typnamespace
+  where pg_namespace.nspname = 'public'
+    and pg_type.typname = 'organization_role'
+    and pg_enum.enumlabel = 'manager'
+)
+on conflict (organization_id, module_id, role, group_id) do nothing;

@@ -20,6 +20,7 @@ import type { OrganizationRole } from "@/types/database";
 export const dashboardNavItems: Array<DashboardNavItem & { moduleId?: string; system?: boolean }> = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, moduleId: "dashboard", system: true },
   { title: "Messages", href: "/dashboard/messages", icon: MessageSquare, system: true },
+  { title: "Groups", href: "/app/groups", icon: UsersRound, system: true },
   { title: "Members", href: "/dashboard/members", icon: UsersRound, moduleId: "members" },
   { title: "Forms", href: "/dashboard/forms", icon: ClipboardList, moduleId: "forms" },
   { title: "Documents", href: "/dashboard/documents", icon: FileArchive, moduleId: "documents" },

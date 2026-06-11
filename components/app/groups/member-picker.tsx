@@ -11,7 +11,7 @@ type GroupPickerMember = {
 
 export function GroupMemberPicker({ members }: { members: GroupPickerMember[] }) {
   const [query, setQuery] = useState("");
-  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const filteredMembers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
 
@@ -26,7 +26,6 @@ export function GroupMemberPicker({ members }: { members: GroupPickerMember[] })
 
   return (
     <div className="space-y-3">
-      <input type="hidden" name="userId" value={selectedUserId} />
       <label className="block space-y-2">
         <span className="text-sm font-medium">Search person</span>
         <Input
@@ -35,15 +34,24 @@ export function GroupMemberPicker({ members }: { members: GroupPickerMember[] })
           placeholder="Type a name"
         />
       </label>
+      {selectedUserIds.map((userId) => (
+        <input key={userId} type="hidden" name="userIds" value={userId} />
+      ))}
       <div className="space-y-2">
         {filteredMembers.map((member) => {
-          const selected = selectedUserId === member.user_id;
+          const selected = selectedUserIds.includes(member.user_id);
 
           return (
             <button
               key={member.user_id}
               type="button"
-              onClick={() => setSelectedUserId(member.user_id)}
+              onClick={() => {
+                setSelectedUserIds((current) =>
+                  current.includes(member.user_id)
+                    ? current.filter((userId) => userId !== member.user_id)
+                    : [...current, member.user_id],
+                );
+              }}
               className={cn(
                 "flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition",
                 selected
@@ -52,11 +60,16 @@ export function GroupMemberPicker({ members }: { members: GroupPickerMember[] })
               )}
             >
               <span>{getMemberName(member)}</span>
-              {selected ? <span className="text-xs">Selected</span> : null}
+              <span className="text-xs">{selected ? "Selected" : "Add"}</span>
             </button>
           );
         })}
       </div>
+      {selectedUserIds.length ? (
+        <p className="text-xs text-muted-foreground">
+          {selectedUserIds.length} {selectedUserIds.length === 1 ? "member" : "members"} selected
+        </p>
+      ) : null}
     </div>
   );
 }
