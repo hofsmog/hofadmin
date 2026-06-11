@@ -82,7 +82,7 @@ export default async function GroupsPage() {
                   <span className="block truncate text-sm font-semibold">{group.name}</span>
                   <span className="mt-1 block truncate text-sm text-muted-foreground">{group.description || "No description yet"}</span>
                 </span>
-                <Badge>{memberCounts.get(group.id) ?? 0} members</Badge>
+                <Badge>{formatMemberCount(memberCounts.get(group.id) ?? 0)}</Badge>
                 <span className="hidden items-center gap-1 text-xs font-semibold text-muted-foreground sm:inline-flex">
                   {canManageGroups ? "Manage" : "Open"}
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -141,6 +141,10 @@ function countMembersByGroup(members: GroupMember[]) {
   }
 
   return counts;
+}
+
+function formatMemberCount(count: number) {
+  return `${count} ${count === 1 ? "member" : "members"}`;
 }
 
 function getOrganizationName(organization: Awaited<ReturnType<typeof requireOrganizationContext>>["organizationContext"]["activeOrganization"]) {

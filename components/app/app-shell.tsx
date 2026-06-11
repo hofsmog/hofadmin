@@ -17,7 +17,7 @@ const userNavItems = [
   { title: "My Pages", href: "/app/my-pages", icon: Home, moduleId: "dashboard", system: true },
   { title: "Calendar", href: "/app/calendar", icon: CalendarDays, system: true },
   { title: "Messages", href: "/app/messages", icon: MessageSquare, system: true },
-  { title: "Groups", href: "/app/groups", icon: UsersRound, system: true },
+  { title: "Groups", href: "/app/groups", icon: UsersRound, system: true, manageOnly: true },
   { title: "Forms", href: "/dashboard/forms", icon: ClipboardList, moduleId: "forms" },
   { title: "Documents", href: "/dashboard/documents", icon: FileArchive, moduleId: "documents" },
   { title: "Bookings", href: "/dashboard/bookings", icon: CalendarDays, moduleId: "bookings" },
@@ -160,6 +160,10 @@ function AppSidebar({
   onNavigate?: () => void;
 }) {
   const navItems = userNavItems.filter((item) => {
+    if ("manageOnly" in item && item.manageOnly && !canManageGroups(organizationContext.activeMembership.role)) {
+      return false;
+    }
+
     if (!("moduleId" in item) || !item.moduleId) {
       return true;
     }
@@ -232,6 +236,10 @@ function AppSidebar({
       </nav>
     </div>
   );
+}
+
+function canManageGroups(role: OrganizationContext["activeMembership"]["role"]) {
+  return role === "owner" || role === "admin" || role === "manager";
 }
 
 function getInitials(email: string) {

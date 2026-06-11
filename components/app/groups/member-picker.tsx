@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 type GroupPickerMember = {
   user_id: string;
+  email: string;
   display_name: string | null;
 };
 
@@ -59,7 +60,10 @@ export function GroupMemberPicker({ members }: { members: GroupPickerMember[] })
                   : "bg-white hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900",
               )}
             >
-              <span>{getMemberName(member)}</span>
+              <span className="min-w-0">
+                <span className="block truncate font-medium">{getMemberName(member)}</span>
+                {member.email ? <span className="block truncate text-xs opacity-75">{member.email}</span> : null}
+              </span>
               <span className="text-xs">{selected ? "Selected" : "Add"}</span>
             </button>
           );
@@ -75,5 +79,5 @@ export function GroupMemberPicker({ members }: { members: GroupPickerMember[] })
 }
 
 function getMemberName(member: GroupPickerMember) {
-  return member.display_name?.trim() || "Team member";
+  return member.display_name?.trim() || member.email?.trim() || "Team member";
 }

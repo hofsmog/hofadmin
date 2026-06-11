@@ -13,7 +13,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
-import { createMessageNameMap, type MessageTeamMember } from "@/lib/messages";
+import type { MessageTeamMember } from "@/lib/messages";
 import type { Database } from "@/types/database";
 
 export const dynamic = "force-dynamic";
@@ -92,7 +92,7 @@ export default async function GroupDetailPage({
 
   const memberships = (groupMembers ?? []) as GroupMemberRow[];
   const team = teamMembers ?? [];
-  const nameByUserId = createMessageNameMap(team);
+  const memberByUserId = new Map(team.map((teamMember) => [teamMember.user_id, teamMember]));
   const existingUserIds = new Set(memberships.map((member) => member.user_id));
   const availableMembers = team.filter((member) => !existingUserIds.has(member.user_id));
 
@@ -135,8 +135,10 @@ export default async function GroupDetailPage({
               memberships.map((membership) => (
                 <div key={membership.id} className="flex flex-col gap-3 rounded-xl bg-zinc-50 p-3 dark:bg-zinc-900/60 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{nameByUserId.get(membership.user_id) ?? "Team member"}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Added {new Date(membership.created_at).toLocaleDateString()}</p>
+                    <p className="truncate text-sm font-medium">{getTeamMemberName(memberByUserId.get(membership.user_id))}</p>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {[memberByUserId.get(membership.user_id)?.email, `Added ${new Date(membership.created_at).toLocaleDateString()}`].filter(Boolean).join(" - ")}
+                    </p>
                   </div>
                   {canManageGroups ? (
                     <form action={removeOrganizationGroupMemberAction}>
@@ -150,7 +152,7 @@ export default async function GroupDetailPage({
             ) : (
               <div className="rounded-xl border border-dashed p-4">
                 <p className="text-sm font-medium">No members in this group yet</p>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">Add people to make this group useful for assignments and permissions.</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">Add people to make this group useful for messages, tasks and permissions.</p>
               </div>
             )}
           </CardContent>
@@ -204,6 +206,11 @@ export default async function GroupDetailPage({
                   ) : availableMembers.length ? (
                     <form action={addOrganizationGroupMemberAction} className="space-y-4">
                       <input type="hidden" name="groupId" value={group.id} />
+                      {memberships.length ? (
+                        <p className="rounded-xl bg-zinc-50 px-3 py-2 text-xs text-muted-foreground dark:bg-zinc-900">
+                          {memberships.length} {memberships.length === 1 ? "person is" : "people are"} already in this group and hidden from the picker.
+                        </p>
+                      ) : null}
                       <GroupMemberPicker members={availableMembers} />
                       <ActionSubmitButton pendingLabel="Adding">Add selected members</ActionSubmitButton>
                     </form>
@@ -252,4 +259,8 @@ function getOrganizationName(organization: Awaited<ReturnType<typeof requireOrga
   const name = organization.displayName?.trim() || organization.name?.trim() || "";
 
   return name || "Your organization";
+}
+
+function getTeamMemberName(member: MessageTeamMember | undefined) {
+  return member?.display_name?.trim() || member?.email?.trim() || "Team member";
 }
