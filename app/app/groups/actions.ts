@@ -96,6 +96,30 @@ export async function deleteOrganizationGroupAction(formData: FormData) {
     return;
   }
 
+  const [{ count: memberCount }, { count: permissionCount }] = await Promise.all([
+    supabase
+      .from("organization_group_members")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", organizationId)
+      .eq("group_id", groupId),
+    supabase
+      .from("organization_module_permissions")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", organizationId)
+      .eq("group_id", groupId),
+  ]);
+
+  if ((memberCount ?? 0) > 0 || (permissionCount ?? 0) > 0) {
+    console.error("[groups] Refused to delete group with dependencies", {
+      organizationId,
+      userId: user.id,
+      groupId,
+      memberCount,
+      permissionCount,
+    });
+    return;
+  }
+
   const { error } = await supabase
     .from("organization_groups")
     .delete()
@@ -193,5 +217,5 @@ export async function removeOrganizationGroupMemberAction(formData: FormData) {
 }
 
 function canManageGroups(role: string) {
-  return role === "owner" || role === "admin";
+  return role === "owner" || role === "admin" || role === "manager";
 }

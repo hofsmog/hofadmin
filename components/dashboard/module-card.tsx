@@ -143,7 +143,7 @@ export function ModuleCard({
               <input type="hidden" name="returnTo" value="/dashboard/modules?updated=1" />
               <p className="text-xs font-medium text-muted-foreground">Allowed roles</p>
               <div className="flex flex-wrap gap-2">
-                {(["owner", "admin", "member"] as OrganizationRole[]).map((role) => (
+                {(["owner", "admin", "manager", "member"] as OrganizationRole[]).map((role) => (
                   <label key={role} className="flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs capitalize">
                     <input type="checkbox" name={`role:${role}`} defaultChecked={allowedRoles.includes(role)} />
                     {role}

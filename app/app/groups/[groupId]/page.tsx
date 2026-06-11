@@ -6,6 +6,7 @@ import {
   removeOrganizationGroupMemberAction,
   updateOrganizationGroupAction,
 } from "@/app/app/groups/actions";
+import { GroupMemberPicker } from "@/components/app/groups/member-picker";
 import { ActionSubmitButton } from "@/components/dashboard/action-submit-button";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
@@ -34,7 +35,7 @@ export default async function GroupDetailPage({
   const { groupId } = await params;
   const { user, supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
-  const canManageGroups = organizationContext.activeMembership.role === "owner" || organizationContext.activeMembership.role === "admin";
+  const canManageGroups = ["owner", "admin", "manager"].includes(organizationContext.activeMembership.role);
   const { data: group, error } = await supabase
     .from("organization_groups")
     .select("id, organization_id, name, description, created_by, created_at, updated_at")
@@ -140,7 +141,7 @@ export default async function GroupDetailPage({
               ))
             ) : (
               <div className="rounded-xl border border-dashed p-4">
-                <p className="text-sm font-medium">No members yet</p>
+                <p className="text-sm font-medium">No members in this group yet</p>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">Add people to make this group useful for assignments and permissions.</p>
               </div>
             )}
@@ -190,17 +191,7 @@ export default async function GroupDetailPage({
                   {availableMembers.length ? (
                     <form action={addOrganizationGroupMemberAction} className="space-y-4">
                       <input type="hidden" name="groupId" value={group.id} />
-                      <label className="block space-y-2">
-                        <span className="text-sm font-medium">Person</span>
-                        <select name="userId" required className="h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm dark:bg-zinc-950">
-                          <option value="">Choose a person</option>
-                          {availableMembers.map((member) => (
-                            <option key={member.user_id} value={member.user_id}>
-                              {member.display_name?.trim() || "Team member"}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                      <GroupMemberPicker members={availableMembers} />
                       <ActionSubmitButton pendingLabel="Adding">Add member</ActionSubmitButton>
                     </form>
                   ) : (
@@ -223,10 +214,17 @@ export default async function GroupDetailPage({
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <form action={deleteOrganizationGroupAction}>
-                    <input type="hidden" name="groupId" value={group.id} />
-                    <ActionSubmitButton pendingLabel="Deleting">Delete group</ActionSubmitButton>
-                  </form>
+                  {memberships.length ? (
+                    <div className="rounded-xl border border-dashed p-4">
+                      <p className="text-sm font-medium">Remove members before deleting</p>
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">Groups can be deleted when no people are assigned to them.</p>
+                    </div>
+                  ) : (
+                    <form action={deleteOrganizationGroupAction}>
+                      <input type="hidden" name="groupId" value={group.id} />
+                      <ActionSubmitButton pendingLabel="Deleting">Delete group</ActionSubmitButton>
+                    </form>
+                  )}
                 </CardContent>
               </Card>
             </>

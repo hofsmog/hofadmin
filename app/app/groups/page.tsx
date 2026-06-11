@@ -16,7 +16,7 @@ type GroupMember = Pick<Database["public"]["Tables"]["organization_group_members
 export default async function GroupsPage() {
   const { user, supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
-  const canManageGroups = organizationContext.activeMembership.role === "owner" || organizationContext.activeMembership.role === "admin";
+  const canManageGroups = ["owner", "admin", "manager"].includes(organizationContext.activeMembership.role);
   const { data: groups, error } = await supabase
     .from("organization_groups")
     .select("id, organization_id, name, description, created_by, created_at, updated_at")
@@ -82,7 +82,7 @@ export default async function GroupsPage() {
                   <UsersRound className="h-6 w-6" />
                 </div>
                 <p className="mt-4 text-sm font-medium">No groups yet</p>
-                <p className="mt-1 text-sm text-muted-foreground">Create groups for teams, assignments and permissions.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Create your first group to organize people by team or responsibility.</p>
               </CardContent>
             </Card>
           )}

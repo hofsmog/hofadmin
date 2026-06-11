@@ -35,8 +35,9 @@ export function InviteMemberForm({
           className="h-11 rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 disabled:opacity-60 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
         >
           {activeRole === "owner" ? <option value="owner">Owner</option> : null}
-          <option value="member">Member</option>
           <option value="admin">Admin</option>
+          <option value="manager">Manager</option>
+          <option value="member">Member</option>
         </select>
         <ActionSubmitButton className="h-11" pendingLabel="Inviting" disabled={disabled}>
           Send invitation

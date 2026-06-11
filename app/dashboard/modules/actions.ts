@@ -98,7 +98,7 @@ export async function updateModuleRolePermissionsAction(formData: FormData) {
     redirect("/dashboard/modules?error=permission");
   }
 
-  const roles: OrganizationRole[] = ["owner", "admin", "member"];
+  const roles: OrganizationRole[] = ["owner", "admin", "manager", "member"];
   const rows = roles.map((role) => ({
     organization_id: organizationContext.activeOrganization.id,
     module_id: moduleId,

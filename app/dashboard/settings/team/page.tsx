@@ -21,6 +21,7 @@ const tabs = [
 const roles: Array<{ name: string; value: OrganizationRole; detail: string }> = [
   { name: "Owner", value: "owner", detail: "Full organization control, including settings, modules, and owner invitations." },
   { name: "Admin", value: "admin", detail: "Can manage daily organization work and invite admins or members." },
+  { name: "Manager", value: "manager", detail: "Can manage assigned team workflows such as groups without full organization settings access." },
   { name: "Member", value: "member", detail: "Can access organization tools without changing core settings." },
 ];
 
@@ -165,7 +166,7 @@ export default async function SettingsTeamPage({
       ) : null}
 
       {activeTab === "roles" ? (
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {roles.map((role) => (
             <Card key={role.value}>
               <CardHeader>

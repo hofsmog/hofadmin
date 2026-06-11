@@ -16,7 +16,7 @@ import {
 } from "@/lib/organizations";
 import type { OrganizationRole, OrganizationSidebarStyle, OrganizationType } from "@/types/database";
 
-const validRoles = new Set<OrganizationRole>(["owner", "admin", "member"]);
+const validRoles = new Set<OrganizationRole>(["owner", "admin", "manager", "member"]);
 const validOrganizationTypes = new Set<OrganizationType>(["school", "club", "business", "restaurant", "cafe", "event", "other"]);
 const validSidebarStyles = new Set<OrganizationSidebarStyle>(["light", "dark", "system"]);
 

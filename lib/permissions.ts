@@ -16,5 +16,6 @@ export const rolePermissions: Record<Role, Permission[]> = {
     "modules:manage",
     "audit:read",
   ],
+  manager: ["organization:read", "team:manage"],
   member: ["organization:read"],
 };

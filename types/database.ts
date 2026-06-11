@@ -1,4 +1,4 @@
-export type OrganizationRole = "owner" | "admin" | "member";
+export type OrganizationRole = "owner" | "admin" | "manager" | "member";
 export type OrganizationSidebarStyle = "light" | "dark" | "system";
 export type OrganizationPlan = "free" | "starter" | "growth" | "enterprise";
 export type BillingStatus = "active" | "trialing" | "past_due" | "canceled" | "none";
@@ -1704,6 +1704,13 @@ export type Database = {
         Args: {
           p_organization_id: string;
           p_group_id: string;
+          p_user_id: string;
+        };
+        Returns: boolean;
+      };
+      can_manage_organization_groups: {
+        Args: {
+          p_organization_id: string;
           p_user_id: string;
         };
         Returns: boolean;
