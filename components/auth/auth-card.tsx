@@ -8,6 +8,7 @@ import { BrandLockup } from "@/components/ui/brand";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getAuthCallbackUrl } from "@/lib/auth/auth-redirects";
 import { createClient } from "@/lib/supabase/client";
 
 type AuthMode = "login" | "signup" | "forgot";
@@ -75,7 +76,8 @@ export function AuthCard({
       }
 
       if (mode === "signup") {
-        const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`;
+        const nextAfterVerification = isInvitationRedirect(redirectTo) ? redirectTo : "/onboarding";
+        const emailRedirectTo = getAuthCallbackUrl(nextAfterVerification, origin);
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -106,17 +108,17 @@ export function AuthCard({
             }
           }
 
-          router.replace(redirectTo);
+          router.replace(nextAfterVerification);
           router.refresh();
           return;
         }
 
-        setMessage("Check your email to confirm your account, then return to HofAdmin.");
+        setMessage("Check your email to confirm your account. The link will bring you back to HofAdmin setup.");
         return;
       }
 
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${origin}/auth/callback?next=/dashboard/settings`,
+        redirectTo: getAuthCallbackUrl("/dashboard/settings", origin),
       });
 
       if (resetError) {

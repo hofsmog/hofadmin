@@ -7,6 +7,7 @@ import { BrandLockup } from "@/components/ui/brand";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getAuthCallbackUrl } from "@/lib/auth/auth-redirects";
 import { createClient } from "@/lib/supabase/client";
 
 type InvitationAuthMode = "signup" | "login";
@@ -66,7 +67,7 @@ export function InvitationAuthPanel({
         email: invitedEmail,
         password,
         options: {
-          emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(acceptPath)}`,
+          emailRedirectTo: getAuthCallbackUrl(acceptPath, origin),
           data: {
             invitation_id: invitationId,
           },

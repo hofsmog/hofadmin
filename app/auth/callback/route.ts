@@ -1,11 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { getSafeAuthNextPath } from "@/lib/auth/auth-redirects";
 import { createClient } from "@/lib/supabase/server";
 import { createOrganizationForUser } from "@/lib/organizations";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const next = requestUrl.searchParams.get("next") || "/dashboard";
+  let next = getSafeAuthNextPath(requestUrl.searchParams.get("next") || "/onboarding");
 
   if (code) {
     const supabase = await createClient();
@@ -26,6 +27,9 @@ export async function GET(request: NextRequest) {
             ? metadataName
             : `${data.user.email?.split("@")[0] ?? "HofAdmin"} Workspace`;
         await createOrganizationForUser(supabase, data.user, organizationName);
+        if (!isOrganizationRegisterRedirect(next) && !next.startsWith("/invitations/accept")) {
+          next = "/onboarding";
+        }
       }
     }
   }

@@ -6,7 +6,7 @@ import { requireOrganizationContext } from "@/lib/auth/require-organization-cont
 export const dynamic = "force-dynamic";
 
 export default async function OnboardingPage() {
-  const { organizationContext } = await requireOrganizationContext();
+  const { user, organizationContext } = await requireOrganizationContext();
 
   if (organizationContext.activeOrganization.onboardingCompletedAt) {
     redirect("/dashboard");
@@ -17,7 +17,11 @@ export default async function OnboardingPage() {
       <div className="mx-auto mb-8 max-w-4xl">
         <BrandLockup size="sm" />
       </div>
-      <OnboardingForm defaultOrganizationName={organizationContext.activeOrganization.name} />
+      <OnboardingForm
+        defaultOrganizationName={organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name}
+        userEmail={user.email ?? "Workspace owner"}
+        userRole={organizationContext.activeMembership.role}
+      />
     </main>
   );
 }

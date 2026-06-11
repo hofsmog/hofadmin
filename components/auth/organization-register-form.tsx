@@ -8,6 +8,7 @@ import { BrandLockup } from "@/components/ui/brand";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getAuthCallbackUrl } from "@/lib/auth/auth-redirects";
 import { createClient } from "@/lib/supabase/client";
 
 export function OrganizationRegisterForm({
@@ -45,7 +46,7 @@ export function OrganizationRegisterForm({
             full_name: fullName,
             registration_organization_slug: orgSlug,
           },
-          emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(completePath)}`,
+          emailRedirectTo: getAuthCallbackUrl(completePath, origin),
         },
       });
 
@@ -60,7 +61,7 @@ export function OrganizationRegisterForm({
         return;
       }
 
-      setMessage("Check your email to confirm your account, then return to HofAdmin.");
+      setMessage("Check your email to confirm your account. The link will bring you back to HofAdmin.");
     } catch (authError) {
       setError(authError instanceof Error ? authError.message : "Registration failed. Please try again.");
     } finally {

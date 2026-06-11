@@ -18,13 +18,23 @@ const organizationTypes = new Set<OrganizationType>([
 ]);
 
 const starterModules = new Set([
-  "qr-checkins",
-  "members",
+  "documents",
   "forms",
   "inventory",
-  "loans",
   "bookings",
-  "sponsors",
+  "issues",
+]);
+
+const starterTools = new Set([
+  "my-pages",
+  "messages",
+  "calendar",
+  "groups",
+  "documents",
+  "forms",
+  "bookings",
+  "issues",
+  "inventory",
 ]);
 
 export type OnboardingState = {
@@ -43,6 +53,10 @@ export async function completeOnboardingAction(
     .getAll("starterModules")
     .map((value) => String(value))
     .filter((value) => starterModules.has(value));
+  const selectedTools = formData
+    .getAll("starterTools")
+    .map((value) => String(value))
+    .filter((value) => starterTools.has(value));
 
   if (!organizationTypes.has(organizationType)) {
     return { status: "error", message: "Choose an organization type." };
@@ -52,21 +66,19 @@ export async function completeOnboardingAction(
     return { status: "error", message: "Organization name must be between 2 and 80 characters." };
   }
 
-  if (!selectedModules.length) {
-    return { status: "error", message: "Choose at least one starter module." };
+  if (!selectedTools.length) {
+    return { status: "error", message: "Choose at least one tool to start with." };
   }
 
   const moduleLimit = getEffectiveModuleLimit(organizationContext.activeOrganization);
-
-  if (moduleLimit !== null && selectedModules.length > moduleLimit) {
-    return { status: "error", message: `Your current plan includes ${moduleLimit} modules. Choose fewer modules to finish setup.` };
-  }
+  const enabledModules = moduleLimit === null ? selectedModules : selectedModules.slice(0, moduleLimit);
 
   const checklist = {
-    createFirstQrItem: false,
-    addFirstMember: false,
+    selectedTools,
+    openMyPages: false,
     inviteTeamMember: false,
-    customizeBranding: false,
+    addFirstDocument: false,
+    createFirstForm: false,
   };
 
   const { error } = await supabase
@@ -75,8 +87,8 @@ export async function completeOnboardingAction(
       name: organizationName,
       display_name: organizationName,
       organization_type: organizationType,
-      starter_modules: selectedModules,
-      enabled_modules: selectedModules,
+      starter_modules: enabledModules,
+      enabled_modules: enabledModules,
       onboarding_checklist: checklist,
       onboarding_completed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -94,10 +106,10 @@ export async function completeOnboardingAction(
     title: "Onboarding completed",
     description: `${organizationName} finished initial setup.`,
     actorId: user.id,
-    metadata: { organizationType, starterModules: selectedModules },
+    metadata: { organizationType, starterTools: selectedTools, starterModules: enabledModules },
   });
 
   revalidatePath("/dashboard");
   revalidatePath("/onboarding");
-  redirect("/dashboard");
+  redirect(organizationContext.activeMembership.role === "member" ? "/app/my-pages" : "/dashboard");
 }
