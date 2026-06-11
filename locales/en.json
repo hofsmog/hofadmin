@@ -13,8 +13,8 @@
   },
   "hero": {
     "badge": "A digital workspace for organizations",
-    "headline": "One simple workspace for your whole organization.",
-    "subheadline": "HofAdmin gives companies, associations and schools one simple place for messages, documents, forms, bookings, tasks and issues.",
+    "headline": "Stop switching between emails, spreadsheets and scattered tools.",
+    "subheadline": "HofAdmin brings messages, documents, forms, bookings, tasks and issues together so your organization can work without chasing information across different tools.",
     "positioning": "A simple digital workspace for everyday organizational work.",
     "primaryCta": "Start free",
     "secondaryCta": "View demo",
@@ -61,8 +61,8 @@
     ]
   },
   "replace": {
-    "eyebrow": "From scattered to organized",
-    "title": "One place for information, responsibility and daily work.",
+    "eyebrow": "The daily problem",
+    "title": "Important work gets harder when information lives in too many places.",
     "withoutTitle": "Without HofAdmin",
     "withTitle": "With HofAdmin",
     "without": ["Email threads", "Spreadsheets", "Paper notes", "Scattered documents", "Separate booking lists", "Unclear responsibilities"],
@@ -84,19 +84,19 @@
     "cards": [
       { "title": "My Pages", "description": "Every user sees what is relevant to them.", "icon": "users" },
       { "title": "Messages & news", "description": "Important information gathered in one place.", "icon": "messages" },
-      { "title": "Documents", "description": "Routines, templates and files that are easy to find.", "icon": "documents" },
-      { "title": "Forms", "description": "Collect and manage responses without friction.", "icon": "forms" },
       { "title": "Tasks", "description": "Keep track of what needs to be done.", "icon": "tasks" },
-      { "title": "Bookings", "description": "Book rooms, resources and equipment.", "icon": "bookings" },
+      { "title": "Documents", "description": "Routines, templates and files that are easy to find.", "icon": "documents" },
+      { "title": "Calendar / Bookings", "description": "Book rooms, resources and equipment.", "icon": "bookings" },
+      { "title": "Forms", "description": "Collect and manage responses without friction.", "icon": "forms" },
       { "title": "Issues", "description": "Handle fault reports and internal questions.", "icon": "issues" },
       { "title": "Inventory", "description": "Track equipment, loans and returns.", "icon": "inventory" },
       { "title": "Groups & permissions", "description": "Show the right things to the right people.", "icon": "groups" }
     ]
   },
   "pilot": {
-    "eyebrow": "Pilot organizations",
-    "title": "We are looking for pilot organizations that want to simplify everyday work with us.",
-    "description": "HofAdmin is built close to real organizations. As a pilot, you can test early and help shape what matters most.",
+    "eyebrow": "Selected pilot organizations",
+    "title": "Free access for selected pilot organizations.",
+    "description": "We are looking for pilot organizations that want to simplify everyday work with us. Test HofAdmin early, give real feedback and help shape the workflows that matter.",
     "cards": [
       { "title": "Free pilot access", "detail": "Get started without cost while the product is shaped." },
       { "title": "Real feedback", "detail": "Tell us what works day to day and what is missing." },
@@ -109,8 +109,8 @@
   },
   "pricing": {
     "eyebrow": "Pricing",
-    "title": "Simple pricing for a shared digital workspace.",
-    "description": "Start small, test calmly and grow as more people and workflows move into HofAdmin.",
+    "title": "Simple plans when you are ready to grow.",
+    "description": "Pricing is intentionally simple while HofAdmin develops with pilot organizations. Start small and expand when more teams and workflows move in.",
     "cta": "Start free",
     "plans": [
       { "name": "Free", "price": "$0/mo", "detail": "For trying HofAdmin with a smaller organization." },

@@ -212,39 +212,34 @@ export function LandingPage({ initialLanguage }: { initialLanguage: Language }) 
         </div>
       </section>
 
-      <section id="organization-fit" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="max-w-2xl">
-          <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">{t.organizationFit.eyebrow}</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t.organizationFit.title}</h2>
+      <section id="product-preview" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="max-w-3xl">
+          <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">{t.productPreview.eyebrow}</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t.productPreview.title}</h2>
         </div>
-        <div className="mt-8 grid gap-4 lg:grid-cols-3">
-          {t.organizationFit.cards.map((organization) => {
-            const Icon = getIcon(organization.icon);
-            return (
-              <a
-                key={organization.title}
-                href="#product-preview"
-                className="group rounded-2xl border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06] dark:bg-zinc-950"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="grid h-12 w-12 place-items-center rounded-xl bg-zinc-100 dark:bg-zinc-900">
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-zinc-400 transition group-hover:translate-x-0.5 group-hover:text-zinc-700 dark:group-hover:text-zinc-200" />
+        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {t.productPreview.cards.map((preview) => (
+            <div key={preview.title} className="rounded-2xl border bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06] dark:bg-zinc-950">
+              <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">{preview.label}</p>
+                  <span className="rounded-full border bg-white px-2.5 py-1 text-xs font-medium dark:bg-zinc-950">
+                    {preview.status}
+                  </span>
                 </div>
-                <h3 className="mt-5 text-xl font-semibold tracking-tight">{organization.title}</h3>
-                <p className="mt-4 text-sm font-medium text-zinc-500 dark:text-zinc-400">{t.organizationFit.commonUseCases}</p>
-                <div className="mt-3 grid gap-2">
-                  {organization.useCases.map((useCase) => (
-                    <div key={useCase} className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                <p className="mt-4 text-lg font-semibold">{preview.title}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{preview.primary}</p>
+                <div className="mt-4 space-y-2">
+                  {preview.rows.map((row) => (
+                    <div key={row} className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm dark:bg-zinc-950">
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-                      <span>{useCase}</span>
+                      <span className="truncate">{row}</span>
                     </div>
                   ))}
                 </div>
-              </a>
-            );
-          })}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -281,34 +276,39 @@ export function LandingPage({ initialLanguage }: { initialLanguage: Language }) 
         </div>
       </section>
 
-      <section id="product-preview" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="max-w-3xl">
-          <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">{t.productPreview.eyebrow}</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t.productPreview.title}</h2>
+      <section id="organization-fit" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="max-w-2xl">
+          <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">{t.organizationFit.eyebrow}</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t.organizationFit.title}</h2>
         </div>
-        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {t.productPreview.cards.map((preview) => (
-            <div key={preview.title} className="rounded-2xl border bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06] dark:bg-zinc-950">
-              <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">{preview.label}</p>
-                  <span className="rounded-full border bg-white px-2.5 py-1 text-xs font-medium dark:bg-zinc-950">
-                    {preview.status}
-                  </span>
+        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+          {t.organizationFit.cards.map((organization) => {
+            const Icon = getIcon(organization.icon);
+            return (
+              <a
+                key={organization.title}
+                href="#product-preview"
+                className="group rounded-2xl border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-950/[0.06] dark:bg-zinc-950"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="grid h-12 w-12 place-items-center rounded-xl bg-zinc-100 dark:bg-zinc-900">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-zinc-400 transition group-hover:translate-x-0.5 group-hover:text-zinc-700 dark:group-hover:text-zinc-200" />
                 </div>
-                <p className="mt-4 text-lg font-semibold">{preview.title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{preview.primary}</p>
-                <div className="mt-4 space-y-2">
-                  {preview.rows.map((row) => (
-                    <div key={row} className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm dark:bg-zinc-950">
+                <h3 className="mt-5 text-xl font-semibold tracking-tight">{organization.title}</h3>
+                <p className="mt-4 text-sm font-medium text-zinc-500 dark:text-zinc-400">{t.organizationFit.commonUseCases}</p>
+                <div className="mt-3 grid gap-2">
+                  {organization.useCases.map((useCase) => (
+                    <div key={useCase} className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-                      <span className="truncate">{row}</span>
+                      <span>{useCase}</span>
                     </div>
                   ))}
                 </div>
-              </div>
-            </div>
-          ))}
+              </a>
+            );
+          })}
         </div>
       </section>
 
