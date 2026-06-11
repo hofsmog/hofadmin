@@ -19,12 +19,22 @@ type InvitationRpcClient = {
     fn: "accept_organization_invitation",
     args: { p_invitation_id: string },
   ): Promise<{ data: string | null; error: { message: string } | null }>;
+  rpc(
+    fn: "get_organization_invitation_by_token",
+    args: { p_token: string },
+  ): Promise<{ data: InvitationContext[] | null; error: { message: string } | null }>;
+  rpc(
+    fn: "accept_organization_invitation_by_token",
+    args: { p_token: string },
+  ): Promise<{ data: string | null; error: { message: string } | null }>;
 };
 
 export async function GET(request: NextRequest) {
-  const invitationId = new URL(request.url).searchParams.get("invitation");
+  const url = new URL(request.url);
+  const invitationId = url.searchParams.get("invitation");
+  const invitationToken = url.searchParams.get("token");
 
-  if (!invitationId) {
+  if (!invitationId && !invitationToken) {
     return NextResponse.redirect(new URL("/invitations/result?status=error&reason=missing", request.url));
   }
 
@@ -39,13 +49,16 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(new URL(`/invitations/accept?invitation=${encodeURIComponent(invitationId)}`, request.url));
+    const destination = invitationToken
+      ? `/invite/${encodeURIComponent(invitationToken)}`
+      : `/invitations/accept?invitation=${encodeURIComponent(invitationId ?? "")}`;
+    return NextResponse.redirect(new URL(destination, request.url));
   }
 
   const rpc = supabase as unknown as InvitationRpcClient;
-  const { data: contextRows, error: contextError } = await rpc.rpc("get_organization_invitation_acceptance_context", {
-    p_invitation_id: invitationId,
-  });
+  const { data: contextRows, error: contextError } = invitationToken
+    ? await rpc.rpc("get_organization_invitation_by_token", { p_token: invitationToken })
+    : await rpc.rpc("get_organization_invitation_acceptance_context", { p_invitation_id: invitationId ?? "" });
   const invitation = contextRows?.[0] ?? null;
 
   if (contextError || !invitation) {
@@ -65,16 +78,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(`/invitations/result?status=error&reason=${reason}`, request.url));
   }
 
-  const { data: organizationId, error } = await rpc.rpc("accept_organization_invitation", {
-    p_invitation_id: invitationId,
-  });
+  const { data: organizationId, error } = invitationToken
+    ? await rpc.rpc("accept_organization_invitation_by_token", { p_token: invitationToken })
+    : await rpc.rpc("accept_organization_invitation", { p_invitation_id: invitationId ?? "" });
 
   if (error || !organizationId) {
     const reason = encodeURIComponent(error?.message ?? "The invitation could not be accepted.");
     return NextResponse.redirect(new URL(`/invitations/result?status=error&reason=${reason}`, request.url));
   }
 
-  const response = NextResponse.redirect(new URL("/dashboard", request.url));
+  const response = NextResponse.redirect(new URL("/app/my-pages", request.url));
   response.cookies.set(activeOrganizationCookie, organizationId, {
     httpOnly: true,
     sameSite: "lax",

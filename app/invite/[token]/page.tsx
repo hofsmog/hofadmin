@@ -3,34 +3,25 @@ import { InvitationAuthPanel } from "@/components/invitations/invitation-auth-pa
 import { InvitationMismatchPanel } from "@/components/invitations/invitation-mismatch-panel";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
-import type { OrganizationRole } from "@/types/database";
+import type { Database } from "@/types/database";
 
-type InvitationContext = {
-  invitation_id: string;
-  organization_name: string;
-  invited_email: string;
-  invited_role: OrganizationRole;
-  invitation_status: "pending" | "accepted" | "revoked";
-  expires_at: string | null;
-  invitation_expired: boolean;
-};
+type InvitationContext = Database["public"]["Functions"]["get_organization_invitation_by_token"]["Returns"][number];
 
-type InvitationContextRpcClient = {
+type InvitationTokenRpcClient = {
   rpc(
-    fn: "get_organization_invitation_acceptance_context",
-    args: { p_invitation_id: string },
+    fn: "get_organization_invitation_by_token",
+    args: { p_token: string },
   ): Promise<{ data: InvitationContext[] | null; error: { message: string } | null }>;
 };
 
-export default async function AcceptInvitationPage({
-  searchParams,
+export default async function InviteTokenPage({
+  params,
 }: {
-  searchParams?: Promise<{ invitation?: string }>;
+  params: Promise<{ token: string }>;
 }) {
-  const params = (await searchParams) ?? {};
-  const invitationId = params.invitation;
+  const { token } = await params;
 
-  if (!invitationId) {
+  if (!token) {
     return <InvitationError title="Invitation link is missing" message="Ask the organization admin to resend the invitation." />;
   }
 
@@ -40,9 +31,9 @@ export default async function AcceptInvitationPage({
     return <InvitationError title="Invitation could not load" message="Supabase is not configured for this environment." />;
   }
 
-  const { data, error } = await (supabase as unknown as InvitationContextRpcClient).rpc(
-    "get_organization_invitation_acceptance_context",
-    { p_invitation_id: invitationId },
+  const { data, error } = await (supabase as unknown as InvitationTokenRpcClient).rpc(
+    "get_organization_invitation_by_token",
+    { p_token: token },
   );
   const invitation = data?.[0] ?? null;
 
@@ -65,10 +56,11 @@ export default async function AcceptInvitationPage({
   if (!user) {
     return (
       <InvitationAuthPanel
-        invitationToken={invitationId}
+        invitationToken={token}
         organizationName={invitation.organization_name}
         invitedEmail={invitation.invited_email}
-        acceptPath={`/invitations/accept?invitation=${encodeURIComponent(invitationId)}`}
+        invitedName={invitation.invited_name}
+        inviterName={invitation.inviter_name}
       />
     );
   }
@@ -82,11 +74,12 @@ export default async function AcceptInvitationPage({
         invitedEmail={invitation.invited_email}
         signedInEmail={user.email ?? "this account"}
         organizationName={invitation.organization_name}
+        returnTo={`/invite/${encodeURIComponent(token)}`}
       />
     );
   }
 
-  redirect(`/invitations/complete?invitation=${encodeURIComponent(invitationId)}`);
+  redirect(`/invitations/complete?token=${encodeURIComponent(token)}`);
 }
 
 function InvitationError({ title, message }: { title: string; message: string }) {

@@ -24,7 +24,7 @@ export default async function InvitationResultPage({
           <CardDescription>{success ? "Your HofAdmin access is ready." : reason}</CardDescription>
           <div className="pt-3">
             {success ? (
-              <ButtonLink href="/dashboard">Open dashboard</ButtonLink>
+              <ButtonLink href="/app/my-pages">Open HofAdmin</ButtonLink>
             ) : (
               <Link href="/login" className="text-sm font-medium">Back to login</Link>
             )}

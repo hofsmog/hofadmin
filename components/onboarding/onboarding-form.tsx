@@ -48,7 +48,6 @@ export function OnboardingForm({
   const [selectedTools, setSelectedTools] = useState(starterTools.filter((tool) => tool.recommended).map((tool) => tool.value));
   const [inviteMode, setInviteMode] = useState<"email" | "link" | "skip">("skip");
   const [inviteEmail, setInviteEmail] = useState("");
-  const [copyMessage, setCopyMessage] = useState("");
   const progress = useMemo(() => ((step + 1) / 4) * 100, [step]);
   const selectedTypeLabel = organizationTypes.find((type) => type.value === organizationType)?.label ?? "Company";
   const canContinue =
@@ -71,12 +70,6 @@ export function OnboardingForm({
         ? currentTools.filter((value) => value !== toolValue)
         : [...currentTools, toolValue],
     );
-  }
-
-  async function copyInviteLink() {
-    const inviteLink = `${window.location.origin}/login`;
-    await navigator.clipboard?.writeText(inviteLink);
-    setCopyMessage("Invite link copied. You can invite people properly from Team settings after setup.");
   }
 
   return (
@@ -195,12 +188,12 @@ export function OnboardingForm({
 
           {inviteMode === "link" ? (
             <div className="mt-5 rounded-2xl border bg-zinc-50 p-4 dark:bg-zinc-900/60">
-              <Button type="button" variant="secondary" onClick={copyInviteLink}>
+              <Button type="button" variant="secondary" disabled>
                 <Copy className="h-4 w-4" />
-                Copy invite link
+                Create invite link after setup
               </Button>
               <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                {copyMessage || "A proper organization invite link can be created from Team settings after setup."}
+                Secure organization invite links are created from Team settings after your workspace is ready.
               </p>
             </div>
           ) : null}

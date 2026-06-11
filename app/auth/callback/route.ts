@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { data } = (await supabase?.auth.exchangeCodeForSession(code)) ?? {};
 
-    if (supabase && data?.user && !next.startsWith("/invitations/accept") && !isOrganizationRegisterRedirect(next)) {
+    if (supabase && data?.user && !isInvitationRedirect(next) && !isOrganizationRegisterRedirect(next)) {
       const { data: membership } = await supabase
         .from("organization_members")
         .select("organization_id")
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
             ? metadataName
             : `${data.user.email?.split("@")[0] ?? "HofAdmin"} Workspace`;
         await createOrganizationForUser(supabase, data.user, organizationName);
-        if (!isOrganizationRegisterRedirect(next) && !next.startsWith("/invitations/accept")) {
+        if (!isOrganizationRegisterRedirect(next) && !isInvitationRedirect(next)) {
           next = "/onboarding";
         }
       }
@@ -39,4 +39,8 @@ export async function GET(request: NextRequest) {
 
 function isOrganizationRegisterRedirect(value: string) {
   return /^\/[^/]+\/register\/complete$/.test(value);
+}
+
+function isInvitationRedirect(value: string) {
+  return value.startsWith("/invitations/accept") || value.startsWith("/invite/");
 }

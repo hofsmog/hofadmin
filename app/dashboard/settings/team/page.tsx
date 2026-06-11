@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Toast } from "@/components/ui/toast";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
+import { getAppUrl } from "@/lib/app-url";
 import { canManageMembers } from "@/lib/organizations";
 import { cn } from "@/lib/utils";
 import type { OrganizationRole } from "@/types/database";
@@ -35,7 +36,7 @@ export default async function SettingsTeamPage({
   const { supabase, organizationContext } = await requireOrganizationContext();
   const { activeOrganization, activeMembership } = organizationContext;
   const canInvite = canManageMembers(activeMembership.role);
-  const [{ data: members }, { data: invitations }] = await Promise.all([
+  const [{ data: members }, { data: invitations }, { data: groups }] = await Promise.all([
     supabase
       .from("organization_members")
       .select("*")
@@ -45,9 +46,15 @@ export default async function SettingsTeamPage({
       .from("organization_invitations")
       .select("*")
       .eq("organization_id", activeOrganization.id)
-      .eq("status", "pending")
       .order("created_at", { ascending: false }),
+    supabase
+      .from("organization_groups")
+      .select("id, name")
+      .eq("organization_id", activeOrganization.id)
+      .order("name", { ascending: true }),
   ]);
+  const pendingInvitations = (invitations ?? []).filter((invite) => invite.status === "pending");
+  const acceptedInvitations = (invitations ?? []).filter((invite) => invite.status === "accepted");
 
   return (
     <>
@@ -122,7 +129,7 @@ export default async function SettingsTeamPage({
 
       {activeTab === "invitations" ? (
         <div className="space-y-4">
-          <InviteMemberForm disabled={!canInvite} activeRole={activeMembership.role} />
+          <InviteMemberForm disabled={!canInvite} activeRole={activeMembership.role} groups={groups ?? []} />
           <Card>
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
@@ -135,14 +142,15 @@ export default async function SettingsTeamPage({
             </CardHeader>
             <CardContent>
               <div className="divide-y">
-                {(invitations ?? []).length ? (
-                  invitations?.map((invite) => (
+                {pendingInvitations.length ? (
+                  pendingInvitations.map((invite) => (
                     <div key={invite.id} className="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between">
                       <div>
                         <p className="text-sm font-medium">{invite.email}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {invite.role} - Pending - Invited {new Date(invite.created_at).toLocaleDateString()}
                         </p>
+                        <p className="mt-1 break-all text-xs text-muted-foreground">{getAppUrl()}/invite/{invite.token}</p>
                       </div>
                       <div className="flex gap-2">
                         <form action={resendInvitationAction}>
@@ -158,6 +166,28 @@ export default async function SettingsTeamPage({
                   ))
                 ) : (
                   <p className="py-4 text-sm text-muted-foreground">No pending invitations.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Accepted invitations</CardTitle>
+              <CardDescription>People who joined this organization from an invitation.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="divide-y">
+                {acceptedInvitations.length ? (
+                  acceptedInvitations.map((invite) => (
+                    <div key={invite.id} className="flex flex-col gap-1 py-3">
+                      <p className="text-sm font-medium">{invite.email}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {invite.role} - Accepted {invite.accepted_at ? new Date(invite.accepted_at).toLocaleDateString() : "recently"}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="py-4 text-sm text-muted-foreground">No accepted invitations yet.</p>
                 )}
               </div>
             </CardContent>

@@ -12,9 +12,11 @@ const initialState: InviteMemberState = { status: "idle", message: "" };
 export function InviteMemberForm({
   disabled,
   activeRole,
+  groups = [],
 }: {
   disabled: boolean;
   activeRole: OrganizationRole;
+  groups?: Array<{ id: string; name: string }>;
 }) {
   const [state, action] = useActionState(inviteMemberAction, initialState);
 
@@ -26,8 +28,10 @@ export function InviteMemberForm({
           Send an email invitation and choose the teammate&apos;s role.
         </CardDescription>
       </CardHeader>
-      <form action={action} className="grid gap-4 p-5 pt-0 md:grid-cols-[1fr_11rem_auto]">
+      <form action={action} className="grid gap-4 p-5 pt-0">
+        <div className="grid gap-4 md:grid-cols-[1fr_1fr_11rem]">
         <Input name="email" type="email" placeholder="member@company.com" disabled={disabled} required />
+        <Input name="name" placeholder="Name (optional)" disabled={disabled} />
         <select
           name="role"
           disabled={disabled}
@@ -39,6 +43,20 @@ export function InviteMemberForm({
           <option value="manager">Manager</option>
           <option value="member">Member</option>
         </select>
+        </div>
+        {groups.length ? (
+          <div className="rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900/60">
+            <p className="text-sm font-medium">Add to groups</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {groups.map((group) => (
+                <label key={group.id} className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm dark:bg-zinc-950">
+                  <input type="checkbox" name="groupIds" value={group.id} disabled={disabled} className="h-4 w-4 rounded border-zinc-300" />
+                  <span>{group.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        ) : null}
         <ActionSubmitButton className="h-11" pendingLabel="Inviting" disabled={disabled}>
           Send invitation
         </ActionSubmitButton>

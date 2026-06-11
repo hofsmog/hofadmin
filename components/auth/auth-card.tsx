@@ -231,5 +231,5 @@ function getSafeRedirectPath(value: string | null) {
 }
 
 function isInvitationRedirect(value: string) {
-  return value.startsWith("/invitations/accept");
+  return value.startsWith("/invitations/accept") || value.startsWith("/invite/");
 }

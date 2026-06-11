@@ -7,6 +7,7 @@ Recommended Supabase Auth settings for production:
 - Site URL: `https://hofadmin.com`
 - Redirect URLs:
   - `https://hofadmin.com/auth/callback`
+  - `https://hofadmin.com/invite/*`
   - `https://hofadmin.com/invitations/accept`
   - `https://hofadmin.com/*`
 - Sender name: `HofAdmin`

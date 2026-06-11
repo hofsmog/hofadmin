@@ -13,13 +13,19 @@ import { createClient } from "@/lib/supabase/client";
 type InvitationAuthMode = "signup" | "login";
 
 export function InvitationAuthPanel({
-  invitationId,
+  invitationToken,
   organizationName,
   invitedEmail,
+  invitedName,
+  inviterName,
+  acceptPath: providedAcceptPath,
 }: {
-  invitationId: string;
+  invitationToken: string;
   organizationName: string;
   invitedEmail: string;
+  invitedName?: string | null;
+  inviterName?: string | null;
+  acceptPath?: string;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<InvitationAuthMode>("signup");
@@ -27,7 +33,7 @@ export function InvitationAuthPanel({
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const acceptPath = `/invitations/accept?invitation=${encodeURIComponent(invitationId)}`;
+  const acceptPath = providedAcceptPath ?? `/invite/${encodeURIComponent(invitationToken)}`;
 
   const submitLabel = useMemo(() => {
     if (pending) {
@@ -69,7 +75,8 @@ export function InvitationAuthPanel({
         options: {
           emailRedirectTo: getAuthCallbackUrl(acceptPath, origin),
           data: {
-            invitation_id: invitationId,
+            invitation_token: invitationToken,
+            full_name: invitedName || undefined,
           },
         },
       });
@@ -99,6 +106,7 @@ export function InvitationAuthPanel({
         <BrandLockup className="mb-6" />
         <h1 className="text-2xl font-semibold tracking-tight">You&apos;ve been invited to join {organizationName}</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          {inviterName ? `${inviterName} invited you. ` : ""}
           Create an account or sign in with <span className="font-medium text-foreground">{invitedEmail}</span> to continue.
         </p>
 

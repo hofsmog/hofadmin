@@ -10,10 +10,12 @@ export function InvitationMismatchPanel({
   invitedEmail,
   signedInEmail,
   organizationName,
+  returnTo,
 }: {
   invitedEmail: string;
   signedInEmail: string;
   organizationName: string;
+  returnTo?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -22,7 +24,7 @@ export function InvitationMismatchPanel({
   async function signOutAndContinue() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.replace(`/invitations/accept?invitation=${encodeURIComponent(invitationId)}`);
+    router.replace(returnTo ?? `/invitations/accept?invitation=${encodeURIComponent(invitationId)}`);
     router.refresh();
   }
 

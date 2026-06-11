@@ -236,6 +236,10 @@ export type Database = {
           role: OrganizationRole;
           invited_by: string;
           status: "pending" | "accepted" | "revoked";
+          token: string;
+          invited_name: string | null;
+          accepted_at: string | null;
+          accepted_by: string | null;
           created_at: string;
           expires_at: string | null;
         };
@@ -246,6 +250,10 @@ export type Database = {
           role?: OrganizationRole;
           invited_by: string;
           status?: "pending" | "accepted" | "revoked";
+          token?: string;
+          invited_name?: string | null;
+          accepted_at?: string | null;
+          accepted_by?: string | null;
           created_at?: string;
           expires_at?: string | null;
         };
@@ -256,6 +264,10 @@ export type Database = {
           role?: OrganizationRole;
           invited_by?: string;
           status?: "pending" | "accepted" | "revoked";
+          token?: string;
+          invited_name?: string | null;
+          accepted_at?: string | null;
+          accepted_by?: string | null;
           created_at?: string;
           expires_at?: string | null;
         };
@@ -265,6 +277,49 @@ export type Database = {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      organization_invitation_groups: {
+        Row: {
+          invitation_id: string;
+          organization_id: string;
+          group_id: string;
+          created_at: string;
+        };
+        Insert: {
+          invitation_id: string;
+          organization_id: string;
+          group_id: string;
+          created_at?: string;
+        };
+        Update: {
+          invitation_id?: string;
+          organization_id?: string;
+          group_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_invitation_groups_invitation_id_fkey";
+            columns: ["invitation_id"];
+            isOneToOne: false;
+            referencedRelation: "organization_invitations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "organization_invitation_groups_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "organization_invitation_groups_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "organization_groups";
             referencedColumns: ["id"];
           },
         ];
@@ -1714,6 +1769,29 @@ export type Database = {
           p_user_id: string;
         };
         Returns: boolean;
+      };
+      get_organization_invitation_by_token: {
+        Args: {
+          p_token: string;
+        };
+        Returns: {
+          invitation_id: string;
+          invitation_token: string;
+          organization_name: string;
+          invited_email: string;
+          invited_name: string | null;
+          invited_role: OrganizationRole;
+          inviter_name: string | null;
+          invitation_status: "pending" | "accepted" | "revoked";
+          expires_at: string | null;
+          invitation_expired: boolean;
+        }[];
+      };
+      accept_organization_invitation_by_token: {
+        Args: {
+          p_token: string;
+        };
+        Returns: string;
       };
     };
     Enums: {

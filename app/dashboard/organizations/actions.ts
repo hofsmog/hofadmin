@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { recordActivityEvent } from "@/lib/activity";
@@ -323,7 +324,12 @@ export async function inviteMemberAction(
   }
 
   const email = String(formData.get("email") || "").trim().toLowerCase();
+  const invitedName = sanitizeOptionalDisplayName(String(formData.get("name") || ""));
   const role = String(formData.get("role") || "member") as OrganizationRole;
+  const groupIds = Array.from(new Set(formData
+    .getAll("groupIds")
+    .map((value) => String(value))
+    .filter(Boolean)));
 
   if (!email.includes("@")) {
     return { status: "error", message: "Enter a valid email address." };
@@ -338,6 +344,20 @@ export async function inviteMemberAction(
   }
 
   const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString();
+  const token = createInviteToken();
+
+  if (groupIds.length) {
+    const { data: validGroups, error: groupsError } = await supabase
+      .from("organization_groups")
+      .select("id")
+      .eq("organization_id", context.activeOrganization.id)
+      .in("id", groupIds);
+
+    if (groupsError || (validGroups ?? []).length !== groupIds.length) {
+      return { status: "error", message: "One or more selected groups could not be found." };
+    }
+  }
+
   const { data: invitation, error } = await supabase
     .from("organization_invitations")
     .insert({
@@ -345,9 +365,11 @@ export async function inviteMemberAction(
       email,
       role,
       invited_by: user.id,
+      token,
+      invited_name: invitedName,
       expires_at: expiresAt,
     })
-    .select("id, email, role")
+    .select("id, email, role, token")
     .single();
 
   if (error) {
@@ -360,11 +382,30 @@ export async function inviteMemberAction(
     };
   }
 
+  if (groupIds.length) {
+    const { error: groupInsertError } = await supabase
+      .from("organization_invitation_groups")
+      .insert(groupIds.map((groupId) => ({
+        invitation_id: invitation.id,
+        organization_id: context.activeOrganization.id,
+        group_id: groupId,
+      })));
+
+    if (groupInsertError) {
+      console.error("[team-invitations] Invitation created but group assignment failed.", {
+        organizationId: context.activeOrganization.id,
+        invitationId: invitation.id,
+        groupIds,
+        error: groupInsertError,
+      });
+    }
+  }
+
   const emailResult = await sendTeamInvitationEmail({
     supabase,
     organizationId: context.activeOrganization.id,
     organizationName: context.activeOrganization.displayName ?? context.activeOrganization.name,
-    invitationId: invitation.id,
+    invitationToken: invitation.token,
     email,
     role,
     invitedByEmail: user.email ?? null,
@@ -377,7 +418,7 @@ export async function inviteMemberAction(
     title: "Member invited",
     description: `${email} was invited as ${role}.`,
     actorId: user.id,
-    metadata: { email, role },
+    metadata: { email, role, groupIds },
   });
 
   revalidatePath("/dashboard/settings/team");
@@ -419,7 +460,7 @@ export async function resendInvitationAction(formData: FormData) {
   const invitationId = String(formData.get("invitationId") || "");
   const { data: invitation, error } = await supabase
     .from("organization_invitations")
-    .select("id, email, role, status")
+    .select("id, email, role, status, token")
     .eq("id", invitationId)
     .eq("organization_id", context.activeOrganization.id)
     .eq("status", "pending")
@@ -433,7 +474,7 @@ export async function resendInvitationAction(formData: FormData) {
     supabase,
     organizationId: context.activeOrganization.id,
     organizationName: context.activeOrganization.displayName ?? context.activeOrganization.name,
-    invitationId: invitation.id,
+    invitationToken: invitation.token,
     email: invitation.email,
     role: invitation.role,
     invitedByEmail: user.email ?? null,
@@ -474,7 +515,7 @@ async function sendTeamInvitationEmail({
   supabase,
   organizationId,
   organizationName,
-  invitationId,
+  invitationToken,
   email,
   role,
   invitedByEmail,
@@ -482,12 +523,12 @@ async function sendTeamInvitationEmail({
   supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>;
   organizationId: string;
   organizationName: string;
-  invitationId: string;
+  invitationToken: string;
   email: string;
   role: OrganizationRole;
   invitedByEmail: string | null;
 }) {
-  const invitationUrl = `${getAppUrl()}/invitations/accept?invitation=${encodeURIComponent(invitationId)}`;
+  const invitationUrl = `${getAppUrl()}/invite/${encodeURIComponent(invitationToken)}`;
   const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
   const inviterLine = invitedByEmail ? `${invitedByEmail} invited you to join ${organizationName}.` : `You were invited to join ${organizationName}.`;
 
@@ -517,6 +558,10 @@ async function sendTeamInvitationEmail({
       `Sign in or create an account with ${email} to join.`,
     ].join("\n"),
   });
+}
+
+function createInviteToken() {
+  return randomBytes(32).toString("base64url");
 }
 
 function escapeHtml(value: string) {
