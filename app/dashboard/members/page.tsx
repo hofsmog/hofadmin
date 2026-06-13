@@ -47,6 +47,27 @@ export default async function MembersOverviewPage() {
         .in("group_id", groupIds)
     : { data: [] };
   const memberCounts = countMembersByGroup((groupMembers ?? []) as GroupMember[]);
+  const hasMembers = (totalMembers ?? 0) > 0;
+  const statItems = [
+    {
+      label: "Total members",
+      value: totalMembers ?? 0,
+      detail: "Member records",
+      icon: UsersRound,
+    },
+    {
+      label: "Active members",
+      value: activeMembers ?? 0,
+      detail: "Ready for workflows",
+      icon: UserRoundCheck,
+    },
+    {
+      label: "Pending invitations",
+      value: pendingInvitations ?? 0,
+      detail: "Waiting for acceptance",
+      icon: MailPlus,
+    },
+  ].filter((item) => item.value > 0);
 
   return (
     <>
@@ -54,7 +75,6 @@ export default async function MembersOverviewPage() {
         title="Members & Teams"
         description="Add people first, then organize them into teams when it helps."
         items={membersNavItems}
-        action={{ href: "/dashboard/members/create", label: "Add member" }}
       />
 
       <section className="mb-5 rounded-xl border bg-white p-4 shadow-sm dark:bg-zinc-950">
@@ -78,38 +98,52 @@ export default async function MembersOverviewPage() {
         </div>
       </section>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <StatCard label="Total members" value={`${totalMembers ?? 0}`} detail="Member records" icon={UsersRound} />
-        <StatCard label="Active members" value={`${activeMembers ?? 0}`} detail="Ready for workflows" icon={UserRoundCheck} />
-        <StatCard label="Pending invitations" value={`${pendingInvitations ?? 0}`} detail="Waiting for acceptance" icon={MailPlus} />
-      </div>
-
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Recent members</CardTitle>
-          <CardDescription>Newest records in this organization.</CardDescription>
-        </CardHeader>
-        <div className="divide-y px-5 pb-5">
-          {(members ?? []).length ? members?.map((member) => (
-            <div key={member.id} className="flex items-center justify-between gap-3 py-3">
-              <div>
-                <p className="text-sm font-medium">{member.name}</p>
-                <p className="text-xs capitalize text-muted-foreground">{member.type} - {member.status}</p>
-              </div>
-              <span className="text-xs text-muted-foreground">{new Date(member.created_at).toLocaleDateString()}</span>
-            </div>
-          )) : <div className="py-8 text-center text-sm text-muted-foreground">No members yet.</div>}
+      {statItems.length ? (
+        <div className="grid gap-4 md:grid-cols-3">
+          {statItems.map((item) => (
+            <StatCard key={item.label} label={item.label} value={`${item.value}`} detail={item.detail} icon={item.icon} />
+          ))}
         </div>
-      </Card>
+      ) : null}
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_22rem]">
+      {hasMembers ? (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Recent members</CardTitle>
+            <CardDescription>Newest records in this organization.</CardDescription>
+          </CardHeader>
+          <div className="divide-y px-5 pb-5">
+            {members?.map((member) => (
+              <div key={member.id} className="flex items-center justify-between gap-3 py-3">
+                <div>
+                  <p className="text-sm font-medium">{member.name}</p>
+                  <p className="text-xs capitalize text-muted-foreground">{member.type} - {member.status}</p>
+                </div>
+                <span className="text-xs text-muted-foreground">{new Date(member.created_at).toLocaleDateString()}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : null}
+
+      <div id="teams" className="mt-6 grid scroll-mt-24 gap-4 lg:grid-cols-[1fr_22rem]">
         <Card>
           <CardHeader>
             <CardTitle>Teams</CardTitle>
-            <CardDescription>Use teams to organize people by responsibility, department, class, or group.</CardDescription>
+            <CardDescription>
+              {hasMembers
+                ? "Use teams to organize people by responsibility, department, class, or group."
+                : "Add members first. Teams can be created later."}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            {(groups ?? []).length ? (
+            {!hasMembers ? (
+              <div className="rounded-xl border border-dashed p-5 text-center">
+                <UsersRound className="mx-auto h-8 w-8 text-muted-foreground" />
+                <p className="mt-3 text-sm font-medium">Teams can wait</p>
+                <p className="mt-1 text-sm text-muted-foreground">Once people are added, you can organize them into teams here.</p>
+              </div>
+            ) : (groups ?? []).length ? (
               ((groups ?? []) as OrganizationGroup[]).map((group) => (
                 <div key={group.id} className="flex items-center justify-between gap-3 rounded-xl bg-zinc-50 p-3 dark:bg-zinc-900/60">
                   <div className="min-w-0">
@@ -129,31 +163,33 @@ export default async function MembersOverviewPage() {
           </CardContent>
         </Card>
 
-        <Card id="create-team">
-          <CardHeader>
-            <CardTitle>Create team</CardTitle>
-            <CardDescription>Secondary setup for organizing people after they are added.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form action={createOrganizationGroupAction} className="space-y-4">
-              <input type="hidden" name="returnTo" value="/dashboard/members#create-team" />
-              <label className="block space-y-2">
-                <span className="text-sm font-medium">Team name</span>
-                <Input name="name" required minLength={2} maxLength={80} placeholder="Maintenance" />
-              </label>
-              <label className="block space-y-2">
-                <span className="text-sm font-medium">Description</span>
-                <textarea
-                  name="description"
-                  rows={3}
-                  placeholder="What this team is responsible for"
-                  className="w-full rounded-xl border bg-white px-3 py-3 text-sm shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
-                />
-              </label>
-              <ActionSubmitButton pendingLabel="Creating">Create team</ActionSubmitButton>
-            </form>
-          </CardContent>
-        </Card>
+        {hasMembers ? (
+          <Card id="create-team">
+            <CardHeader>
+              <CardTitle>Create team</CardTitle>
+              <CardDescription>Secondary setup for organizing people after they are added.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form action={createOrganizationGroupAction} className="space-y-4">
+                <input type="hidden" name="returnTo" value="/dashboard/members#create-team" />
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium">Team name</span>
+                  <Input name="name" required minLength={2} maxLength={80} placeholder="Maintenance" />
+                </label>
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium">Description</span>
+                  <textarea
+                    name="description"
+                    rows={3}
+                    placeholder="What this team is responsible for"
+                    className="w-full rounded-xl border bg-white px-3 py-3 text-sm shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
+                  />
+                </label>
+                <ActionSubmitButton pendingLabel="Creating">Create team</ActionSubmitButton>
+              </form>
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
     </>
   );

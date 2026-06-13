@@ -26,7 +26,6 @@ export const formsNavItems = [
 ];
 
 export const membersNavItems = [
-  { title: "Members & Teams", href: "/dashboard/members" },
-  { title: "Members", href: "/dashboard/members/list" },
-  { title: "Add member", href: "/dashboard/members/create" },
+  { title: "Members", href: "/dashboard/members" },
+  { title: "Teams", href: "/dashboard/members#teams" },
 ];
