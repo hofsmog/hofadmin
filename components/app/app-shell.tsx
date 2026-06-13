@@ -122,7 +122,7 @@ export function AppShell({
                 href="/dashboard"
                 className="hidden h-9 items-center justify-center rounded-xl border bg-white px-3 text-sm font-medium shadow-sm transition hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 sm:inline-flex"
               >
-                Admin dashboard
+                Back to admin dashboard
               </Link>
             ) : null}
             <Link
@@ -221,7 +221,7 @@ function AppSidebar({
             className="mb-3 flex items-center gap-3 rounded-xl bg-zinc-950 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200"
           >
             <Home className="h-4 w-4" />
-            <span className="min-w-0 flex-1 truncate">Admin dashboard</span>
+            <span className="min-w-0 flex-1 truncate">Back to admin dashboard</span>
           </Link>
         ) : null}
         {navItems.map((item) => {

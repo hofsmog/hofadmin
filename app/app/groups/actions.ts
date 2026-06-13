@@ -14,6 +14,7 @@ export async function createOrganizationGroupAction(formData: FormData) {
   const organizationId = organizationContext.activeOrganization.id;
   const name = String(formData.get("name") || "").trim();
   const description = String(formData.get("description") || "").trim();
+  const returnTo = getSafeReturnPath(String(formData.get("returnTo") || "").trim());
 
   if (!name) {
     return;
@@ -40,7 +41,8 @@ export async function createOrganizationGroupAction(formData: FormData) {
   }
 
   revalidatePath("/app/groups");
-  redirect(`/app/groups/${data.id}`);
+  revalidatePath("/dashboard/members");
+  redirect(returnTo || `/app/groups/${data.id}`);
 }
 
 export async function updateOrganizationGroupAction(formData: FormData) {
@@ -221,4 +223,12 @@ export async function removeOrganizationGroupMemberAction(formData: FormData) {
 
 function canManageGroups(role: string) {
   return role === "owner" || role === "admin" || role === "manager";
+}
+
+function getSafeReturnPath(value: string) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return "";
+  }
+
+  return value;
 }

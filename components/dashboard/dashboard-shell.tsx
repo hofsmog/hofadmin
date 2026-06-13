@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronDown, Loader2, LogOut, Menu, X } from "lucide-react";
+import { ChevronDown, ExternalLink, Loader2, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { BrandLockup } from "@/components/ui/brand";
 import { OrganizationSwitcher } from "@/components/dashboard/organization-switcher";
@@ -91,6 +91,13 @@ export function DashboardShell({
           </button>
 
           <div className="ml-auto flex items-center gap-2">
+            <Link
+              href="/app/my-pages?preview=member"
+              className="hidden h-10 items-center justify-center gap-2 rounded-xl border bg-white px-3 text-sm font-medium shadow-sm transition hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 sm:inline-flex"
+            >
+              View member portal
+              <ExternalLink className="h-4 w-4" />
+            </Link>
             <div className="flex items-center gap-2 rounded-xl border bg-white px-2 py-1.5 shadow-sm dark:bg-zinc-900">
               <span className="grid h-7 w-7 place-items-center rounded-lg bg-zinc-950 text-xs font-semibold text-white dark:bg-zinc-100 dark:text-zinc-950">
                 {initials}

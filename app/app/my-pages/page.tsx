@@ -84,10 +84,16 @@ const quickLinks = [
   { moduleId: "inventory", label: "Inventory", href: "/dashboard/inventory", icon: Package },
 ] as const;
 
-export default async function MyPagesPage() {
+export default async function MyPagesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ preview?: string }>;
+}) {
+  const params = (await searchParams) ?? {};
   const { user, supabase, organizationContext } = await requireOrganizationContext();
+  const isAdminPreview = hasAdminAccess(organizationContext.activeMembership.role) && params.preview === "member";
 
-  if (hasAdminAccess(organizationContext.activeMembership.role)) {
+  if (hasAdminAccess(organizationContext.activeMembership.role) && !isAdminPreview) {
     redirect("/dashboard");
   }
 
@@ -246,6 +252,11 @@ export default async function MyPagesPage() {
                 Here&apos;s what needs your attention today.
               </p>
             </div>
+            {isAdminPreview ? (
+              <ButtonLink href="/dashboard" variant="secondary" className="shrink-0">
+                Back to admin dashboard
+              </ButtonLink>
+            ) : null}
           </div>
         </section>
 

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSafeAuthNextPath } from "@/lib/auth/auth-redirects";
+import { hasAdminAccess } from "@/lib/auth/role-destinations";
 import { createClient } from "@/lib/supabase/server";
 import { createOrganizationForUser } from "@/lib/organizations";
 
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
     if (data?.user && !isInvitationRedirect(next) && !isOrganizationRegisterRedirect(next)) {
       const { data: membership, error: membershipError } = await supabase
         .from("organization_members")
-        .select("organization_id")
+        .select("organization_id, role")
         .eq("user_id", data.user.id)
         .limit(1)
         .maybeSingle();
@@ -71,6 +72,8 @@ export async function GET(request: NextRequest) {
         if (!isOrganizationRegisterRedirect(next) && !isInvitationRedirect(next)) {
           next = "/onboarding";
         }
+      } else if (hasAdminAccess(membership.role) && !isOrganizationRegisterRedirect(next) && !isInvitationRedirect(next)) {
+        next = "/dashboard";
       }
     } else if (data?.user && isInvitationRedirect(next)) {
       console.info("[auth/callback] Verified invited user; redirecting to invitation acceptance.", {
