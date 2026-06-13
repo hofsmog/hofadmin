@@ -90,13 +90,6 @@ export function DashboardShell({
             <Menu className="h-5 w-5" />
           </button>
 
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">
-              {organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name}
-            </p>
-            <p className="text-xs capitalize text-muted-foreground">{organizationContext.activeMembership.role}</p>
-          </div>
-
           <div className="ml-auto flex items-center gap-2">
             <div className="flex items-center gap-2 rounded-xl border bg-white px-2 py-1.5 shadow-sm dark:bg-zinc-900">
               <span className="grid h-7 w-7 place-items-center rounded-lg bg-zinc-950 text-xs font-semibold text-white dark:bg-zinc-100 dark:text-zinc-950">

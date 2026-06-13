@@ -231,15 +231,15 @@ export default async function DashboardPage() {
   ].filter((item) => item.value > 0) satisfies OverviewItem[];
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-      <main className="space-y-6">
-        <section className="rounded-xl border bg-white px-4 py-3 shadow-sm dark:bg-zinc-950">
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <main className="space-y-4">
+        <section className="rounded-xl border bg-white px-4 py-2.5 shadow-sm dark:bg-zinc-950">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">
+              <h1 className="text-lg font-semibold tracking-tight">
                 {isNewOrganization ? "Set up your organization" : "Admin dashboard"}
               </h1>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+              <p className="mt-0.5 max-w-2xl text-sm leading-5 text-muted-foreground">
                 {isNewOrganization
                   ? "Finish the basics first. The dashboard will stay focused on what matters next."
                   : "A quiet overview of the work that matters right now."}
@@ -254,12 +254,12 @@ export default async function DashboardPage() {
         ) : null}
 
         {!isNewOrganization && overviewItems.length ? (
-          <section className="space-y-3">
+          <section className="space-y-2">
             <div>
               <h2 className="text-base font-semibold tracking-tight">Useful overview</h2>
               <p className="text-sm text-muted-foreground">Only active areas with data are shown.</p>
             </div>
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-2.5 md:grid-cols-3">
               {overviewItems.map((item) => (
                 <OverviewCard key={item.label} item={item} />
               ))}
@@ -293,11 +293,11 @@ function OnboardingChecklist({
 }) {
   return (
     <Card>
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2">
         <CardTitle>Onboarding checklist</CardTitle>
         <CardDescription>Start with what is still left to do.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3">
         <div className="space-y-2">
           {incompleteItems.map((item) => (
             <ChecklistItem key={item.label} item={item} />
@@ -305,14 +305,18 @@ function OnboardingChecklist({
         </div>
 
         {completedItems.length ? (
-          <div className="border-t pt-3">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Completed</p>
-            <div className="space-y-2">
+          <details className="group border-t pt-3" open={completedItems.length <= 1}>
+            <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <span>Completed ({completedItems.length})</span>
+              <span className="normal-case text-muted-foreground group-open:hidden">Show</span>
+              <span className="hidden normal-case text-muted-foreground group-open:inline">Hide</span>
+            </summary>
+            <div className="mt-2 space-y-2">
               {completedItems.map((item) => (
                 <ChecklistItem key={item.label} item={item} />
               ))}
             </div>
-          </div>
+          </details>
         ) : null}
       </CardContent>
     </Card>
@@ -320,11 +324,11 @@ function OnboardingChecklist({
 }
 
 type SetupItem = {
-    label: string;
-    done: boolean;
-    href: string;
-    description: string;
-    icon: ComponentType<{ className?: string }>;
+  label: string;
+  done: boolean;
+  href: string;
+  description: string;
+  icon: ComponentType<{ className?: string }>;
 };
 
 function ChecklistItem({ item }: { item: SetupItem }) {
@@ -334,7 +338,7 @@ function ChecklistItem({ item }: { item: SetupItem }) {
     <ButtonLink
       href={item.href}
       variant="ghost"
-      className={`h-auto w-full justify-start rounded-xl p-3 text-left ${
+      className={`h-auto w-full justify-start rounded-xl p-2.5 text-left ${
         item.done
           ? "bg-white opacity-65 ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800"
           : "bg-zinc-50 shadow-sm dark:bg-zinc-900/60"
@@ -356,7 +360,7 @@ function OverviewCard({ item }: { item: OverviewItem }) {
   const Icon = item.icon;
 
   return (
-    <ButtonLink href={item.href} variant="secondary" className="h-auto justify-start rounded-xl p-4 text-left">
+    <ButtonLink href={item.href} variant="secondary" className="h-auto justify-start rounded-xl p-3 text-left">
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
         <Icon className="h-5 w-5" />
       </span>
@@ -371,13 +375,13 @@ function OverviewCard({ item }: { item: OverviewItem }) {
 
 function AttentionCenter({ items }: { items: AttentionItem[] }) {
   return (
-    <aside className="space-y-3 xl:sticky xl:top-20 xl:self-start">
+    <aside className="space-y-2 xl:sticky xl:top-20 xl:self-start">
       <div>
         <h2 className="text-base font-semibold tracking-tight">Attention Center</h2>
         <p className="text-sm text-muted-foreground">Only items that need action or review.</p>
       </div>
       <Card>
-        <CardContent className="space-y-2 p-3">
+        <CardContent className="space-y-2 p-2.5">
           {items.length ? (
             items.map((item) => <AttentionCenterItem key={item.label} item={item} />)
           ) : (
@@ -398,7 +402,7 @@ function AttentionCenterItem({ item }: { item: AttentionItem }) {
     <ButtonLink
       href={item.href}
       variant="ghost"
-      className="h-auto w-full justify-start rounded-xl bg-zinc-50 p-3 text-left dark:bg-zinc-900/60"
+      className="h-auto w-full justify-start rounded-xl bg-zinc-50 p-2.5 text-left dark:bg-zinc-900/60"
     >
       <span className={getToneClass(item.tone)}>
         <Icon className="h-5 w-5" />
