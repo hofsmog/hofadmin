@@ -1,10 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { getHomePathForRole } from "@/lib/auth/role-destinations";
 import { createClient } from "@/lib/supabase/server";
+import type { OrganizationRole } from "@/types/database";
 
 const activeOrganizationCookie = "hofadmin_active_organization_id";
 
 type InvitationContext = {
   invited_email: string;
+  invited_role: OrganizationRole;
   invitation_status: "pending" | "accepted" | "revoked";
   expires_at: string | null;
   invitation_expired: boolean;
@@ -128,7 +131,7 @@ export async function GET(request: NextRequest) {
     hasToken: Boolean(invitationToken),
   });
 
-  const response = NextResponse.redirect(new URL("/app/my-pages", request.url));
+  const response = NextResponse.redirect(new URL(getHomePathForRole(invitation.invited_role), request.url));
   response.cookies.set(activeOrganizationCookie, organizationId, {
     httpOnly: true,
     sameSite: "lax",

@@ -1,8 +1,10 @@
 import type { ComponentType } from "react";
 import { AlertCircle, CalendarDays, ClipboardList, FileArchive, Inbox, Package, SquareCheckBig } from "lucide-react";
+import { redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { hasAdminAccess } from "@/lib/auth/role-destinations";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { canRoleAccessModule, getModulePermissionRows } from "@/lib/module-permissions";
 import { isModuleEnabled } from "@/lib/modules";
@@ -84,6 +86,11 @@ const quickLinks = [
 
 export default async function MyPagesPage() {
   const { user, supabase, organizationContext } = await requireOrganizationContext();
+
+  if (hasAdminAccess(organizationContext.activeMembership.role)) {
+    redirect("/dashboard");
+  }
+
   const organization = organizationContext.activeOrganization;
   const permissionRows = await getModulePermissionRows(supabase, organization.id);
   const canAccess = (moduleId: string) =>

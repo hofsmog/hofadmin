@@ -7,6 +7,7 @@ import { useState } from "react";
 import { MessagesAutoRefresh } from "@/components/dashboard/messages-auto-refresh";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
 import { OrganizationSwitcher } from "@/components/dashboard/organization-switcher";
+import { hasAdminAccess } from "@/lib/auth/role-destinations";
 import { createClient } from "@/lib/supabase/client";
 import { canRoleAccessModule, type ModulePermissionRow } from "@/lib/module-permissions";
 import { isModuleEnabled } from "@/lib/modules";
@@ -47,6 +48,7 @@ export function AppShell({
   const accentColor = organizationContext.activeOrganization.accentColor ?? "#111827";
   const backgroundColor = organizationContext.activeOrganization.backgroundColor ?? undefined;
   const organizationName = getOrganizationName(organizationContext.activeOrganization);
+  const canOpenAdmin = hasAdminAccess(organizationContext.activeMembership.role);
 
   async function handleSignOut() {
     setIsSigningOut(true);
@@ -115,6 +117,14 @@ export function AppShell({
             <p className="text-xs text-muted-foreground">Personal workspace</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
+            {canOpenAdmin ? (
+              <Link
+                href="/dashboard"
+                className="hidden h-9 items-center justify-center rounded-xl border bg-white px-3 text-sm font-medium shadow-sm transition hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 sm:inline-flex"
+              >
+                Admin dashboard
+              </Link>
+            ) : null}
             <Link
               aria-label="Messages"
               href="/app/messages"
@@ -184,6 +194,7 @@ function AppSidebar({
     });
   });
   const organizationName = getOrganizationName(organizationContext.activeOrganization);
+  const canOpenAdmin = hasAdminAccess(organizationContext.activeMembership.role);
 
   return (
     <div className="flex h-full flex-col">
@@ -203,6 +214,16 @@ function AppSidebar({
       </div>
 
       <nav className="flex-1 space-y-1 p-4">
+        {canOpenAdmin ? (
+          <Link
+            href="/dashboard"
+            onClick={onNavigate}
+            className="mb-3 flex items-center gap-3 rounded-xl bg-zinc-950 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200"
+          >
+            <Home className="h-4 w-4" />
+            <span className="min-w-0 flex-1 truncate">Admin dashboard</span>
+          </Link>
+        ) : null}
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href || (item.href !== "/app/my-pages" && pathname.startsWith(item.href));

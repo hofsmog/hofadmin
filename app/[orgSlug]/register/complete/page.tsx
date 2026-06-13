@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
+import { getHomePathForRole } from "@/lib/auth/role-destinations";
 import { setActiveOrganizationCookie } from "@/lib/organizations";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
@@ -37,5 +38,22 @@ export default async function CompleteOrganizationRegistrationPage({
   }
 
   await setActiveOrganizationCookie(organizationId);
-  redirect("/app/my-pages");
+
+  const { data: membership, error: membershipError } = await supabase
+    .from("organization_members")
+    .select("role")
+    .eq("organization_id", organizationId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (membershipError) {
+    console.error("[organization-register] Could not load membership role after join", {
+      orgSlug,
+      userId: user.id,
+      organizationId,
+      error: membershipError.message,
+    });
+  }
+
+  redirect(getHomePathForRole(membership?.role ?? "member"));
 }

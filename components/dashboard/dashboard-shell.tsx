@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChevronDown, Loader2, LogOut, Menu, Search, X } from "lucide-react";
+import { ChevronDown, Loader2, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { BrandLockup } from "@/components/ui/brand";
 import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
@@ -19,16 +19,12 @@ export function DashboardShell({
   userId,
   userEmail,
   organizationContext,
-  newSubmissionsCount = 0,
-  unreadMessagesCount = 0,
   modulePermissionRows = [],
 }: {
   children: React.ReactNode;
   userId: string;
   userEmail: string;
   organizationContext: OrganizationContext;
-  newSubmissionsCount?: number;
-  unreadMessagesCount?: number;
   modulePermissionRows?: ModulePermissionRow[];
 }) {
   const pathname = usePathname();
@@ -36,7 +32,6 @@ export function DashboardShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const initials = getInitials(userEmail);
-  const accentColor = organizationContext.activeOrganization.accentColor ?? "#111827";
   const backgroundColor = organizationContext.activeOrganization.backgroundColor ?? undefined;
 
   async function handleSignOut() {
@@ -56,7 +51,7 @@ export function DashboardShell({
     <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50" style={backgroundColor ? { backgroundColor } : undefined}>
       <MessagesAutoRefresh organizationId={organizationContext.activeOrganization.id} userId={userId} />
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r bg-white/90 backdrop-blur-xl dark:bg-zinc-950/90 lg:flex lg:flex-col">
-        <Sidebar pathname={pathname} organizationContext={organizationContext} newSubmissionsCount={newSubmissionsCount} unreadMessagesCount={unreadMessagesCount} modulePermissionRows={modulePermissionRows} />
+        <Sidebar pathname={pathname} organizationContext={organizationContext} modulePermissionRows={modulePermissionRows} />
       </aside>
 
       {mobileOpen ? (
@@ -79,8 +74,6 @@ export function DashboardShell({
             <Sidebar
               pathname={pathname}
               organizationContext={organizationContext}
-              newSubmissionsCount={newSubmissionsCount}
-              unreadMessagesCount={unreadMessagesCount}
               modulePermissionRows={modulePermissionRows}
               onNavigate={() => setMobileOpen(false)}
             />
@@ -98,21 +91,14 @@ export function DashboardShell({
             <Menu className="h-5 w-5" />
           </button>
 
-          <div className="hidden h-10 flex-1 max-w-lg items-center gap-2 rounded-xl border bg-zinc-50 px-3 text-sm text-zinc-500 dark:bg-zinc-900 sm:flex">
-            <Search className="h-4 w-4" />
-            <span>Search organizations, modules, members</span>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold">
+              {organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name}
+            </p>
+            <p className="text-xs capitalize text-muted-foreground">{organizationContext.activeMembership.role}</p>
           </div>
 
           <div className="ml-auto flex items-center gap-2">
-            <button
-              aria-label="Notifications"
-              className="relative rounded-xl border bg-white p-2 shadow-sm transition hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800"
-            >
-              <Bell className="h-5 w-5" />
-              {newSubmissionsCount + unreadMessagesCount > 0 ? (
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full ring-2 ring-white dark:ring-zinc-900" style={{ backgroundColor: accentColor }} />
-              ) : null}
-            </button>
             <div className="flex items-center gap-2 rounded-xl border bg-white px-2 py-1.5 shadow-sm dark:bg-zinc-900">
               <span className="grid h-7 w-7 place-items-center rounded-lg bg-zinc-950 text-xs font-semibold text-white dark:bg-zinc-100 dark:text-zinc-950">
                 {initials}
@@ -158,15 +144,11 @@ function getInitials(email: string) {
 function Sidebar({
   pathname,
   organizationContext,
-  newSubmissionsCount,
-  unreadMessagesCount,
   modulePermissionRows,
   onNavigate,
 }: {
   pathname: string;
   organizationContext: OrganizationContext;
-  newSubmissionsCount: number;
-  unreadMessagesCount: number;
   modulePermissionRows: ModulePermissionRow[];
   onNavigate?: () => void;
 }) {
@@ -216,22 +198,6 @@ function Sidebar({
             >
               <Icon className="h-4 w-4" />
               <span className="min-w-0 flex-1 truncate">{item.title}</span>
-              {item.title === "Forms" && newSubmissionsCount > 0 ? (
-                <span className={cn(
-                  "ml-auto rounded-full px-2 py-0.5 text-xs font-semibold",
-                  active ? "bg-white/20 text-current dark:bg-zinc-950/15" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
-                )}>
-                  {newSubmissionsCount > 99 ? "99+" : newSubmissionsCount}
-                </span>
-              ) : null}
-              {item.title === "Messages" && unreadMessagesCount > 0 ? (
-                <span className={cn(
-                  "ml-auto rounded-full px-2 py-0.5 text-xs font-semibold",
-                  active ? "bg-white/20 text-current dark:bg-zinc-950/15" : "bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300",
-                )}>
-                  {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
-                </span>
-              ) : null}
             </Link>
           );
         })}

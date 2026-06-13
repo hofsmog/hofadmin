@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { recordActivityEvent } from "@/lib/activity";
+import { getHomePathForRole } from "@/lib/auth/role-destinations";
 import { requireOrganizationContext } from "@/lib/auth/require-organization-context";
 import { getEffectiveModuleLimit } from "@/lib/plans";
 import type { OrganizationType } from "@/types/database";
@@ -111,5 +112,5 @@ export async function completeOnboardingAction(
 
   revalidatePath("/dashboard");
   revalidatePath("/onboarding");
-  redirect(organizationContext.activeMembership.role === "member" ? "/app/my-pages" : "/dashboard");
+  redirect(getHomePathForRole(organizationContext.activeMembership.role));
 }
