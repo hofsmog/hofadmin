@@ -18,11 +18,11 @@ export default async function MembersOverviewPage() {
   const { supabase, organizationContext } = await requireOrganizationContext();
   const organizationId = organizationContext.activeOrganization.id;
   const [
-    { data: members },
-    { count: totalMembers },
-    { count: activeMembers },
-    { count: pendingInvitations },
-    { data: groups },
+    { data: members, error: membersError },
+    { count: totalMembers, error: totalMembersError },
+    { count: activeMembers, error: activeMembersError },
+    { count: pendingInvitations, error: pendingInvitationsError },
+    { data: groups, error: groupsError },
   ] = await Promise.all([
     supabase.from("members").select("id, name, type, status, created_at").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(6),
     supabase.from("members").select("*", { count: "exact", head: true }).eq("organization_id", organizationId),
@@ -39,13 +39,31 @@ export default async function MembersOverviewPage() {
       .order("name", { ascending: true }),
   ]);
   const groupIds = (groups ?? []).map((group) => group.id);
-  const { data: groupMembers } = groupIds.length
+  const { data: groupMembers, error: groupMembersError } = groupIds.length
     ? await supabase
         .from("organization_group_members")
         .select("group_id")
         .eq("organization_id", organizationId)
         .in("group_id", groupIds)
-    : { data: [] };
+    : { data: [], error: null };
+
+  logMembersQuery("recent members", membersError);
+  logMembersQuery("total members", totalMembersError);
+  logMembersQuery("active members", activeMembersError);
+  logMembersQuery("pending invitations", pendingInvitationsError);
+  logMembersQuery("teams", groupsError);
+  logMembersQuery("team member counts", groupMembersError);
+
+  console.info("[members] Members & Teams overview loaded.", {
+    organizationId,
+    recentMembers: members?.length ?? 0,
+    totalMembers: totalMembers ?? 0,
+    activeMembers: activeMembers ?? 0,
+    pendingInvitations: pendingInvitations ?? 0,
+    teams: groups?.length ?? 0,
+    teamMemberRows: groupMembers?.length ?? 0,
+  });
+
   const memberCounts = countMembersByGroup((groupMembers ?? []) as GroupMember[]);
   const hasMembers = (totalMembers ?? 0) > 0;
   const hasTeams = (groups ?? []).length > 0;
@@ -221,4 +239,15 @@ function countMembersByGroup(members: GroupMember[]) {
 
 function formatMemberCount(count: number) {
   return `${count} ${count === 1 ? "member" : "members"}`;
+}
+
+function logMembersQuery(label: string, error: { message: string } | null) {
+  if (!error) {
+    return;
+  }
+
+  console.error("[members] Members & Teams query failed.", {
+    area: label,
+    error: error.message,
+  });
 }

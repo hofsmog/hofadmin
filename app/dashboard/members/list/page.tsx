@@ -32,11 +32,29 @@ export default async function MembersListPage({ searchParams }: { searchParams?:
   if (searchTerm) membersQuery = membersQuery.or(`name.ilike.%${searchTerm}%,member_number.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`);
   if (status !== "all") membersQuery = membersQuery.eq("status", status);
   if (type !== "all") membersQuery = membersQuery.eq("type", type);
-  const [{ data: members }, { count: totalMembers }, { count: activeMembers }] = await Promise.all([
+  const [
+    { data: members, error: membersError },
+    { count: totalMembers, error: totalMembersError },
+    { count: activeMembers, error: activeMembersError },
+  ] = await Promise.all([
     membersQuery,
     supabase.from("members").select("id", { count: "exact", head: true }).eq("organization_id", organizationContext.activeOrganization.id),
     supabase.from("members").select("id", { count: "exact", head: true }).eq("organization_id", organizationContext.activeOrganization.id).eq("status", "active"),
   ]);
+
+  logMembersListQuery("member directory", membersError);
+  logMembersListQuery("total members", totalMembersError);
+  logMembersListQuery("active members", activeMembersError);
+
+  console.info("[members] Members list loaded.", {
+    organizationId: organizationContext.activeOrganization.id,
+    returnedMembers: members?.length ?? 0,
+    totalMembers: totalMembers ?? 0,
+    activeMembers: activeMembers ?? 0,
+    search: Boolean(searchTerm),
+    status,
+    type,
+  });
 
   return (
     <>
@@ -72,4 +90,15 @@ export default async function MembersListPage({ searchParams }: { searchParams?:
 
 function MetricCard({ icon: Icon, label, value }: { icon: ComponentType<{ className?: string }>; label: string; value: number | string }) {
   return <Card className="p-5"><div className="flex items-start justify-between gap-4"><div><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-3xl font-semibold tracking-tight">{value}</p></div><div className="grid h-10 w-10 place-items-center rounded-xl bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"><Icon className="h-5 w-5" /></div></div></Card>;
+}
+
+function logMembersListQuery(label: string, error: { message: string } | null) {
+  if (!error) {
+    return;
+  }
+
+  console.error("[members] Members list query failed.", {
+    area: label,
+    error: error.message,
+  });
 }

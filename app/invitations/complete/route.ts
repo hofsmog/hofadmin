@@ -7,6 +7,7 @@ const activeOrganizationCookie = "hofadmin_active_organization_id";
 
 type InvitationContext = {
   invited_email: string;
+  invited_name: string | null;
   invited_role: OrganizationRole;
   invitation_status: "pending" | "accepted" | "revoked";
   expires_at: string | null;
@@ -29,6 +30,10 @@ type InvitationRpcClient = {
   rpc(
     fn: "accept_organization_invitation_by_token",
     args: { p_token: string },
+  ): Promise<{ data: string | null; error: { message: string } | null }>;
+  rpc(
+    fn: "ensure_organization_member_profile",
+    args: { p_organization_id: string; p_user_id: string; p_created_by?: string | null; p_member_name?: string | null },
   ): Promise<{ data: string | null; error: { message: string } | null }>;
 };
 
@@ -131,6 +136,20 @@ export async function GET(request: NextRequest) {
     hasToken: Boolean(invitationToken),
   });
 
+  const verification = await verifyAcceptedInvitationState({
+    supabase,
+    rpc,
+    organizationId,
+    userId: user.id,
+    userEmail: user.email ?? null,
+    invitedName: "invited_name" in invitation ? invitation.invited_name ?? null : null,
+  });
+
+  if (!verification.ok) {
+    const reason = encodeURIComponent(verification.reason);
+    return NextResponse.redirect(new URL(`/invitations/result?status=error&reason=${reason}`, request.url));
+  }
+
   const response = NextResponse.redirect(new URL(getHomePathForRole(invitation.invited_role), request.url));
   response.cookies.set(activeOrganizationCookie, organizationId, {
     httpOnly: true,
@@ -141,4 +160,96 @@ export async function GET(request: NextRequest) {
   });
 
   return response;
+}
+
+async function verifyAcceptedInvitationState({
+  supabase,
+  rpc,
+  organizationId,
+  userId,
+  userEmail,
+  invitedName,
+}: {
+  supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>;
+  rpc: InvitationRpcClient;
+  organizationId: string;
+  userId: string;
+  userEmail: string | null;
+  invitedName: string | null;
+}) {
+  const [{ data: membership, error: membershipError }, { data: memberProfile, error: memberProfileError }] = await Promise.all([
+    supabase
+      .from("organization_members")
+      .select("organization_id, user_id, role, invited_by, joined_at")
+      .eq("organization_id", organizationId)
+      .eq("user_id", userId)
+      .maybeSingle(),
+    userEmail
+      ? supabase
+          .from("members")
+          .select("id, organization_id, name, email, created_at")
+          .eq("organization_id", organizationId)
+          .eq("email", userEmail.toLowerCase())
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+
+  console.info("[invitations/complete] Acceptance verification.", {
+    organizationId,
+    userId,
+    userEmail,
+    hasOrganizationMembership: Boolean(membership),
+    hasMemberProfile: Boolean(memberProfile),
+    membershipError: membershipError?.message ?? null,
+    memberProfileError: memberProfileError?.message ?? null,
+  });
+
+  if (membershipError || !membership) {
+    console.error("[invitations/complete] Organization membership missing after invitation acceptance.", {
+      organizationId,
+      userId,
+      error: membershipError?.message ?? null,
+    });
+    return { ok: false, reason: "Organization membership was not created." };
+  }
+
+  if (memberProfileError) {
+    console.error("[invitations/complete] Member profile lookup failed after invitation acceptance.", {
+      organizationId,
+      userId,
+      userEmail,
+      error: memberProfileError.message,
+    });
+    return { ok: false, reason: "Member profile lookup failed after invitation acceptance." };
+  }
+
+  if (memberProfile) {
+    return { ok: true, reason: "" };
+  }
+
+  const { data: ensuredMemberId, error: ensureError } = await rpc.rpc("ensure_organization_member_profile", {
+    p_organization_id: organizationId,
+    p_user_id: userId,
+    p_created_by: membership.invited_by ?? null,
+    p_member_name: invitedName,
+  });
+
+  if (ensureError || !ensuredMemberId) {
+    console.error("[invitations/complete] Member profile sync failed after invitation acceptance.", {
+      organizationId,
+      userId,
+      userEmail,
+      error: ensureError?.message ?? null,
+    });
+    return { ok: false, reason: "Member profile could not be created after invitation acceptance." };
+  }
+
+  console.info("[invitations/complete] Member profile synced after invitation acceptance.", {
+    organizationId,
+    userId,
+    userEmail,
+    memberId: ensuredMemberId,
+  });
+
+  return { ok: true, reason: "" };
 }

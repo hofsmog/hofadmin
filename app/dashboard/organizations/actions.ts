@@ -358,6 +358,15 @@ export async function inviteMemberAction(
     }
   }
 
+  console.info("[team-invitations] Creating invitation.", {
+    organizationId: context.activeOrganization.id,
+    invitedBy: user.id,
+    email,
+    role,
+    invitedName: invitedName ?? null,
+    groupCount: groupIds.length,
+  });
+
   const { data: invitation, error } = await supabase
     .from("organization_invitations")
     .insert({
@@ -374,6 +383,14 @@ export async function inviteMemberAction(
 
   if (error) {
     const isDuplicate = error.code === "23505";
+    console.error("[team-invitations] Invitation creation failed.", {
+      organizationId: context.activeOrganization.id,
+      invitedBy: user.id,
+      email,
+      role,
+      error: error.message,
+      code: error.code,
+    });
     return {
       status: "error",
       message: isDuplicate
@@ -381,6 +398,14 @@ export async function inviteMemberAction(
         : "Invitation could not be sent. Please check email settings or try again.",
     };
   }
+
+  console.info("[team-invitations] Invitation created.", {
+    organizationId: context.activeOrganization.id,
+    invitationId: invitation.id,
+    email: invitation.email,
+    role: invitation.role,
+    hasToken: Boolean(invitation.token),
+  });
 
   if (groupIds.length) {
     const { error: groupInsertError } = await supabase
@@ -423,6 +448,7 @@ export async function inviteMemberAction(
 
   revalidatePath("/dashboard/settings/team");
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/members");
 
   if (!emailResult.success) {
     console.error("[team-invitations] Invitation was created but email sending failed.", {
