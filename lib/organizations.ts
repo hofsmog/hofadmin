@@ -9,6 +9,16 @@ const activeOrganizationCookie = "hofadmin_active_organization_id";
 type Supabase = SupabaseClient<Database>;
 type OrganizationRow = Database["public"]["Tables"]["organizations"]["Row"];
 type MembershipRow = Database["public"]["Tables"]["organization_members"]["Row"];
+type InvitationAcceptanceRpcClient = Supabase & {
+  rpc(
+    fn: "accept_organization_invitation_by_token",
+    args: { p_token: string },
+  ): Promise<{ data: string | null; error: { message: string } | null }>;
+  rpc(
+    fn: "accept_organization_invitation",
+    args: { p_invitation_id: string },
+  ): Promise<{ data: string | null; error: { message: string } | null }>;
+};
 
 export function mapOrganization(row: OrganizationRow): Organization {
   return {
@@ -60,7 +70,7 @@ export async function getOrganizationContext(
 ): Promise<OrganizationContext> {
   const memberships = await getMemberships(supabase, user);
   const ensuredMemberships =
-    memberships.length > 0 ? memberships : [await createInitialOrganization(supabase, user)];
+    memberships.length > 0 ? memberships : await getFallbackMemberships(supabase, user);
 
   const organizationIds = ensuredMemberships.map((membership) => membership.organization_id);
   const { data: organizations, error } = await supabase
@@ -156,6 +166,81 @@ async function getMemberships(supabase: Supabase, user: User) {
   return data ?? [];
 }
 
+async function getFallbackMemberships(supabase: Supabase, user: User): Promise<MembershipRow[]> {
+  const invitationOrganizationId = await acceptPendingInvitationFromMetadata(supabase, user);
+
+  if (invitationOrganizationId) {
+    const memberships = await getMemberships(supabase, user);
+
+    if (memberships.length > 0) {
+      return memberships;
+    }
+
+    console.error("[organization-context] Invitation acceptance returned an organization but no membership was found.", {
+      userId: user.id,
+      organizationId: invitationOrganizationId,
+    });
+  }
+
+  console.warn("[organization-context] No organization membership found; creating initial workspace.", {
+    userId: user.id,
+    email: user.email,
+    hadInvitationToken: Boolean(getInvitationTokenFromMetadata(user)),
+  });
+
+  return [await createInitialOrganization(supabase, user)];
+}
+
+async function acceptPendingInvitationFromMetadata(supabase: Supabase, user: User) {
+  const invitationToken = getInvitationTokenFromMetadata(user);
+
+  if (!invitationToken) {
+    return null;
+  }
+
+  const rpc = supabase as InvitationAcceptanceRpcClient;
+  const { data: organizationId, error } = await rpc.rpc("accept_organization_invitation_by_token", {
+    p_token: invitationToken,
+  });
+
+  if (organizationId && !error) {
+    await setActiveOrganizationCookie(organizationId);
+    console.info("[organization-context] Accepted pending token invitation from user metadata.", {
+      userId: user.id,
+      organizationId,
+    });
+    return organizationId;
+  }
+
+  if (isUuid(invitationToken)) {
+    const { data: legacyOrganizationId, error: legacyError } = await rpc.rpc("accept_organization_invitation", {
+      p_invitation_id: invitationToken,
+    });
+
+    if (legacyOrganizationId && !legacyError) {
+      await setActiveOrganizationCookie(legacyOrganizationId);
+      console.info("[organization-context] Accepted pending legacy invitation from user metadata.", {
+        userId: user.id,
+        organizationId: legacyOrganizationId,
+      });
+      return legacyOrganizationId;
+    }
+
+    console.warn("[organization-context] Legacy invitation metadata could not be accepted.", {
+      userId: user.id,
+      invitationId: invitationToken,
+      error: legacyError?.message ?? error?.message,
+    });
+    return null;
+  }
+
+  console.warn("[organization-context] Token invitation metadata could not be accepted.", {
+    userId: user.id,
+    error: error?.message,
+  });
+  return null;
+}
+
 async function createInitialOrganization(supabase: Supabase, user: User): Promise<MembershipRow> {
   const metadataName = user.user_metadata?.organization_name;
   const fallbackName =
@@ -171,6 +256,15 @@ async function createInitialOrganization(supabase: Supabase, user: User): Promis
     invited_by: null,
     joined_at: new Date().toISOString(),
   };
+}
+
+function getInvitationTokenFromMetadata(user: User) {
+  const token = user.user_metadata?.invitation_token;
+  return typeof token === "string" && token.trim() ? token.trim() : null;
+}
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 export function sanitizeOrganizationName(name: string) {

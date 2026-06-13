@@ -35,12 +35,14 @@ export async function GET(request: NextRequest) {
   const invitationToken = url.searchParams.get("token");
 
   if (!invitationId && !invitationToken) {
+    console.warn("[invitations/complete] Missing invitation identifier.");
     return NextResponse.redirect(new URL("/invitations/result?status=error&reason=missing", request.url));
   }
 
   const supabase = await createClient();
 
   if (!supabase) {
+    console.error("[invitations/complete] Supabase is not configured.");
     return NextResponse.redirect(new URL("/invitations/result?status=error&reason=config", request.url));
   }
 
@@ -49,6 +51,10 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
+    console.info("[invitations/complete] User is not signed in; returning to invitation entry.", {
+      invitationId: invitationId ?? null,
+      hasToken: Boolean(invitationToken),
+    });
     const destination = invitationToken
       ? `/invite/${encodeURIComponent(invitationToken)}`
       : `/invitations/accept?invitation=${encodeURIComponent(invitationId ?? "")}`;
@@ -62,18 +68,39 @@ export async function GET(request: NextRequest) {
   const invitation = contextRows?.[0] ?? null;
 
   if (contextError || !invitation) {
+    console.error("[invitations/complete] Invitation context lookup failed.", {
+      userId: user.id,
+      invitationId: invitationId ?? null,
+      hasToken: Boolean(invitationToken),
+      error: contextError?.message,
+    });
     return NextResponse.redirect(new URL("/invitations/result?status=error&reason=not-found", request.url));
   }
 
   if (invitation.invitation_status !== "pending") {
+    console.warn("[invitations/complete] Invitation is not pending.", {
+      userId: user.id,
+      invitedEmail: invitation.invited_email,
+      status: invitation.invitation_status,
+    });
     return NextResponse.redirect(new URL("/invitations/result?status=error&reason=not-pending", request.url));
   }
 
   if (invitation.invitation_expired) {
+    console.warn("[invitations/complete] Invitation is expired.", {
+      userId: user.id,
+      invitedEmail: invitation.invited_email,
+      expiresAt: invitation.expires_at,
+    });
     return NextResponse.redirect(new URL("/invitations/result?status=error&reason=expired", request.url));
   }
 
   if ((user.email ?? "").toLowerCase() !== invitation.invited_email.toLowerCase()) {
+    console.warn("[invitations/complete] Signed-in email does not match invitation.", {
+      userId: user.id,
+      signedInEmail: user.email,
+      invitedEmail: invitation.invited_email,
+    });
     const reason = encodeURIComponent(`This invitation was sent to ${invitation.invited_email}. Please sign in or register with that email address.`);
     return NextResponse.redirect(new URL(`/invitations/result?status=error&reason=${reason}`, request.url));
   }
@@ -83,9 +110,23 @@ export async function GET(request: NextRequest) {
     : await rpc.rpc("accept_organization_invitation", { p_invitation_id: invitationId ?? "" });
 
   if (error || !organizationId) {
+    console.error("[invitations/complete] Invitation acceptance failed.", {
+      userId: user.id,
+      invitedEmail: invitation.invited_email,
+      invitationId: invitationId ?? null,
+      hasToken: Boolean(invitationToken),
+      error: error?.message,
+    });
     const reason = encodeURIComponent(error?.message ?? "The invitation could not be accepted.");
     return NextResponse.redirect(new URL(`/invitations/result?status=error&reason=${reason}`, request.url));
   }
+
+  console.info("[invitations/complete] Invitation accepted.", {
+    userId: user.id,
+    organizationId,
+    invitationId: invitationId ?? null,
+    hasToken: Boolean(invitationToken),
+  });
 
   const response = NextResponse.redirect(new URL("/app/my-pages", request.url));
   response.cookies.set(activeOrganizationCookie, organizationId, {

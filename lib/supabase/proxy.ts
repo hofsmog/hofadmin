@@ -15,11 +15,11 @@ function cloneCookies(from: NextResponse, to: NextResponse) {
 export async function updateSession(request: NextRequest) {
   const config = getSupabaseConfig();
   const { pathname, search } = request.nextUrl;
-  const isDashboardRoute = pathname.startsWith("/dashboard");
+  const isProtectedRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/app");
   const isAuthRoute = authRoutes.has(pathname);
 
   if (!config) {
-    if (isDashboardRoute) {
+    if (isProtectedRoute) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("error", "supabase_not_configured");
@@ -50,7 +50,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (isDashboardRoute && !user) {
+  if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirectTo", `${pathname}${search}`);
@@ -59,10 +59,23 @@ export async function updateSession(request: NextRequest) {
 
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    url.search = "";
+    const redirectTo = getSafeRedirectPath(request.nextUrl.searchParams.get("redirectTo"));
+    url.pathname = redirectTo.pathname;
+    url.search = redirectTo.search;
     return cloneCookies(response, NextResponse.redirect(url));
   }
 
   return response;
+}
+
+function getSafeRedirectPath(value: string | null) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return { pathname: "/dashboard", search: "" };
+  }
+
+  const [pathname, search = ""] = value.split("?", 2);
+  return {
+    pathname: pathname || "/dashboard",
+    search: search ? `?${search}` : "",
+  };
 }
