@@ -143,7 +143,8 @@ export default async function DashboardPage() {
     },
   ];
   const isNewOrganization = setupItems.some((item) => !item.done);
-  const orderedSetupItems = [...setupItems].sort((a, b) => Number(a.done) - Number(b.done));
+  const incompleteSetupItems = setupItems.filter((item) => !item.done);
+  const completedSetupItems = setupItems.filter((item) => item.done);
 
   const attentionItems = [
     {
@@ -232,19 +233,25 @@ export default async function DashboardPage() {
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
       <main className="space-y-6">
-        <section className="rounded-xl border bg-white p-5 shadow-sm dark:bg-zinc-950">
-          <Badge className="capitalize">{role}</Badge>
-          <h1 className="mt-3 text-2xl font-semibold tracking-tight">
-            {isNewOrganization ? "Set up your organization" : "Admin dashboard"}
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            {isNewOrganization
-              ? "Finish the basics first. The dashboard will stay focused on what matters next."
-              : "A quiet overview of the work that matters right now."}
-          </p>
+        <section className="rounded-xl border bg-white px-4 py-3 shadow-sm dark:bg-zinc-950">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight">
+                {isNewOrganization ? "Set up your organization" : "Admin dashboard"}
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+                {isNewOrganization
+                  ? "Finish the basics first. The dashboard will stay focused on what matters next."
+                  : "A quiet overview of the work that matters right now."}
+              </p>
+            </div>
+            <Badge className="w-fit capitalize">{role}</Badge>
+          </div>
         </section>
 
-        {isNewOrganization ? <OnboardingChecklist items={orderedSetupItems} /> : null}
+        {isNewOrganization ? (
+          <OnboardingChecklist incompleteItems={incompleteSetupItems} completedItems={completedSetupItems} />
+        ) : null}
 
         {!isNewOrganization && overviewItems.length ? (
           <section className="space-y-3">
@@ -278,50 +285,70 @@ export default async function DashboardPage() {
 }
 
 function OnboardingChecklist({
-  items,
+  incompleteItems,
+  completedItems,
 }: {
-  items: Array<{
+  incompleteItems: SetupItem[];
+  completedItems: SetupItem[];
+}) {
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle>Onboarding checklist</CardTitle>
+        <CardDescription>Start with what is still left to do.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          {incompleteItems.map((item) => (
+            <ChecklistItem key={item.label} item={item} />
+          ))}
+        </div>
+
+        {completedItems.length ? (
+          <div className="border-t pt-3">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Completed</p>
+            <div className="space-y-2">
+              {completedItems.map((item) => (
+                <ChecklistItem key={item.label} item={item} />
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+type SetupItem = {
     label: string;
     done: boolean;
     href: string;
     description: string;
     icon: ComponentType<{ className?: string }>;
-  }>;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Onboarding checklist</CardTitle>
-        <CardDescription>Complete these basics to make HofAdmin useful for your team.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {items.map((item) => {
-          const Icon = item.icon;
+};
 
-          return (
-            <ButtonLink
-              key={item.label}
-              href={item.href}
-              variant="ghost"
-              className={`h-auto w-full justify-start rounded-xl p-3 text-left ${
-                item.done
-                  ? "bg-white opacity-70 ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800"
-                  : "bg-zinc-50 dark:bg-zinc-900/60"
-              }`}
-            >
-              <span className={item.done ? "text-emerald-600" : "text-zinc-500"}>
-                {item.done ? <CheckCircle2 className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium">{item.label}</span>
-                <span className="mt-1 block text-xs leading-5 text-muted-foreground">{item.description}</span>
-              </span>
-              <Badge>{item.done ? "Done" : "Next"}</Badge>
-            </ButtonLink>
-          );
-        })}
-      </CardContent>
-    </Card>
+function ChecklistItem({ item }: { item: SetupItem }) {
+  const Icon = item.icon;
+
+  return (
+    <ButtonLink
+      href={item.href}
+      variant="ghost"
+      className={`h-auto w-full justify-start rounded-xl p-3 text-left ${
+        item.done
+          ? "bg-white opacity-65 ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800"
+          : "bg-zinc-50 shadow-sm dark:bg-zinc-900/60"
+      }`}
+    >
+      <span className={item.done ? "text-emerald-600" : "text-zinc-500"}>
+        {item.done ? <CheckCircle2 className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium">{item.label}</span>
+        <span className="mt-1 block text-xs leading-5 text-muted-foreground">{item.description}</span>
+      </span>
+      <Badge>{item.done ? "Done" : "Next"}</Badge>
+    </ButtonLink>
   );
 }
 

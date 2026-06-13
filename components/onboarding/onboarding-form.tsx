@@ -22,7 +22,7 @@ const starterTools = [
   { label: "My Pages", value: "my-pages", description: "A simple start page for each person.", icon: Layers3, recommended: true },
   { label: "Messages", value: "messages", description: "Internal updates and conversations.", icon: Inbox, recommended: true },
   { label: "Calendar", value: "calendar", description: "Upcoming work and reminders.", icon: CalendarDays, recommended: true },
-  { label: "Groups", value: "groups", description: "Organize people by team or responsibility.", icon: UsersRound, recommended: true },
+  { label: "Members & Teams", value: "groups", description: "Organize people by team or responsibility.", icon: UsersRound, recommended: true },
   { label: "Documents", value: "documents", description: "Files, routines and resources.", icon: FileText, recommended: true },
   { label: "Forms", value: "forms", description: "Collect and manage responses.", icon: ClipboardCheck },
   { label: "Bookings", value: "bookings", description: "Reserve rooms and resources.", icon: CalendarDays },

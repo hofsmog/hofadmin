@@ -60,8 +60,9 @@ export async function updateSession(request: NextRequest) {
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone();
     const redirectTo = getSafeRedirectPath(request.nextUrl.searchParams.get("redirectTo"));
-    url.pathname = redirectTo.pathname;
-    url.search = redirectTo.search;
+    url.pathname = "/auth/after-login";
+    url.search = "";
+    url.searchParams.set("redirectTo", `${redirectTo.pathname}${redirectTo.search}`);
     return cloneCookies(response, NextResponse.redirect(url));
   }
 

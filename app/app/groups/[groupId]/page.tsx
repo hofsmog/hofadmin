@@ -104,7 +104,7 @@ export default async function GroupDetailPage({
             <Badge>{getOrganizationName(organizationContext.activeOrganization)}</Badge>
             <h1 className="mt-3 text-2xl font-semibold tracking-tight">{group.name}</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              {group.description || "Group for team membership, assignments and permissions."}
+              {group.description || "Team for member assignments and permissions."}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -114,7 +114,7 @@ export default async function GroupDetailPage({
                 Add members
               </ButtonLink>
             ) : null}
-            <ButtonLink href="/app/groups" variant="secondary">Back to groups</ButtonLink>
+            <ButtonLink href="/app/groups" variant="secondary">Back to teams</ButtonLink>
           </div>
         </div>
       </section>
@@ -125,7 +125,7 @@ export default async function GroupDetailPage({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <CardTitle>Members</CardTitle>
-                <CardDescription>People currently in this group.</CardDescription>
+                <CardDescription>People currently in this team.</CardDescription>
               </div>
               <UsersRound className="h-5 w-5 text-muted-foreground" />
             </div>
@@ -151,8 +151,8 @@ export default async function GroupDetailPage({
               ))
             ) : (
               <div className="rounded-xl border border-dashed p-4">
-                <p className="text-sm font-medium">No members in this group yet</p>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">Add people to make this group useful for messages, tasks and permissions.</p>
+                <p className="text-sm font-medium">No members in this team yet</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">Add people to make this team useful for messages, tasks and permissions.</p>
               </div>
             )}
           </CardContent>
@@ -163,14 +163,14 @@ export default async function GroupDetailPage({
             <>
               <Card>
                 <CardHeader>
-                  <CardTitle>Edit group</CardTitle>
-                  <CardDescription>Keep the group name clear and human-readable.</CardDescription>
+                  <CardTitle>Edit team</CardTitle>
+                  <CardDescription>Keep the team name clear and human-readable.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form action={updateOrganizationGroupAction} className="space-y-4">
                     <input type="hidden" name="groupId" value={group.id} />
                     <label className="block space-y-2">
-                      <span className="text-sm font-medium">Group name</span>
+                      <span className="text-sm font-medium">Team name</span>
                       <Input name="name" required minLength={2} maxLength={80} defaultValue={group.name} />
                     </label>
                     <label className="block space-y-2">
@@ -201,14 +201,14 @@ export default async function GroupDetailPage({
                   {team.length === 0 ? (
                     <div className="rounded-xl border border-dashed p-4">
                       <p className="text-sm font-medium">No organization members found. Add members first.</p>
-                      <p className="mt-1 text-sm leading-6 text-muted-foreground">Invite people to the organization before adding them to groups.</p>
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">Invite people to the organization before adding them to teams.</p>
                     </div>
                   ) : availableMembers.length ? (
                     <form action={addOrganizationGroupMemberAction} className="space-y-4">
                       <input type="hidden" name="groupId" value={group.id} />
                       {memberships.length ? (
                         <p className="rounded-xl bg-zinc-50 px-3 py-2 text-xs text-muted-foreground dark:bg-zinc-900">
-                          {memberships.length} {memberships.length === 1 ? "person is" : "people are"} already in this group and hidden from the picker.
+                          {memberships.length} {memberships.length === 1 ? "person is" : "people are"} already in this team and hidden from the picker.
                         </p>
                       ) : null}
                       <GroupMemberPicker members={availableMembers} />
@@ -216,7 +216,7 @@ export default async function GroupDetailPage({
                     </form>
                   ) : (
                     <div className="rounded-xl border border-dashed p-4">
-                      <p className="text-sm font-medium">Everyone is already in this group</p>
+                      <p className="text-sm font-medium">Everyone is already in this team</p>
                       <p className="mt-1 text-sm leading-6 text-muted-foreground">Invite more people to the organization before adding them here.</p>
                     </div>
                   )}
@@ -227,8 +227,8 @@ export default async function GroupDetailPage({
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <CardTitle>Delete group</CardTitle>
-                      <CardDescription>Remove this group and its memberships.</CardDescription>
+                      <CardTitle>Delete team</CardTitle>
+                      <CardDescription>Remove this team and its memberships.</CardDescription>
                     </div>
                     <Trash2 className="h-5 w-5 text-muted-foreground" />
                   </div>
@@ -237,12 +237,12 @@ export default async function GroupDetailPage({
                   {memberships.length ? (
                     <div className="rounded-xl border border-dashed p-4">
                       <p className="text-sm font-medium">Remove members before deleting</p>
-                      <p className="mt-1 text-sm leading-6 text-muted-foreground">Groups can be deleted when no people are assigned to them.</p>
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">Teams can be deleted when no people are assigned to them.</p>
                     </div>
                   ) : (
                     <form action={deleteOrganizationGroupAction}>
                       <input type="hidden" name="groupId" value={group.id} />
-                      <ActionSubmitButton pendingLabel="Deleting">Delete group</ActionSubmitButton>
+                      <ActionSubmitButton pendingLabel="Deleting">Delete team</ActionSubmitButton>
                     </form>
                   )}
                 </CardContent>

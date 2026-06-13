@@ -354,7 +354,7 @@ export async function inviteMemberAction(
       .in("id", groupIds);
 
     if (groupsError || (validGroups ?? []).length !== groupIds.length) {
-      return { status: "error", message: "One or more selected groups could not be found." };
+      return { status: "error", message: "One or more selected teams could not be found." };
     }
   }
 

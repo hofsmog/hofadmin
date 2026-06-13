@@ -56,15 +56,15 @@ export default async function GroupsPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <Badge>{getOrganizationName(organizationContext.activeOrganization)}</Badge>
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight">Groups</h1>
+            <h1 className="mt-3 text-2xl font-semibold tracking-tight">Members & Teams</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Create working teams like IT, Maintenance, Teachers or Management. Groups are separate from roles.
+              Organize members into teams like IT, Maintenance, Teachers or Management. Teams are separate from roles.
             </p>
           </div>
           {canManageGroups ? (
             <ButtonLink href="#create-group">
               <Plus className="h-4 w-4" />
-              Create group
+              Create team
             </ButtonLink>
           ) : null}
         </div>
@@ -95,8 +95,8 @@ export default async function GroupsPage() {
                 <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
                   <UsersRound className="h-6 w-6" />
                 </div>
-                <p className="mt-4 text-sm font-medium">No groups yet</p>
-                <p className="mt-1 text-sm text-muted-foreground">Create your first group to organize people by team or responsibility.</p>
+                <p className="mt-4 text-sm font-medium">No teams yet</p>
+                <p className="mt-1 text-sm text-muted-foreground">Create your first team to organize people by responsibility.</p>
               </CardContent>
             </Card>
           )}
@@ -105,13 +105,13 @@ export default async function GroupsPage() {
         {canManageGroups ? (
           <Card id="create-group">
             <CardHeader>
-              <CardTitle>Create group</CardTitle>
+              <CardTitle>Create team</CardTitle>
               <CardDescription>Add a team inside this organization.</CardDescription>
             </CardHeader>
             <CardContent>
               <form action={createOrganizationGroupAction} className="space-y-4">
                 <label className="block space-y-2">
-                  <span className="text-sm font-medium">Group name</span>
+                  <span className="text-sm font-medium">Team name</span>
                   <Input name="name" required minLength={2} maxLength={80} placeholder="Maintenance" />
                 </label>
                 <label className="block space-y-2">
@@ -119,11 +119,11 @@ export default async function GroupsPage() {
                   <textarea
                     name="description"
                     rows={3}
-                    placeholder="What this group is responsible for"
+                    placeholder="What this team is responsible for"
                     className="w-full rounded-xl border bg-white px-3 py-3 text-sm shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
                   />
                 </label>
-                <ActionSubmitButton pendingLabel="Creating">Create group</ActionSubmitButton>
+                <ActionSubmitButton pendingLabel="Creating">Create team</ActionSubmitButton>
               </form>
             </CardContent>
           </Card>

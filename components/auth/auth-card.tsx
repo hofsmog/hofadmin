@@ -70,7 +70,7 @@ export function AuthCard({
           return;
         }
 
-        router.replace(redirectTo);
+        router.replace(`/auth/after-login?redirectTo=${encodeURIComponent(redirectTo)}`);
         router.refresh();
         return;
       }

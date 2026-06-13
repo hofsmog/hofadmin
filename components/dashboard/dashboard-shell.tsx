@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, Loader2, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { BrandLockup } from "@/components/ui/brand";
-import { OrganizationAvatar } from "@/components/dashboard/organization-avatar";
 import { OrganizationSwitcher } from "@/components/dashboard/organization-switcher";
 import { MessagesAutoRefresh } from "@/components/dashboard/messages-auto-refresh";
 import { createClient } from "@/lib/supabase/client";
@@ -157,17 +156,6 @@ function Sidebar({
       <div className="border-b p-5">
         <div>
           <BrandLockup size="sm" onClick={onNavigate} />
-          <div className="mt-4 flex items-center gap-3">
-            <OrganizationAvatar
-              name={organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name}
-              avatarUrl={organizationContext.activeOrganization.logoUrl ?? organizationContext.activeOrganization.avatarUrl}
-              className="h-9 w-9"
-            />
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{organizationContext.activeOrganization.displayName ?? organizationContext.activeOrganization.name}</p>
-              <p className="text-xs text-muted-foreground">Powered by HofAdmin</p>
-            </div>
-          </div>
         </div>
 
         <OrganizationSwitcher context={organizationContext} />
