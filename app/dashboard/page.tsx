@@ -143,6 +143,7 @@ export default async function DashboardPage() {
     },
   ];
   const isNewOrganization = setupItems.some((item) => !item.done);
+  const orderedSetupItems = [...setupItems].sort((a, b) => Number(a.done) - Number(b.done));
 
   const attentionItems = [
     {
@@ -243,7 +244,7 @@ export default async function DashboardPage() {
           </p>
         </section>
 
-        {isNewOrganization ? <OnboardingChecklist items={setupItems} /> : null}
+        {isNewOrganization ? <OnboardingChecklist items={orderedSetupItems} /> : null}
 
         {!isNewOrganization && overviewItems.length ? (
           <section className="space-y-3">
@@ -269,18 +270,6 @@ export default async function DashboardPage() {
             </CardHeader>
           </Card>
         ) : null}
-
-        <section className="space-y-3">
-          <div>
-            <h2 className="text-base font-semibold tracking-tight">Manage organization</h2>
-            <p className="text-sm text-muted-foreground">The shortest paths to common admin work.</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <AdminShortcut href="/dashboard/members" icon={UsersRound} label="Team and members" />
-            <AdminShortcut href="/dashboard/forms" icon={ClipboardList} label="Forms and responses" />
-            <AdminShortcut href="/dashboard/modules" icon={Puzzle} label="Modules" />
-          </div>
-        </section>
       </main>
 
       <AttentionCenter items={visibleAttentionItems} />
@@ -314,7 +303,11 @@ function OnboardingChecklist({
               key={item.label}
               href={item.href}
               variant="ghost"
-              className="h-auto w-full justify-start rounded-xl bg-zinc-50 p-3 text-left dark:bg-zinc-900/60"
+              className={`h-auto w-full justify-start rounded-xl p-3 text-left ${
+                item.done
+                  ? "bg-white opacity-70 ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800"
+                  : "bg-zinc-50 dark:bg-zinc-900/60"
+              }`}
             >
               <span className={item.done ? "text-emerald-600" : "text-zinc-500"}>
                 {item.done ? <CheckCircle2 className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
@@ -345,23 +338,6 @@ function OverviewCard({ item }: { item: OverviewItem }) {
         <span className="block text-sm font-medium">{item.label}</span>
         <span className="mt-1 block text-xs leading-5 text-muted-foreground">{item.description}</span>
       </span>
-    </ButtonLink>
-  );
-}
-
-function AdminShortcut({
-  href,
-  icon: Icon,
-  label,
-}: {
-  href: string;
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-}) {
-  return (
-    <ButtonLink href={href} variant="secondary" className="h-14 justify-start rounded-xl px-4">
-      <Icon className="h-4 w-4" />
-      {label}
     </ButtonLink>
   );
 }

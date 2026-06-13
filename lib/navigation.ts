@@ -1,11 +1,9 @@
 import {
-  Activity,
   CalendarDays,
   ClipboardList,
   FileArchive,
   Handshake,
   LayoutDashboard,
-  MessageSquare,
   Puzzle,
   QrCode,
   Settings,
@@ -19,7 +17,6 @@ import type { OrganizationRole } from "@/types/database";
 
 export const dashboardNavItems: Array<DashboardNavItem & { moduleId?: string; system?: boolean }> = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, moduleId: "dashboard", system: true },
-  { title: "Messages", href: "/dashboard/messages", icon: MessageSquare, system: true },
   { title: "Groups", href: "/app/groups", icon: UsersRound, system: true },
   { title: "Members", href: "/dashboard/members", icon: UsersRound, moduleId: "members" },
   { title: "Forms", href: "/dashboard/forms", icon: ClipboardList, moduleId: "forms" },
@@ -32,7 +29,6 @@ export const dashboardNavItems: Array<DashboardNavItem & { moduleId?: string; sy
   { title: "Sponsors", href: "/dashboard/sponsors", icon: Handshake, moduleId: "sponsors" },
   { title: "Modules", href: "/dashboard/modules", icon: Puzzle, system: true },
   { title: "Settings", href: "/dashboard/settings", icon: Settings, moduleId: "settings", system: true },
-  { title: "Activity Feed", href: "/dashboard/audit-logs", icon: Activity, moduleId: "activity-feed", system: true },
 ];
 
 export function getDashboardNavItems(
