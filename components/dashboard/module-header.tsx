@@ -28,7 +28,7 @@ export function ModuleHeader({
           </ButtonLink>
         ) : null}
       </div>
-      <ModuleSubNav items={items} />
+      {items.length ? <ModuleSubNav items={items} /> : null}
     </div>
   );
 }

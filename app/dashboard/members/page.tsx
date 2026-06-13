@@ -48,6 +48,8 @@ export default async function MembersOverviewPage() {
     : { data: [] };
   const memberCounts = countMembersByGroup((groupMembers ?? []) as GroupMember[]);
   const hasMembers = (totalMembers ?? 0) > 0;
+  const hasTeams = (groups ?? []).length > 0;
+  const isEmptyOrganization = !hasMembers && !hasTeams;
   const statItems = [
     {
       label: "Total members",
@@ -74,10 +76,10 @@ export default async function MembersOverviewPage() {
       <ModuleHeader
         title="Members & Teams"
         description="Add people first, then organize them into teams when it helps."
-        items={membersNavItems}
+        items={isEmptyOrganization ? [] : membersNavItems}
       />
 
-      <section className="mb-5 rounded-xl border bg-white p-4 shadow-sm dark:bg-zinc-950">
+      <section className="rounded-xl border bg-white p-4 shadow-sm dark:bg-zinc-950">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-base font-semibold tracking-tight">Add people to your organization</h2>
@@ -98,8 +100,24 @@ export default async function MembersOverviewPage() {
         </div>
       </section>
 
+      {isEmptyOrganization ? (
+        <Card className="mt-4 border-dashed shadow-none">
+          <CardContent className="flex items-start gap-3 p-4">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+              <UsersRound className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">Teams can be created after you add members.</p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                Start with people first. When the organization grows, teams can help group them by class, department, role, or responsibility.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {statItems.length ? (
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
           {statItems.map((item) => (
             <StatCard key={item.label} label={item.label} value={`${item.value}`} detail={item.detail} icon={item.icon} />
           ))}
@@ -126,71 +144,67 @@ export default async function MembersOverviewPage() {
         </Card>
       ) : null}
 
-      <div id="teams" className="mt-6 grid scroll-mt-24 gap-4 lg:grid-cols-[1fr_22rem]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Teams</CardTitle>
-            <CardDescription>
-              {hasMembers
-                ? "Use teams to organize people by responsibility, department, class, or group."
-                : "Add members first. Teams can be created later."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {!hasMembers ? (
-              <div className="rounded-xl border border-dashed p-5 text-center">
-                <UsersRound className="mx-auto h-8 w-8 text-muted-foreground" />
-                <p className="mt-3 text-sm font-medium">Teams can wait</p>
-                <p className="mt-1 text-sm text-muted-foreground">Once people are added, you can organize them into teams here.</p>
-              </div>
-            ) : (groups ?? []).length ? (
-              ((groups ?? []) as OrganizationGroup[]).map((group) => (
-                <div key={group.id} className="flex items-center justify-between gap-3 rounded-xl bg-zinc-50 p-3 dark:bg-zinc-900/60">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{group.name}</p>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">{group.description || "No description yet"}</p>
-                  </div>
-                  <Badge>{formatMemberCount(memberCounts.get(group.id) ?? 0)}</Badge>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-xl border border-dashed p-5 text-center">
-                <UsersRound className="mx-auto h-8 w-8 text-muted-foreground" />
-                <p className="mt-3 text-sm font-medium">No teams yet</p>
-                <p className="mt-1 text-sm text-muted-foreground">Add members first, then create teams when you need structure.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {hasMembers ? (
-          <Card id="create-team">
+      {!isEmptyOrganization ? (
+        <div id="teams" className="mt-6 grid scroll-mt-24 gap-4 lg:grid-cols-[1fr_22rem]">
+          <Card>
             <CardHeader>
-              <CardTitle>Create team</CardTitle>
-              <CardDescription>Secondary setup for organizing people after they are added.</CardDescription>
+              <CardTitle>Teams</CardTitle>
+              <CardDescription>
+                {hasMembers
+                  ? "Use teams to organize people by responsibility, department, class, or group."
+                  : "Teams already created for this organization."}
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <form action={createOrganizationGroupAction} className="space-y-4">
-                <input type="hidden" name="returnTo" value="/dashboard/members#create-team" />
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">Team name</span>
-                  <Input name="name" required minLength={2} maxLength={80} placeholder="Maintenance" />
-                </label>
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">Description</span>
-                  <textarea
-                    name="description"
-                    rows={3}
-                    placeholder="What this team is responsible for"
-                    className="w-full rounded-xl border bg-white px-3 py-3 text-sm shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
-                  />
-                </label>
-                <ActionSubmitButton pendingLabel="Creating">Create team</ActionSubmitButton>
-              </form>
+            <CardContent className="space-y-2">
+              {hasTeams ? (
+                ((groups ?? []) as OrganizationGroup[]).map((group) => (
+                  <div key={group.id} className="flex items-center justify-between gap-3 rounded-xl bg-zinc-50 p-3 dark:bg-zinc-900/60">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{group.name}</p>
+                      <p className="mt-1 truncate text-xs text-muted-foreground">{group.description || "No description yet"}</p>
+                    </div>
+                    <Badge>{formatMemberCount(memberCounts.get(group.id) ?? 0)}</Badge>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-xl border border-dashed p-5 text-center">
+                  <UsersRound className="mx-auto h-8 w-8 text-muted-foreground" />
+                  <p className="mt-3 text-sm font-medium">No teams yet</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Create teams when you need structure beyond the member list.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
-        ) : null}
-      </div>
+
+          {hasMembers ? (
+            <Card id="create-team">
+              <CardHeader>
+                <CardTitle>Create team</CardTitle>
+                <CardDescription>Secondary setup for organizing people after they are added.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form action={createOrganizationGroupAction} className="space-y-4">
+                  <input type="hidden" name="returnTo" value="/dashboard/members#create-team" />
+                  <label className="block space-y-2">
+                    <span className="text-sm font-medium">Team name</span>
+                    <Input name="name" required minLength={2} maxLength={80} placeholder="Maintenance" />
+                  </label>
+                  <label className="block space-y-2">
+                    <span className="text-sm font-medium">Description</span>
+                    <textarea
+                      name="description"
+                      rows={3}
+                      placeholder="What this team is responsible for"
+                      className="w-full rounded-xl border bg-white px-3 py-3 text-sm shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200/70 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
+                    />
+                  </label>
+                  <ActionSubmitButton pendingLabel="Creating">Create team</ActionSubmitButton>
+                </form>
+              </CardContent>
+            </Card>
+          ) : null}
+        </div>
+      ) : null}
     </>
   );
 }
